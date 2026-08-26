@@ -60,6 +60,14 @@ export default async function HomeLanding() {
             <Link href="/sermoes" className="border border-white/30 text-white font-bold px-8 py-4 rounded-full hover:bg-white/10 transition-all text-sm uppercase tracking-wider flex items-center justify-center gap-2">
               <Play className="h-4 w-4" /> Assista ao Vivo
             </Link>
+            {process.env.NEXT_PUBLIC_FEIJOADA_ATIVA === "true" && (
+              <a
+                href={process.env.NEXT_PUBLIC_FEIJOADA_URL || "https://feijoada.pibrr.com"}
+                className="border border-primary/60 text-primary font-bold px-8 py-4 rounded-full hover:bg-primary/10 transition-all text-sm uppercase tracking-wider"
+              >
+                Feijoada da construção
+              </a>
+            )}
           </div>
         </div>
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
