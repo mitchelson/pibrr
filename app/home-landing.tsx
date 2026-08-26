@@ -6,6 +6,7 @@ import { sql } from "@/lib/neon";
 import { MinistryIcon } from "@/components/ministry-icon";
 import { SiteShell } from "@/components/site-shell";
 import { CHURCH_INFO } from "@/lib/constants";
+import { getFeijoadaCampanhaAtiva } from "@/lib/feijoada-campanha";
 
 const RSS_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHURCH_INFO.YOUTUBE_CHANNEL_ID}`
 
@@ -23,12 +24,15 @@ async function getVideos() {
   } catch { return [] }
 }
 
-export const revalidate = 3600
+export const revalidate = 60
 
 export default async function HomeLanding() {
-  const videos = await getVideos()
-  const eventos = await sql`SELECT titulo, data, horario, descricao, tipo FROM eventos WHERE data >= CURRENT_DATE ORDER BY data ASC LIMIT 6`
-  const ministerios = await sql`SELECT nome, descricao, icone FROM ministerios WHERE ativo = true ORDER BY ordem ASC, nome ASC`
+  const [videos, eventos, ministerios, feijoada] = await Promise.all([
+    getVideos(),
+    sql`SELECT titulo, data, horario, descricao, tipo FROM eventos WHERE data >= CURRENT_DATE ORDER BY data ASC LIMIT 6`,
+    sql`SELECT nome, descricao, icone FROM ministerios WHERE ativo = true ORDER BY ordem ASC, nome ASC`,
+    getFeijoadaCampanhaAtiva(),
+  ])
   return (
     <SiteShell variant="dark">
       {/* ── Hero ── */}
@@ -60,12 +64,12 @@ export default async function HomeLanding() {
             <Link href="/sermoes" className="border border-white/30 text-white font-bold px-8 py-4 rounded-full hover:bg-white/10 transition-all text-sm uppercase tracking-wider flex items-center justify-center gap-2">
               <Play className="h-4 w-4" /> Assista ao Vivo
             </Link>
-            {process.env.NEXT_PUBLIC_FEIJOADA_ATIVA === "true" && (
+            {feijoada.ativa && (
               <a
-                href={process.env.NEXT_PUBLIC_FEIJOADA_URL || "https://feijoada.pibrr.com"}
+                href={feijoada.url}
                 className="border border-primary/60 text-primary font-bold px-8 py-4 rounded-full hover:bg-primary/10 transition-all text-sm uppercase tracking-wider"
               >
-                Feijoada da construção
+                {feijoada.nome?.trim() || "Feijoada da construção"}
               </a>
             )}
           </div>
