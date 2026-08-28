@@ -4,9 +4,10 @@ import Image from "next/image";
 import { Play, MapPin, Clock, ChevronRight } from "lucide-react";
 import { sql } from "@/lib/neon";
 import { MinistryIcon } from "@/components/ministry-icon";
+import { FeijoadaCampanhaSection } from "@/components/feijoada-campanha-section";
 import { SiteShell } from "@/components/site-shell";
 import { CHURCH_INFO } from "@/lib/constants";
-import { getFeijoadaCampanhaAtiva } from "@/lib/feijoada-campanha";
+import { getFeijoadaCampanha } from "@/lib/feijoada-campanha";
 import { SITE_IMAGES } from "@/lib/site-images";
 
 const RSS_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHURCH_INFO.YOUTUBE_CHANNEL_ID}`
@@ -32,7 +33,7 @@ export default async function HomeLanding() {
     getVideos(),
     sql`SELECT titulo, data, horario, descricao, tipo FROM eventos WHERE data >= CURRENT_DATE ORDER BY data ASC LIMIT 6`,
     sql`SELECT nome, descricao, icone FROM ministerios WHERE ativo = true ORDER BY ordem ASC, nome ASC`,
-    getFeijoadaCampanhaAtiva(),
+    getFeijoadaCampanha(),
   ])
   return (
     <SiteShell variant="dark">
@@ -67,7 +68,7 @@ export default async function HomeLanding() {
               <Play className="h-4 w-4" /> Assista ao Vivo
             </Link>
             {feijoada.ativa && (
-              <a href={feijoada.url} className="site-btn-secondary uppercase tracking-wider">
+              <a href="#feijoada" className="site-btn-secondary uppercase tracking-wider">
                 {feijoada.nome?.trim() || "Feijoada da construção"}
               </a>
             )}
@@ -190,6 +191,8 @@ export default async function HomeLanding() {
           </div>
         </div>
       </section>
+
+      <FeijoadaCampanhaSection campanha={feijoada} />
 
       {/* ── Próximos Eventos ── */}
       <section id="programacao" className="site-section-dark">

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000" fill="none">
+  <rect width="800" height="1000" fill="#111111"/>
+  <rect x="40" y="40" width="720" height="920" rx="24" stroke="#333333" stroke-width="2" stroke-dasharray="12 8"/>
+  <text x="400" y="500" fill="#555555" font-family="system-ui, sans-serif" font-size="20" text-anchor="middle">Campanha Feijoada</text>
+</svg>
