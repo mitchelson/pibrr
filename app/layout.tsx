@@ -20,11 +20,11 @@ const fraunces = Fraunces({
 
 export const metadata: Metadata = {
   title: "Primeira Igreja Batista de Roraima",
-  description: "Sistema de gerenciamento de visitantes",
+  description: "Primeira Igreja Batista de Roraima — Boa Vista, RR",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "PIB Roraima",
   },
 };
@@ -40,9 +40,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <head>
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-      </head>
       <body className={`${sora.variable} ${fraunces.variable} ${sora.className} font-sans`}>
         <AuthSessionProvider>
           <ThemeProvider

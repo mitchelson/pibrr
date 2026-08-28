@@ -1,21 +1,21 @@
 {
   "name": "Primeira Igreja Batista de Roraima",
   "short_name": "PIB Roraima",
-  "description": "App da Primeira Igreja Batista de Roraima",
-  "start_url": "/minha-area",
+  "description": "Primeira Igreja Batista de Roraima — Boa Vista, RR",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#c9a84c",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/pib-logo-black.png",
+      "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/pib-logo-black.png",
+      "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
