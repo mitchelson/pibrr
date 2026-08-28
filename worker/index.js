@@ -4,8 +4,8 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title || "PIB Roraima", {
       body: data.body || "",
-      icon: "/pib-logo-black.png",
-      badge: "/pib-logo-black.png",
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
       data: { url: data.url || "/minha-area" },
     })
   );

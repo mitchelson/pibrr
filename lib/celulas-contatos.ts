@@ -35,7 +35,7 @@ export const CELULAS_CONTATOS: CelulaContato[] = [
   {
     id: "a3-casais",
     titulo: "Célula — A3 (Casais)",
-    telefone: "5595981021029",
+    telefone: "5595991151464",
     descricao: "Encontro para casais.",
     mensagem: "Olá, como faço para participar da célula de jovens casados A3?",
   },
