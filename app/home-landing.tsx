@@ -45,8 +45,8 @@ export default async function HomeLanding() {
           className="object-cover scale-105 animate-[kenburns_18s_ease-out_infinite_alternate]"
           priority
         />
-        <div className="absolute inset-0 bg-black/45" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/85 via-black/70 to-[var(--site-bg)]" />
+        <div className="absolute inset-0 bg-black/15" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/20 to-[var(--site-bg)]/90" />
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto pt-16">
           <p className="site-label-dark mb-6 md:text-sm">
             {CHURCH_INFO.NAME}
