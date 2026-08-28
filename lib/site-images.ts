@@ -5,6 +5,5 @@ export const SITE_IMAGES = {
   comunidadeGrupo: "/images/comunidade-grupo.jpg",
   comunidadeAbraco: "/images/comunidade-abraco.jpg",
   comunhao: "/images/comunhao.jpg",
-  /** Troque por /images/feijoada-campanha.jpg quando a foto estiver pronta */
-  feijoadaCampanha: "/images/feijoada-campanha.svg",
+  feijoadaCampanha: "/images/feijoada-campanha.jpg",
 } as const

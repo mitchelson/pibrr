@@ -28,13 +28,14 @@ export function FeijoadaCampanhaSection({ campanha }: Props) {
 
       <div className="relative mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2 lg:gap-16">
         <div className="relative mx-auto w-full max-w-md lg:max-w-none">
-          <div className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-[var(--site-line)] bg-white/[0.02] shadow-2xl">
+          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-[var(--site-line)] bg-white/[0.02] shadow-2xl">
             <Image
               src={SITE_IMAGES.feijoadaCampanha}
-              alt="Campanha Feijoada da construção"
+              alt="Feijoada da obra — campanha de construção"
               fill
-              className="object-cover"
+              className="object-cover object-center"
               sizes="(max-width: 1024px) 90vw, 50vw"
+              priority={false}
             />
           </div>
         </div>
