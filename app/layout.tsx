@@ -1,12 +1,22 @@
 import type React from "react";
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Fraunces, Sora } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import AuthSessionProvider from "@/components/session-provider";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const sora = Sora({
+  subsets: ["latin"],
+  variable: "--font-sans-loaded",
+  weight: ["400", "500", "600", "700"],
+});
+
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-display-loaded",
+  weight: ["500", "600", "700"],
+});
 
 export const metadata: Metadata = {
   title: "Primeira Igreja Batista de Roraima",
@@ -20,7 +30,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#c9a84c",
+  themeColor: "#0a0a0a",
 };
 
 export default function RootLayout({
@@ -33,7 +43,7 @@ export default function RootLayout({
       <head>
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
-      <body className={`${inter.variable} ${inter.className} font-sans`}>
+      <body className={`${sora.variable} ${fraunces.variable} ${sora.className} font-sans`}>
         <AuthSessionProvider>
           <ThemeProvider
             attribute="class"

@@ -20,10 +20,10 @@ export function LegalPageShell({
   return (
     <SiteShell hideFooter>
       <article className="mx-auto max-w-3xl px-4 py-10 md:py-14">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+        <p className="site-label mb-2 text-muted-foreground">
           {CHURCH_INFO.NAME}
         </p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">
+        <h1 className="font-display mt-2 text-3xl font-semibold tracking-tight md:text-4xl">
           {title}
         </h1>
         {subtitle ? (
@@ -33,7 +33,7 @@ export function LegalPageShell({
           Última atualização: {updatedAt}
         </p>
 
-        <div className="prose prose-gray mt-10 max-w-none prose-headings:font-semibold prose-headings:tracking-tight prose-a:text-primary prose-a:no-underline hover:prose-a:underline">
+        <div className="prose prose-gray mt-10 max-w-none prose-headings:font-semibold prose-headings:tracking-tight prose-a:text-foreground prose-a:no-underline hover:prose-a:underline">
           {children}
         </div>
       </article>
@@ -45,7 +45,7 @@ export function LegalPageShell({
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm text-muted-foreground hover:text-primary"
+                className="text-sm text-muted-foreground hover:text-foreground"
               >
                 {link.label}
               </Link>

@@ -119,10 +119,10 @@ export default function ContatoPage() {
           />
         </div>
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-          <p className="text-sm md:text-base uppercase tracking-[0.3em] mb-4 text-primary font-semibold">
+          <p className="site-label-dark mb-4 md:text-sm">
             FALE CONOSCO
           </p>
-          <h1 className="text-4xl md:text-6xl font-bold mb-4">Contato</h1>
+          <h1 className="font-display text-4xl md:text-6xl font-semibold mb-4">Contato</h1>
           <p className="text-lg md:text-xl">
             Estamos aqui para você. Entre em contato!
           </p>
@@ -140,7 +140,7 @@ export default function ContatoPage() {
                   className="bg-background p-6 rounded-lg border border-border text-center"
                 >
                   <div className="mb-4 flex justify-center">
-                    <InfoIcon className="h-10 w-10 text-primary" aria-hidden />
+                    <InfoIcon className="h-10 w-10 text-foreground" aria-hidden />
                   </div>
                   <h3 className="text-xl font-bold text-foreground mb-3">
                     {info.titulo}
@@ -263,22 +263,22 @@ export default function ContatoPage() {
               </p>
               <ul className="space-y-2 text-muted-foreground">
                 <li className="flex items-start gap-2">
-                  <Bus className="h-5 w-5 shrink-0 text-primary mt-0.5" aria-hidden />
+                  <Bus className="h-5 w-5 shrink-0 text-foreground mt-0.5" aria-hidden />
                   <span>Ônibus: Linhas 101, 202, 303</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <Car className="h-5 w-5 shrink-0 text-primary mt-0.5" aria-hidden />
+                  <Car className="h-5 w-5 shrink-0 text-foreground mt-0.5" aria-hidden />
                   <span>Estacionamento próprio disponível</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <Accessibility className="h-5 w-5 shrink-0 text-primary mt-0.5" aria-hidden />
+                  <Accessibility className="h-5 w-5 shrink-0 text-foreground mt-0.5" aria-hidden />
                   <span>Acessibilidade para pessoas com deficiência</span>
                 </li>
               </ul>
             </div>
 
-            <div className="bg-primary p-6 rounded-lg">
-              <h3 className="text-xl font-bold text-primary-foreground mb-4">
+            <div className="bg-[var(--site-bg)] text-white p-6 rounded-2xl border border-[var(--site-line)]">
+              <h3 className="text-xl font-bold mb-4">
                 Redes Sociais
               </h3>
               <div className="flex gap-4">

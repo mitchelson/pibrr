@@ -64,11 +64,11 @@ export default async function MinisteriosPage() {
                   <p className="text-muted-foreground mb-4 text-lg">{m.descricao || "Ministério da nossa igreja."}</p>
                   <div className="space-y-2 mb-6">
                     <div className="flex items-center">
-                      <User className="h-4 w-4 text-primary mr-2" />
+                      <User className="h-4 w-4 text-muted-foreground mr-2" />
                       <span className="text-foreground">{liderNome}</span>
                     </div>
                   </div>
-                  <Link href="/form-ministerios" className="inline-block bg-foreground text-background font-semibold px-6 py-3 rounded-lg hover:bg-primary hover:text-primary-foreground transition-all">
+                  <Link href="/form-ministerios" className="inline-block bg-foreground text-background font-semibold px-6 py-3 rounded-xl hover:opacity-90 transition-all">
                     Quero servir
                   </Link>
                 </div>
@@ -78,15 +78,15 @@ export default async function MinisteriosPage() {
         </div>
       </section>
 
-      <section className="bg-primary py-16 px-4">
+      <section className="site-cta-band">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-6">Pronto para fazer a diferença?</h2>
-          <p className="text-lg text-primary-foreground/90 mb-8">Descubra como você pode servir e crescer conosco</p>
+          <h2 className="font-display text-3xl md:text-4xl font-semibold mb-6">Pronto para fazer a diferença?</h2>
+          <p className="text-lg text-[var(--site-muted)] mb-8">Descubra como você pode servir e crescer conosco</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/form-ministerios" className="bg-foreground text-background font-semibold px-8 py-4 rounded-lg hover:bg-background hover:text-foreground transition-all">
+            <Link href="/form-ministerios" className="site-btn-primary">
               Quero servir
             </Link>
-            <Link href="/contato" className="bg-background text-foreground font-semibold px-8 py-4 rounded-lg hover:bg-foreground hover:text-background transition-all">
+            <Link href="/contato" className="site-btn-secondary">
               Falar Conosco
             </Link>
           </div>
@@ -103,8 +103,8 @@ function HeroSection() {
         <Image src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=1920&h=1080&fit=crop" alt="Ministérios" fill className="object-cover" />
       </div>
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-        <p className="text-sm md:text-base uppercase tracking-[0.3em] mb-4 text-primary font-semibold">SERVINDO JUNTOS</p>
-        <h1 className="text-4xl md:text-6xl font-bold mb-4">Ministérios</h1>
+        <p className="site-label-dark mb-4 md:text-sm">SERVINDO JUNTOS</p>
+        <h1 className="font-display text-4xl md:text-6xl font-semibold mb-4">Ministérios</h1>
         <p className="text-lg md:text-xl">Há um lugar para você no que Deus está fazendo em nossa casa</p>
       </div>
     </section>

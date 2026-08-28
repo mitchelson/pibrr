@@ -37,14 +37,14 @@ export function SiteShell({
     <div
       className={cn(
         "min-h-screen flex flex-col",
-        dark ? "bg-[#0a0a0a] text-white" : "bg-background text-foreground"
+        dark ? "bg-[var(--site-bg)] text-[var(--site-fg)]" : "bg-background text-foreground"
       )}
     >
       <header
         className={cn(
           "sticky top-0 z-50 border-b backdrop-blur-md",
           dark
-            ? "bg-[#0a0a0a]/80 border-white/5"
+            ? "bg-[var(--site-bg)]/85 border-[var(--site-line)]"
             : "bg-background/90 border-border"
         )}
       >
@@ -71,10 +71,10 @@ export function SiteShell({
                     "text-sm transition-colors",
                     dark
                       ? active
-                        ? "text-primary"
-                        : "text-gray-300 hover:text-white"
+                        ? "text-white font-medium"
+                        : "text-[var(--site-muted)] hover:text-white"
                       : active
-                        ? "text-primary font-semibold"
+                        ? "text-foreground font-semibold"
                         : "text-muted-foreground hover:text-foreground"
                   )}
                 >
@@ -86,20 +86,38 @@ export function SiteShell({
               href={PUBLIC_SECONDARY.href}
               className={cn(
                 "text-sm",
-                dark ? "text-gray-300 hover:text-white" : "text-muted-foreground hover:text-foreground"
+                dark
+                  ? "text-[var(--site-muted)] hover:text-white"
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               {PUBLIC_SECONDARY.label}
             </Link>
-            <Button asChild size="sm" className="rounded-full font-semibold">
-              <Link href={PUBLIC_CTA.href}>{PUBLIC_CTA.label}</Link>
-            </Button>
+            <Link
+              href={PUBLIC_CTA.href}
+              className={cn(
+                "inline-flex h-10 items-center rounded-xl px-5 text-sm font-semibold transition-colors",
+                dark
+                  ? "bg-white text-[var(--site-ink)] hover:bg-[var(--site-accent-soft)]"
+                  : "bg-primary text-primary-foreground hover:opacity-90"
+              )}
+            >
+              {PUBLIC_CTA.label}
+            </Link>
           </nav>
 
           <div className="flex items-center gap-1 md:hidden">
-            <Button asChild size="sm" className="rounded-full h-8 px-3 text-xs font-semibold">
-              <Link href={PUBLIC_CTA.href}>{PUBLIC_CTA.label}</Link>
-            </Button>
+            <Link
+              href={PUBLIC_CTA.href}
+              className={cn(
+                "inline-flex h-8 items-center rounded-xl px-3 text-xs font-semibold transition-colors",
+                dark
+                  ? "bg-white text-[var(--site-ink)]"
+                  : "bg-primary text-primary-foreground"
+              )}
+            >
+              {PUBLIC_CTA.label}
+            </Link>
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
                 <Button
@@ -130,7 +148,7 @@ export function SiteShell({
                   >
                     {PUBLIC_SECONDARY.label}
                   </Link>
-                  <Button asChild className="mt-4 rounded-full font-semibold">
+                  <Button asChild className="mt-4 rounded-xl font-semibold">
                     <Link href={PUBLIC_CTA.href} onClick={() => setOpen(false)}>
                       {PUBLIC_CTA.label}
                     </Link>
@@ -155,7 +173,7 @@ export function SiteShell({
         <footer
           className={cn(
             "border-t pt-14 pb-10 px-4",
-            dark ? "bg-[#050505] border-white/5" : "bg-muted/40 border-border"
+            dark ? "bg-[#050505] border-[var(--site-line)]" : "bg-muted/40 border-border"
           )}
         >
           <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-4">
@@ -170,7 +188,7 @@ export function SiteShell({
               <p
                 className={cn(
                   "mt-3 text-sm leading-relaxed",
-                  dark ? "text-gray-500" : "text-muted-foreground"
+                  dark ? "text-[var(--site-muted)]" : "text-muted-foreground"
                 )}
               >
                 Uma comunidade apaixonada por Jesus, dedicada à transformação de vidas.
@@ -179,8 +197,8 @@ export function SiteShell({
             <div>
               <h4
                 className={cn(
-                  "mb-3 text-xs font-semibold uppercase tracking-wider",
-                  dark ? "text-gray-400" : "text-muted-foreground"
+                  "mb-3 site-label",
+                  dark ? "text-[var(--site-muted)]" : "text-muted-foreground"
                 )}
               >
                 Navegação
@@ -191,8 +209,10 @@ export function SiteShell({
                     <Link
                       href={l.href}
                       className={cn(
-                        "text-sm transition-colors hover:text-primary",
-                        dark ? "text-gray-500" : "text-muted-foreground"
+                        "text-sm transition-colors",
+                        dark
+                          ? "text-[var(--site-muted)] hover:text-white"
+                          : "text-muted-foreground hover:text-foreground"
                       )}
                     >
                       {l.label}
@@ -204,8 +224,8 @@ export function SiteShell({
             <div>
               <h4
                 className={cn(
-                  "mb-3 text-xs font-semibold uppercase tracking-wider",
-                  dark ? "text-gray-400" : "text-muted-foreground"
+                  "mb-3 site-label",
+                  dark ? "text-[var(--site-muted)]" : "text-muted-foreground"
                 )}
               >
                 Legal
@@ -216,8 +236,10 @@ export function SiteShell({
                     <Link
                       href={l.href}
                       className={cn(
-                        "text-sm transition-colors hover:text-primary",
-                        dark ? "text-gray-500" : "text-muted-foreground"
+                        "text-sm transition-colors",
+                        dark
+                          ? "text-[var(--site-muted)] hover:text-white"
+                          : "text-muted-foreground hover:text-foreground"
                       )}
                     >
                       {l.label}
@@ -229,13 +251,13 @@ export function SiteShell({
             <div>
               <h4
                 className={cn(
-                  "mb-3 text-xs font-semibold uppercase tracking-wider",
-                  dark ? "text-gray-400" : "text-muted-foreground"
+                  "mb-3 site-label",
+                  dark ? "text-[var(--site-muted)]" : "text-muted-foreground"
                 )}
               >
                 Contato
               </h4>
-              <p className={cn("text-sm mb-3", dark ? "text-gray-500" : "text-muted-foreground")}>
+              <p className={cn("text-sm mb-3", dark ? "text-[var(--site-muted)]" : "text-muted-foreground")}>
                 {CHURCH_INFO.CITY}
                 <br />
                 {CHURCH_INFO.EMAIL}
@@ -246,8 +268,10 @@ export function SiteShell({
                   target="_blank"
                   rel="noopener noreferrer"
                   className={cn(
-                    "flex h-9 w-9 items-center justify-center rounded-full border transition-colors hover:border-primary hover:text-primary",
-                    dark ? "border-white/10" : "border-border"
+                    "flex h-9 w-9 items-center justify-center rounded-full border transition-colors",
+                    dark
+                      ? "border-[var(--site-line)] hover:border-white hover:text-white"
+                      : "border-border hover:border-foreground hover:text-foreground"
                   )}
                   aria-label="Instagram"
                 >
@@ -258,8 +282,10 @@ export function SiteShell({
                   target="_blank"
                   rel="noopener noreferrer"
                   className={cn(
-                    "flex h-9 w-9 items-center justify-center rounded-full border transition-colors hover:border-primary hover:text-primary",
-                    dark ? "border-white/10" : "border-border"
+                    "flex h-9 w-9 items-center justify-center rounded-full border transition-colors",
+                    dark
+                      ? "border-[var(--site-line)] hover:border-white hover:text-white"
+                      : "border-border hover:border-foreground hover:text-foreground"
                   )}
                   aria-label="YouTube"
                 >
@@ -268,8 +294,10 @@ export function SiteShell({
                 <a
                   href={`https://wa.me/${CHURCH_INFO.WHATSAPP_E164}`}
                   className={cn(
-                    "flex h-9 w-9 items-center justify-center rounded-full border transition-colors hover:border-primary hover:text-primary",
-                    dark ? "border-white/10" : "border-border"
+                    "flex h-9 w-9 items-center justify-center rounded-full border transition-colors",
+                    dark
+                      ? "border-[var(--site-line)] hover:border-white hover:text-white"
+                      : "border-border hover:border-foreground hover:text-foreground"
                   )}
                   aria-label="WhatsApp"
                 >
@@ -281,7 +309,7 @@ export function SiteShell({
           <p
             className={cn(
               "mx-auto mt-10 max-w-6xl border-t pt-6 text-center text-xs",
-              dark ? "border-white/5 text-gray-600" : "border-border text-muted-foreground"
+              dark ? "border-[var(--site-line)] text-neutral-600" : "border-border text-muted-foreground"
             )}
           >
             © {new Date().getFullYear()} {CHURCH_INFO.NAME}. Todos os direitos reservados.

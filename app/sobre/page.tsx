@@ -86,10 +86,10 @@ export default function SobrePage() {
           />
         </div>
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-          <p className="text-sm md:text-base uppercase tracking-[0.3em] mb-4 text-primary font-semibold">
+          <p className="site-label-dark mb-4 md:text-sm">
             NOSSA HISTÓRIA
           </p>
-          <h1 className="text-4xl md:text-6xl font-bold mb-4">
+          <h1 className="font-display text-4xl md:text-6xl font-semibold mb-4">
             Sobre Nós
           </h1>
           <p className="text-lg md:text-xl">
@@ -167,7 +167,7 @@ export default function SobrePage() {
                 e global.
               </p>
             </div>
-            <div className="bg-primary text-primary-foreground p-8 rounded-lg">
+            <div className="bg-[var(--site-bg)] text-white p-8 rounded-2xl border border-[var(--site-line)]">
               <h3 className="text-2xl font-bold mb-4">
                 Nossa Visão
               </h3>
@@ -191,7 +191,7 @@ export default function SobrePage() {
                 className="bg-muted/40 p-6 rounded-lg text-center"
               >
                 <div className="mb-4 flex justify-center">
-                  <ValorIcon className="h-12 w-12 text-primary" aria-hidden />
+                  <ValorIcon className="h-12 w-12 text-foreground" aria-hidden />
                 </div>
                 <h4 className="text-xl font-bold text-foreground mb-3">
                   {valor.titulo}
@@ -228,7 +228,7 @@ export default function SobrePage() {
                   <h3 className="text-xl font-bold text-foreground mb-1">
                     {lider.nome}
                   </h3>
-                  <p className="text-primary font-semibold mb-3">
+                  <p className="text-muted-foreground font-semibold mb-3">
                     {lider.cargo}
                   </p>
                   <p className="text-sm text-muted-foreground">{lider.descricao}</p>
@@ -240,24 +240,24 @@ export default function SobrePage() {
       </section>
 
       {/* CTA */}
-      <section className="bg-primary py-16 px-4">
+      <section className="site-cta-band">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-6">
+          <h2 className="font-display text-3xl md:text-4xl font-semibold mb-6">
             Faça parte da nossa história
           </h2>
-          <p className="text-lg text-primary-foreground/90 mb-8">
+          <p className="text-lg text-[var(--site-muted)] mb-8">
             Venha nos visitar e descubra como Deus pode transformar sua vida
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/cadastro"
-              className="bg-foreground text-background font-semibold px-8 py-4 rounded-lg hover:bg-background hover:text-foreground transition-all"
+              className="site-btn-primary"
             >
               Agendar Visita
             </Link>
             <Link
               href="/eventos"
-              className="bg-background text-foreground font-semibold px-8 py-4 rounded-lg hover:bg-foreground hover:text-background transition-all"
+              className="site-btn-secondary"
             >
               Ver Eventos
             </Link>

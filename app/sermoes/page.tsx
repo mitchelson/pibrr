@@ -55,10 +55,10 @@ export default async function SermoesPage() {
           />
         </div>
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-          <p className="text-sm md:text-base uppercase tracking-[0.3em] mb-4 text-primary font-semibold">
+          <p className="site-label-dark mb-4 md:text-sm">
             PALAVRA DE DEUS
           </p>
-          <h1 className="text-4xl md:text-6xl font-bold mb-4">
+          <h1 className="font-display text-4xl md:text-6xl font-semibold mb-4">
             Pregações
           </h1>
           <p className="text-lg md:text-xl">
@@ -72,7 +72,7 @@ export default async function SermoesPage() {
           {featured ? (
             <>
               <div className="mb-12">
-                <p className="text-primary uppercase tracking-[0.3em] text-xs font-semibold mb-3">
+                <p className="site-label mb-3 text-muted-foreground">
                   Mais recente
                 </p>
                 <div className="relative aspect-video rounded-2xl overflow-hidden bg-black/50 border border-border max-w-4xl">
@@ -106,7 +106,7 @@ export default async function SermoesPage() {
                         href={video.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group bg-background rounded-lg border border-border overflow-hidden hover:border-primary/40 transition-all"
+                        className="group bg-background rounded-2xl border border-border overflow-hidden hover:border-foreground/25 transition-all"
                       >
                         <div className="relative aspect-video overflow-hidden">
                           <Image
@@ -116,13 +116,13 @@ export default async function SermoesPage() {
                             className="object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                           <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <span className="bg-primary text-primary-foreground rounded-full p-4">
+                            <span className="bg-foreground text-background rounded-full p-4">
                               <Play className="h-6 w-6 fill-current" aria-hidden />
                             </span>
                           </div>
                         </div>
                         <div className="p-5">
-                          <h3 className="font-bold text-lg text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+                          <h3 className="font-bold text-lg text-foreground line-clamp-2 group-hover:text-foreground/80 transition-colors">
                             {video.title}
                           </h3>
                           <p className="text-xs text-muted-foreground mt-2">
@@ -144,7 +144,7 @@ export default async function SermoesPage() {
                 href={CHURCH_INFO.YOUTUBE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-foreground text-background font-semibold px-6 py-3 rounded-lg hover:bg-primary hover:text-primary-foreground transition-all"
+                className="inline-flex items-center gap-2 bg-foreground text-background font-semibold px-6 py-3 rounded-xl hover:opacity-90 transition-all"
               >
                 Ver no YouTube <ExternalLink className="h-4 w-4" />
               </a>
@@ -156,7 +156,7 @@ export default async function SermoesPage() {
               href={CHURCH_INFO.YOUTUBE_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-primary font-semibold hover:underline"
+              className="inline-flex items-center gap-2 font-semibold text-foreground hover:underline"
             >
               Ver todas no YouTube <ExternalLink className="h-4 w-4" />
             </a>
@@ -164,24 +164,19 @@ export default async function SermoesPage() {
         </div>
       </section>
 
-      <section className="bg-primary py-16 px-4">
+      <section className="site-cta-band">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-6">
+          <h2 className="font-display text-3xl md:text-4xl font-semibold mb-6">
             Venha viver a palavra conosco
           </h2>
-          <p className="text-lg text-primary-foreground/90 mb-8">
+          <p className="text-lg text-[var(--site-muted)] mb-8">
             Assista online ou participe pessoalmente dos nossos cultos
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/eventos"
-              className="inline-block bg-foreground text-background font-semibold px-8 py-4 rounded-lg hover:bg-background hover:text-foreground transition-all"
-            >
+            <Link href="/eventos" className="site-btn-primary">
               Ver programação
             </Link>
-            <Link
-              href="/cadastro"
-              className="inline-block bg-background text-foreground font-semibold px-8 py-4 rounded-lg hover:bg-foreground hover:text-background transition-all"
+            <Link href="/cadastro" className="site-btn-secondary">
             >
               Sou visitante
             </Link>
