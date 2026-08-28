@@ -81,6 +81,8 @@ export default async function HomeLanding() {
         </div>
       </section>
 
+      <FeijoadaCampanhaSection campanha={feijoada} />
+
       {/* ── Cultos ao Vivo / Última Mensagem ── */}
       <section className="site-section-band">
         <div className="max-w-6xl mx-auto">
@@ -191,8 +193,6 @@ export default async function HomeLanding() {
           </div>
         </div>
       </section>
-
-      <FeijoadaCampanhaSection campanha={feijoada} />
 
       {/* ── Próximos Eventos ── */}
       <section id="programacao" className="site-section-dark">
