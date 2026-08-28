@@ -5,6 +5,7 @@ import { User } from "lucide-react"
 import { sql } from "@/lib/neon"
 import { MinistryIcon } from "@/components/ministry-icon"
 import { SiteShell } from "@/components/site-shell"
+import { SITE_IMAGES } from "@/lib/site-images"
 
 export const revalidate = 60
 export const dynamic = "force-dynamic"
@@ -100,7 +101,7 @@ function HeroSection() {
   return (
     <section className="relative w-full h-[50vh] bg-gradient-to-br from-black via-gray-900 to-black text-white flex items-center justify-center">
       <div className="absolute inset-0 opacity-30">
-        <Image src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=1920&h=1080&fit=crop" alt="Ministérios" fill className="object-cover" />
+        <Image src={SITE_IMAGES.louvor} alt="Ministério de louvor" fill className="object-cover" />
       </div>
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
         <p className="site-label-dark mb-4 md:text-sm">SERVINDO JUNTOS</p>

@@ -7,6 +7,7 @@ import { MinistryIcon } from "@/components/ministry-icon";
 import { SiteShell } from "@/components/site-shell";
 import { CHURCH_INFO } from "@/lib/constants";
 import { getFeijoadaCampanhaAtiva } from "@/lib/feijoada-campanha";
+import { SITE_IMAGES } from "@/lib/site-images";
 
 const RSS_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHURCH_INFO.YOUTUBE_CHANNEL_ID}`
 
@@ -38,8 +39,8 @@ export default async function HomeLanding() {
       {/* ── Hero ── */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         <Image
-          src="https://images.unsplash.com/photo-1507692049790-de58290a4334?w=1920&q=80"
-          alt="Culto"
+          src={SITE_IMAGES.adoracao}
+          alt="Momento de adoração no culto"
           fill
           className="object-cover scale-105 animate-[kenburns_18s_ease-out_infinite_alternate]"
           priority
@@ -115,7 +116,7 @@ export default async function HomeLanding() {
             </>
           ) : (
             <div className="relative aspect-video rounded-2xl overflow-hidden bg-black/50 border border-[var(--site-line)] max-w-4xl mx-auto group">
-              <Image src="https://images.unsplash.com/photo-1478147427282-58a87a120781?w=1200&q=80" alt="Última pregação" fill className="object-cover opacity-60" />
+              <Image src={SITE_IMAGES.louvor} alt="Louvor e adoração" fill className="object-cover opacity-60" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <Link href="/sermoes" className="bg-white rounded-full p-5 hover:scale-110 transition-transform shadow-2xl">
                   <Play className="h-8 w-8 text-[var(--site-ink)] fill-current" />
@@ -152,8 +153,8 @@ export default async function HomeLanding() {
           </div>
           <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-[var(--site-line)]">
             <Image
-              src="https://images.unsplash.com/photo-1438232992991-995b7058bbb3?w=800&q=80"
-              alt="Comunidade"
+              src={SITE_IMAGES.comunidadeGrupo}
+              alt="Comunidade da igreja em comunhão"
               fill
               className="object-cover"
             />
@@ -247,8 +248,8 @@ export default async function HomeLanding() {
       {/* ── CTA: Encontre Jesus ── */}
       <section className="relative py-24 px-4 overflow-hidden">
         <Image
-          src="https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=1920&q=80"
-          alt="Encontre Jesus"
+          src={SITE_IMAGES.comunidadeAbraco}
+          alt="Acolhimento na comunidade da igreja"
           fill
           className="object-cover"
         />

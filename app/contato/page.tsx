@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { SiteShell } from "@/components/site-shell";
 import { CHURCH_INFO } from "@/lib/constants";
+import { SITE_IMAGES } from "@/lib/site-images";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -112,8 +113,8 @@ export default function ContatoPage() {
       <section className="relative w-full h-[40vh] bg-gradient-to-br from-black via-gray-900 to-black text-white flex items-center justify-center">
         <div className="absolute inset-0 opacity-30">
           <Image
-            src="https://images.unsplash.com/photo-1423666639041-f56000c27a9a?w=1920&h=1080&fit=crop"
-            alt="Contato"
+            src={SITE_IMAGES.comunidadeAbraco}
+            alt="Acolhimento na igreja"
             fill
             className="object-cover"
           />

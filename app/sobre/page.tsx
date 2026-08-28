@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Sparkles, Heart, Star, Flame, type LucideIcon } from "lucide-react";
 import { SiteShell } from "@/components/site-shell";
+import { SITE_IMAGES } from "@/lib/site-images";
 
 export default function SobrePage() {
   const valores: { titulo: string; descricao: string; Icon: LucideIcon }[] = [
@@ -36,30 +37,22 @@ export default function SobrePage() {
     {
       nome: "Pastor Titular",
       cargo: "Pastor Presidente",
-      imagem:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
       descricao:
         "Liderando com paixão por Cristo e amor pelas pessoas há mais de 20 anos.",
     },
     {
       nome: "Pastora",
       cargo: "Pastora Auxiliar",
-      imagem:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop",
       descricao: "Dedicada ao ministério de cuidado pastoral e aconselhamento.",
     },
     {
       nome: "Pastor de Jovens",
       cargo: "Ministério de Jovens",
-      imagem:
-        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop",
       descricao: "Investindo na próxima geração com energia e unção.",
     },
     {
       nome: "Pastor de Louvor",
       cargo: "Ministério de Música",
-      imagem:
-        "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop",
       descricao: "Conduzindo a igreja à adoração verdadeira e profunda.",
     },
   ];
@@ -79,8 +72,8 @@ export default function SobrePage() {
       <section className="relative w-full h-[60vh] bg-gradient-to-br from-black via-gray-900 to-black text-white flex items-center justify-center">
         <div className="absolute inset-0 opacity-40">
           <Image
-            src="https://images.unsplash.com/photo-1438032005730-c779502df39b?w=1920&h=1080&fit=crop"
-            alt="Sobre Nós"
+            src={SITE_IMAGES.comunhao}
+            alt="Mesa da Santa Ceia"
             fill
             className="object-cover"
           />
@@ -214,25 +207,15 @@ export default function SobrePage() {
             {lideranca.map((lider, index) => (
               <div
                 key={index}
-                className="bg-background rounded-lg border border-border overflow-hidden"
+                className="bg-background rounded-lg border border-border p-6 text-center"
               >
-                <div className="relative h-64">
-                  <Image
-                    src={lider.imagem}
-                    alt={lider.nome}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <div className="p-6 text-center">
-                  <h3 className="text-xl font-bold text-foreground mb-1">
-                    {lider.nome}
-                  </h3>
-                  <p className="text-muted-foreground font-semibold mb-3">
-                    {lider.cargo}
-                  </p>
-                  <p className="text-sm text-muted-foreground">{lider.descricao}</p>
-                </div>
+                <h3 className="text-xl font-bold text-foreground mb-1">
+                  {lider.nome}
+                </h3>
+                <p className="text-muted-foreground font-semibold mb-3">
+                  {lider.cargo}
+                </p>
+                <p className="text-sm text-muted-foreground">{lider.descricao}</p>
               </div>
             ))}
           </div>

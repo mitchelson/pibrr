@@ -4,6 +4,7 @@ import Image from "next/image"
 import { Play, ExternalLink } from "lucide-react"
 import { SiteShell } from "@/components/site-shell"
 import { CHURCH_INFO } from "@/lib/constants"
+import { SITE_IMAGES } from "@/lib/site-images"
 
 export const revalidate = 3600
 
@@ -48,8 +49,8 @@ export default async function SermoesPage() {
       <section className="relative w-full h-[50vh] bg-gradient-to-br from-black via-gray-900 to-black text-white flex items-center justify-center">
         <div className="absolute inset-0 opacity-30">
           <Image
-            src="https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=1920&h=1080&fit=crop"
-            alt="Pregações"
+            src={SITE_IMAGES.adoracao}
+            alt="Adoração durante o culto"
             fill
             className="object-cover"
           />
