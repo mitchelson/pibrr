@@ -33,6 +33,7 @@ export type AdminNavGroup = {
 export const PUBLIC_NAV: NavLink[] = [
   { href: "/sobre", label: "Igreja" },
   { href: "/ministerios", label: "Ministérios" },
+  { href: "/celulas", label: "Células" },
   { href: "/eventos", label: "Eventos" },
   { href: "/sermoes", label: "Pregações" },
   { href: "/contato", label: "Contato" },

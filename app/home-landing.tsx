@@ -254,12 +254,13 @@ export default async function HomeLanding() {
           fill
           className="object-cover"
         />
-        <div className="absolute inset-0 bg-[var(--site-bg)]/85" />
+        <div className="absolute inset-0 bg-black/50" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/65 to-black/80" />
         <div className="relative z-10 max-w-4xl mx-auto text-center">
-          <h2 className="font-display text-3xl md:text-5xl font-semibold mb-6">
+          <h2 className="font-display text-3xl md:text-5xl font-semibold mb-6 text-white">
             Deus tem algo <span className="text-white/90">extraordinário</span> para você
           </h2>
-          <p className="text-lg text-[var(--site-muted)] mb-10 max-w-2xl mx-auto">
+          <p className="text-lg text-white/85 mb-10 max-w-2xl mx-auto">
             Precisa de oração? Quer conhecer Jesus? Estamos aqui para caminhar com você.
           </p>
           <div className="flex flex-wrap gap-4 justify-center">

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   MapPin,
   Phone,
@@ -153,6 +154,13 @@ export default function ContatoPage() {
               );
             })}
           </div>
+          <p className="mt-8 text-center text-sm text-muted-foreground">
+            Quer falar pelo WhatsApp com a secretaria ou uma célula?{" "}
+            <Link href="/celulas" className="font-semibold text-foreground underline-offset-4 hover:underline">
+              Ver contatos das células
+            </Link>
+            .
+          </p>
         </div>
       </section>
 
