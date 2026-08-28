@@ -54,7 +54,10 @@ export const CHURCH_INFO = {
   NAME: "Primeira Igreja Batista de Roraima",
   SHORT_NAME: "PIB Roraima",
   CITY: "Boa Vista, RR",
-  ADDRESS_LINE: "Boa Vista, RR",
+  ADDRESS_LINE: "Rua General Penha Brasil, 345 - Centro",
+  ADDRESS_FULL: "Rua General Penha Brasil, 345 - Centro, Boa Vista, RR",
+  MAPS_EMBED_URL:
+    "https://www.google.com/maps?q=Rua+General+Penha+Brasil,+345,+Centro,+Boa+Vista,+RR&hl=pt-BR&z=17&output=embed",
   EMAIL: "contato@pibr.org.br",
   PHONE_DISPLAY: CONTACT_INFO.CAPELANIA_PHONE,
   WHATSAPP_E164: "559591522392",

@@ -45,7 +45,8 @@ export default async function HomeLanding() {
           className="object-cover scale-105 animate-[kenburns_18s_ease-out_infinite_alternate]"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[var(--site-bg)]/75 via-[var(--site-bg)]/55 to-[var(--site-bg)]" />
+        <div className="absolute inset-0 bg-black/45" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/85 via-black/70 to-[var(--site-bg)]" />
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto pt-16">
           <p className="site-label-dark mb-6 md:text-sm">
             {CHURCH_INFO.NAME}
@@ -302,7 +303,7 @@ export default async function HomeLanding() {
           </div>
           <div className="relative aspect-video rounded-2xl overflow-hidden bg-white/5 border border-[var(--site-line)]">
             <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3984.0!2d-60.67!3d2.82!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMsKwNDknMTIuMCJOIDYwwrA0MCcxMi4wIlc!5e0!3m2!1spt-BR!2sbr!4v1"
+              src={CHURCH_INFO.MAPS_EMBED_URL}
               className="absolute inset-0 w-full h-full"
               style={{ border: 0, filter: "invert(90%) hue-rotate(180deg)" }}
               allowFullScreen

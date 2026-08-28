@@ -243,7 +243,7 @@ export default function ContatoPage() {
               style={{ height: "300px" }}
             >
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3989.3083649999997!2d-60.67638908523426!3d2.8198899577214!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMsKwNDknMTEuNiJOIDYwwrA0MCczMy4wIlc!5e0!3m2!1spt-BR!2sbr!4v1234567890123!5m2!1spt-BR!2sbr"
+                src={CHURCH_INFO.MAPS_EMBED_URL}
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
@@ -259,7 +259,7 @@ export default function ContatoPage() {
                 Como Chegar
               </h3>
               <p className="text-muted-foreground mb-4">
-                Estamos localizados em {CHURCH_INFO.CITY}, de fácil acesso por
+                Estamos na {CHURCH_INFO.ADDRESS_FULL}, de fácil acesso por
                 transporte público e com estacionamento disponível.
               </p>
               <ul className="space-y-2 text-muted-foreground">

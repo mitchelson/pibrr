@@ -258,6 +258,8 @@ export function SiteShell({
                 Contato
               </h4>
               <p className={cn("text-sm mb-3", dark ? "text-[var(--site-muted)]" : "text-muted-foreground")}>
+                {CHURCH_INFO.ADDRESS_LINE}
+                <br />
                 {CHURCH_INFO.CITY}
                 <br />
                 {CHURCH_INFO.EMAIL}
