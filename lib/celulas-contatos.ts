@@ -3,7 +3,6 @@
 export type CelulaContato = {
   id: string
   titulo: string
-  /** Número E.164 sem + (ex.: 5595991522392) */
   telefone: string
   descricao?: string
   mensagem?: string
@@ -21,7 +20,7 @@ export const CELULAS_CONTATOS: CelulaContato[] = [
   {
     id: "desafiando-homens",
     titulo: "Célula — Desafiando Homens",
-    telefone: "5595991540027",
+    telefone: "5595984099182",
     descricao: "Grupo de homens em comunhão e discipulado.",
     mensagem: "Olá, como faço para participar da célula de Desafiando Homens?",
   },

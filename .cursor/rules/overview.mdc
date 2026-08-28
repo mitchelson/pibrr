@@ -1,0 +1,13 @@
+---
+description: Contexto superficial do projeto pibrr (igreja web + API)
+alwaysApply: true
+---
+
+# pibrr — overview
+
+Site institucional + gestão + API Next. Não é o projeto de vendas.
+
+- Workspace: prioridade atual = `vendas-pibrr`; aqui manutenção / link para feijoada se pedido.
+- Não misturar domínio feijoada/PDV.
+- Backend dedicado da igreja em standby — não extrair API sem pedido.
+- Ler `AGENTS.md` deste projeto e `../docs/README.md` se mudar escopo de produto.
