@@ -12,7 +12,7 @@
  * @requires pg or @vercel/postgres for database queries
  */
 
-import { sql } from '@vercel/postgres';
+import { sql } from '@/lib/neon';
 
 // ============================================================================
 // TYPES
@@ -124,13 +124,13 @@ export async function hasPermission(
       const result = await sql`
         SELECT has_permission(${accountId}::uuid, ${permissionName}, ${contextId}::uuid) as has_perm
       `;
-      return result.rows[0]?.has_perm === true;
+      return result[0]?.has_perm === true;
     } else {
       // Check without context (global permission)
       const result = await sql`
         SELECT has_permission(${accountId}::uuid, ${permissionName}, NULL) as has_perm
       `;
-      return result.rows[0]?.has_perm === true;
+      return result[0]?.has_perm === true;
     }
   } catch (error) {
     console.error('Error checking permission:', error);
@@ -154,7 +154,7 @@ export async function getAccountPermissions(
       ? await sql`SELECT * FROM get_account_permissions(${accountId}::uuid, ${contextId}::uuid)`
       : await sql`SELECT * FROM get_account_permissions(${accountId}::uuid, NULL)`;
     
-    return result.rows as AccountPermission[];
+return result as AccountPermission[];
   } catch (error) {
     console.error('Error getting account permissions:', error);
     return [];
@@ -177,7 +177,7 @@ export async function getAccountRoles(
       ? await sql`SELECT * FROM get_account_roles(${accountId}::uuid, ${contextType})`
       : await sql`SELECT * FROM get_account_roles(${accountId}::uuid, NULL)`;
     
-    return result.rows as AccountRoleWithContext[];
+    return result as AccountRoleWithContext[];
   } catch (error) {
     console.error('Error getting account roles:', error);
     return [];
@@ -224,7 +224,7 @@ export async function hasRole(
         `;
     
     const result = await query;
-    return result.rows[0]?.has_role === true;
+    return result[0]?.has_role === true;
   } catch (error) {
     console.error('Error checking role:', error);
     return false;
@@ -246,7 +246,7 @@ export async function isMinistryLeader(
     const result = await sql`
       SELECT is_ministry_leader(${accountId}::uuid, ${ministryId}::uuid) as is_leader
     `;
-    return result.rows[0]?.is_leader === true;
+    return result[0]?.is_leader === true;
   } catch (error) {
     console.error('Error checking ministry leader:', error);
     return false;
@@ -284,7 +284,7 @@ export async function assignRole(
         ${expiresAt ? expiresAt.toISOString() : 'NULL'}
       ) as account_role_id
     `;
-    return result.rows[0]?.account_role_id;
+    return result[0]?.account_role_id;
   } catch (error) {
     console.error('Error assigning role:', error);
     throw error;
@@ -312,7 +312,7 @@ export async function removeRole(
         ${contextId ? contextId + '::uuid' : 'NULL'}
       ) as removed
     `;
-    return result.rows[0]?.removed === true;
+    return result[0]?.removed === true;
   } catch (error) {
     console.error('Error removing role:', error);
     throw error;
@@ -347,7 +347,7 @@ export async function createContext(
         ${description || null}
       ) as context_id
     `;
-    return result.rows[0]?.context_id;
+    return result[0]?.context_id;
   } catch (error) {
     console.error('Error creating context:', error);
     throw error;
@@ -365,7 +365,7 @@ export async function getMinistryMembers(ministryId: string): Promise<any[]> {
     const result = await sql`
       SELECT * FROM get_ministry_members(${ministryId}::uuid)
     `;
-    return result.rows;
+    return result;
   } catch (error) {
     console.error('Error getting ministry members:', error);
     return [];
@@ -387,7 +387,7 @@ export async function getAccountById(accountId: string): Promise<Account | null>
     const result = await sql`
       SELECT * FROM accounts WHERE id = ${accountId}::uuid
     `;
-    return result.rows[0] as Account || null;
+    return result[0] as Account || null;
   } catch (error) {
     console.error('Error getting account:', error);
     return null;
@@ -405,7 +405,7 @@ export async function getAccountByEmail(email: string): Promise<Account | null> 
     const result = await sql`
       SELECT * FROM accounts WHERE email = ${email}
     `;
-    return result.rows[0] as Account || null;
+    return result[0] as Account || null;
   } catch (error) {
     console.error('Error getting account by email:', error);
     return null;
@@ -423,7 +423,7 @@ export async function getAccountDashboard(accountId: string): Promise<any> {
     const result = await sql`
       SELECT get_account_dashboard(${accountId}::uuid) as dashboard
     `;
-    return result.rows[0]?.dashboard || null;
+    return result[0]?.dashboard || null;
   } catch (error) {
     console.error('Error getting account dashboard:', error);
     return null;
@@ -464,7 +464,7 @@ export async function checkOldStyleRole(
         SELECT 1 FROM users WHERE id = ${userId}::uuid AND role = ${requiredRole}
       ) as has_old_role
     `;
-    return result.rows[0]?.has_old_role === true;
+    return result[0]?.has_old_role === true;
   } catch (error) {
     return false;
   }
