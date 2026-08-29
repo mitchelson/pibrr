@@ -5,13 +5,9 @@ import { verifyAppleIdentityToken } from "@/lib/apple-auth"
 import { verifyFirebaseIdToken } from "@/lib/firebase-auth"
 import { verifyGoogleIdToken } from "@/lib/google-auth"
 import { resolveMobileAuthUser, type MobileAuthProfile } from "@/lib/mobile-auth-user"
+import { getMobileJwtSecret } from "@/lib/jwt-secret"
 
-const secret = new TextEncoder().encode(
-  process.env.AUTH_MOBILE_SECRET ??
-    process.env.AUTH_SECRET ??
-    process.env.NEXTAUTH_SECRET ??
-    "fallback-secret"
-)
+const secret = getMobileJwtSecret()
 
 function buildAppleName(fullName?: {
   givenName?: string | null
@@ -104,8 +100,8 @@ export async function POST(request: NextRequest) {
     }
 
     const token = await new SignJWT({
-      userId: resolved.userId,
-      role: user.role,
+      userId: String(resolved.userId),
+      role: String(user.role),
       ministerioIds,
     })
       .setProtectedHeader({ alg: "HS256" })

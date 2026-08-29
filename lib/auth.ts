@@ -1,11 +1,13 @@
 import NextAuth from "next-auth"
-import Google from "next-auth/providers/google"
-import { sql } from "@/lib/neon"
 import { cookies } from "next/headers"
+import { authConfig } from "@/lib/auth.config"
+import { sql } from "@/lib/neon"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  providers: [Google],
+  ...authConfig,
   callbacks: {
+    ...authConfig.callbacks,
+
     async signIn({ user, account }) {
       if (!account || account.provider !== "google") return false
       const { email, name, image } = user
@@ -15,19 +17,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       const authMode = cookieStore.get("auth_mode")?.value || "signup"
       cookieStore.delete("auth_mode")
 
-      // Verifica se já existe user com esse google_id
       const existing = await sql`
         SELECT id, role, ativo FROM users WHERE google_id = ${account.providerAccountId} LIMIT 1
       `
 
       if (existing.length > 0) {
-        if (!existing[0].ativo) return false // bloqueado
-        // Atualiza último login
+        if (!existing[0].ativo) return false
         await sql`UPDATE users SET ultimo_login_em = now(), foto_url = ${image}, nome = ${name} WHERE id = ${existing[0].id}`
         return true
       }
 
-      // Mesmo e-mail de conta existente (ex.: criada via Apple) — vincula Google
       const byEmail = await sql`
         SELECT id, role, ativo FROM users
         WHERE lower(trim(email)) = lower(trim(${email}))
@@ -48,7 +47,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         return true
       }
 
-      // Verifica se existe user pendente (migrado de responsáveis) com mesmo email ou nome
       const pendente = await sql`
         SELECT id FROM users
         WHERE google_id IS NULL
@@ -58,7 +56,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       `
 
       if (pendente.length > 0) {
-        // Vincula conta Google ao user existente
         await sql`
           UPDATE users SET google_id = ${account.providerAccountId}, email = ${email}, nome = ${name}, foto_url = ${image}, ultimo_login_em = now()
           WHERE id = ${pendente[0].id}
@@ -66,12 +63,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         return true
       }
 
-      // Modo login: não cria conta nova
       if (authMode === "login") {
         return "/login?error=no_account"
       }
 
-      // Novo user — verifica se é o primeiro (vira admin)
       const count = await sql`SELECT count(*)::int as total FROM users`
       const role = count[0].total === 0 ? "admin" : "visitor"
 
@@ -99,22 +94,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       if (token.userId) {
         const mRows = await sql`SELECT ministerio_id FROM ministerio_membros WHERE user_id = ${token.userId}`
-        token.ministerioIds = mRows.map((r: any) => r.ministerio_id)
+        token.ministerioIds = mRows.map((r: { ministerio_id: string }) => r.ministerio_id)
       }
       return token
     },
-
-    async session({ session, token }) {
-      if (token.userId) {
-        session.user.id = token.userId as string
-        session.user.role = token.role as string
-        session.user.ministerioIds = (token.ministerioIds as string[]) || []
-      }
-      return session
-    },
   },
-  pages: {
-    signIn: "/login",
-  },
-  session: { strategy: "jwt" },
 })

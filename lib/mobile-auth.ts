@@ -2,13 +2,9 @@ import { jwtVerify } from "jose"
 import { NextRequest } from "next/server"
 import { auth } from "@/lib/auth"
 import { sql } from "@/lib/neon"
+import { getMobileJwtSecret } from "@/lib/jwt-secret"
 
-const secret = new TextEncoder().encode(
-  process.env.AUTH_MOBILE_SECRET ??
-    process.env.AUTH_SECRET ??
-    process.env.NEXTAUTH_SECRET ??
-    "fallback-secret"
-)
+const secret = getMobileJwtSecret()
 
 export interface MobileSession {
   userId: string
@@ -23,24 +19,26 @@ export async function getSession(request: NextRequest): Promise<MobileSession | 
   // 1. Tenta Bearer token (app mobile)
   const authHeader = request.headers.get("Authorization")
   if (authHeader?.startsWith("Bearer ")) {
-    const token = authHeader.slice(7)
+    const token = authHeader.slice(7).trim()
+    if (!token) return null
+
+    let payload: { userId?: string; role?: string; ministerioIds?: string[]; sub?: string }
     try {
-      const { payload } = await jwtVerify(token, secret)
-      const userId = payload.userId as string
-      const role = payload.role as string
-      const ministerioIds = (payload.ministerioIds as string[]) ?? []
-
-      // Verifica se o user ainda está ativo (null = legado, trata como ativo)
-      const rows = await sql`
-        SELECT ativo FROM users WHERE id = ${userId}::uuid LIMIT 1
-      `
-      if (rows.length === 0) return null
-      if (rows[0].ativo === false) return null
-
-      return { userId, role, ministerioIds }
+      const verified = await jwtVerify(token, secret)
+      payload = verified.payload as typeof payload
     } catch {
       return null
     }
+
+    const userId = String(payload.userId ?? payload.sub ?? "")
+    const role = String(payload.role ?? "membro")
+    const ministerioIds = Array.isArray(payload.ministerioIds)
+      ? payload.ministerioIds.map(String)
+      : []
+
+    if (!userId) return null
+
+    return { userId, role, ministerioIds }
   }
 
   // 2. Fallback: sessão NextAuth (web)
