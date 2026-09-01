@@ -22,14 +22,18 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   // Membro comum só pode alterar status (não funcao)
   if (isOwner && session.role === "membro") {
+    if (status == null) {
+      return NextResponse.json({ error: "status obrigatório" }, { status: 400 })
+    }
     const rows = await sql`UPDATE escalas SET status = ${status} WHERE id = ${id} RETURNING *`
     return NextResponse.json(rows[0])
   }
 
+  // Neon rejeita `undefined` em parâmetros — usar null para campos omitidos
   const rows = await sql`
     UPDATE escalas SET
-      status = COALESCE(${status}, status),
-      funcao = COALESCE(${funcao}, funcao)
+      status = COALESCE(${status ?? null}, status),
+      funcao = COALESCE(${funcao ?? null}, funcao)
     WHERE id = ${id}
     RETURNING *
   `

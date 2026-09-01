@@ -19,12 +19,22 @@ export function EscalaActions({ id, status, ministerioId }: { id: string; status
   const update = async (newStatus: string) => {
     setLoading(newStatus)
     try {
-      await fetch(`/api/escalas/${id}`, {
+      const res = await fetch(`/api/escalas/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        toast({
+          title: err.error || "Não foi possível atualizar a escala",
+          variant: "destructive",
+        })
+        return
+      }
       router.refresh()
+    } catch {
+      toast({ title: "Erro de rede ao atualizar a escala", variant: "destructive" })
     } finally {
       setLoading(null)
     }

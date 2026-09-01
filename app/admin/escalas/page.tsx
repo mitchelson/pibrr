@@ -116,11 +116,19 @@ export default function EscalasAdminPage() {
   };
 
   const handleStatus = async (id: string, status: string) => {
-    await fetch(`/api/escalas/${id}`, {
+    const res = await fetch(`/api/escalas/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      toast({
+        title: err.error || "Não foi possível atualizar o status",
+        variant: "destructive",
+      });
+      return;
+    }
     toast({ title: `Status: ${status}` });
     mutate();
   };
