@@ -6,6 +6,21 @@ async function canEdit(userId: string, eventoId: string): Promise<boolean> {
   const user = await sql`SELECT role FROM users WHERE id = ${userId}`
   if (user[0]?.role === "admin") return true
 
+  try {
+    const adminRole = await sql`
+      SELECT 1
+      FROM account_roles ar
+      JOIN roles r ON r.id = ar.role_id
+      WHERE ar.account_id = ${userId}
+        AND r.name = 'admin'
+        AND (ar.is_active IS NULL OR ar.is_active = true)
+      LIMIT 1
+    `
+    if (adminRole.length > 0) return true
+  } catch {
+    // ignore if permissions tables unavailable
+  }
+
   const evento = await sql`SELECT repertorio_ministerio_id, repertorio_funcao FROM eventos WHERE id = ${eventoId}`
   const { repertorio_ministerio_id, repertorio_funcao } = evento[0] || {}
   if (!repertorio_ministerio_id) return false
