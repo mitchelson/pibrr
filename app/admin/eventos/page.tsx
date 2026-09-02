@@ -58,7 +58,18 @@ export default function EventosAdminPage() {
   const handleSave = async () => {
     const method = editing ? "PUT" : "POST"
     const url = editing ? `/api/eventos/${editing.id}` : "/api/eventos"
-    const payload = { ...form, modelo_id: form.modelo_id || null, repertorio_ministerio_id: form.repertorio_ministerio_id || null, repertorio_funcao: form.repertorio_funcao || null }
+    // Campos opcionais sempre como null (nunca undefined) — postgres.js na VPS rejeita undefined
+    const payload = {
+      titulo: form.titulo,
+      data: form.data,
+      horario: form.horario || null,
+      descricao: form.descricao || null,
+      tipo: form.tipo,
+      modelo_id: form.modelo_id || null,
+      observacoes: null,
+      repertorio_ministerio_id: form.repertorio_ministerio_id || null,
+      repertorio_funcao: form.repertorio_funcao || null,
+    }
     try {
       const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
       if (res.ok) {
@@ -196,9 +207,17 @@ export default function EventosAdminPage() {
                 <div><Label>Descrição</Label><Input value={form.descricao} onChange={e => setForm({ ...form, descricao: e.target.value })} /></div>
                 <div className="border-t pt-4 space-y-3">
                   <Label className="text-sm font-semibold">Repertório — Permissão de edição</Label>
-                  <Select value={form.repertorio_ministerio_id} onValueChange={v => setForm({ ...form, repertorio_ministerio_id: v, repertorio_funcao: "" })}>
+                  <Select
+                    value={form.repertorio_ministerio_id || "__none__"}
+                    onValueChange={v => setForm({
+                      ...form,
+                      repertorio_ministerio_id: v === "__none__" ? "" : v,
+                      repertorio_funcao: "",
+                    })}
+                  >
                     <SelectTrigger><SelectValue placeholder="Ministério responsável (opcional)" /></SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-[100]">
+                      <SelectItem value="__none__">Nenhum</SelectItem>
                       {ministerios?.map((m: any) => (
                         <SelectItem key={m.id} value={m.id}>
                           <span className="inline-flex items-center gap-2">
@@ -209,10 +228,14 @@ export default function EventosAdminPage() {
                       ))}
                     </SelectContent>
                   </Select>
-                  {form.repertorio_ministerio_id && repFuncoes?.length > 0 && (
-                    <Select value={form.repertorio_funcao} onValueChange={v => setForm({ ...form, repertorio_funcao: v })}>
+                  {form.repertorio_ministerio_id && Array.isArray(repFuncoes) && repFuncoes.length > 0 && (
+                    <Select
+                      value={form.repertorio_funcao || "__none__"}
+                      onValueChange={v => setForm({ ...form, repertorio_funcao: v === "__none__" ? "" : v })}
+                    >
                       <SelectTrigger><SelectValue placeholder="Função responsável (opcional)" /></SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="z-[100]">
+                        <SelectItem value="__none__">Qualquer função do ministério</SelectItem>
                         {repFuncoes.map((f: any) => <SelectItem key={f.id} value={f.nome}>{f.nome}</SelectItem>)}
                       </SelectContent>
                     </Select>
