@@ -3,12 +3,17 @@ import { auth } from "@/lib/auth"
 import { sql } from "@/lib/neon"
 import { PullToRefresh } from "@/components/pull-to-refresh"
 import { PushNotificationRegister } from "@/components/push-notification-register"
-import { EscalaCardV2 } from "./escala-card"
+import { EscalaRowV2 } from "./escala-row"
 import { InboxSection } from "./inbox-section"
 import { DsEmpty, DsHero, DsList, DsPage, DsRow, DsSection } from "@/components/app-v2/ds"
 
 export const dynamic = "force-dynamic"
 
+/**
+ * Hoje — home do membro.
+ * Objetivo: o que eu preciso decidir/fazer, e onde eu sirvo em seguida.
+ * Lista só resume; detalhe do culto é /culto/[id].
+ */
 export default async function MinhaAreaV2Page() {
   const session = await auth()
   if (!session) redirect("/login")
@@ -16,11 +21,10 @@ export default async function MinhaAreaV2Page() {
   const userId = session.user.id
 
   const minhas = await sql`
-    SELECT e.id, e.titulo, e.data, e.horario, e.observacoes,
-           true as is_escalado,
+    SELECT e.id, e.titulo, e.data, e.horario,
            es.id as escala_id, es.funcao as minha_funcao, es.status as meu_status,
-           es.observacao as minha_observacao, es.ministerio_id as meu_ministerio_id,
-           m.nome as ministerio, m.icone, m.cor
+           es.ministerio_id as meu_ministerio_id,
+           m.nome as ministerio, m.icone
     FROM eventos e
     INNER JOIN escalas es ON es.evento_id = e.id AND es.user_id = ${userId}
     INNER JOIN ministerios m ON m.id = es.ministerio_id
@@ -28,6 +32,21 @@ export default async function MinhaAreaV2Page() {
     ORDER BY e.data ASC
     LIMIT 20
   `
+
+  // Um card por culto (se o membro tem 2 ministérios no mesmo dia, prioriza pendente)
+  const porEvento = new Map<string, (typeof minhas)[0]>()
+  for (const row of minhas) {
+    const existing = porEvento.get(row.id as string)
+    if (!existing) {
+      porEvento.set(row.id as string, row)
+      continue
+    }
+    const rank = (s: string) => (s === "pendente" ? 0 : s === "confirmado" ? 1 : 2)
+    if (rank(row.meu_status as string) < rank(existing.meu_status as string)) {
+      porEvento.set(row.id as string, row)
+    }
+  }
+  const cultos = Array.from(porEvento.values())
 
   const programacao = await sql`
     SELECT e.id, e.titulo, e.data, e.horario, e.tipo
@@ -40,32 +59,8 @@ export default async function MinhaAreaV2Page() {
     LIMIT 8
   `
 
-  const eventoIds = minhas.map((e: { id: string }) => e.id)
-  const colegasPorEvento: Record<string, any[]> = {}
-  if (eventoIds.length > 0) {
-    const colegasRows = await sql`
-      SELECT e.evento_id, u.id as user_id, u.nome, u.foto_url, e.funcao, m.nome as ministerio
-      FROM escalas e
-      JOIN users u ON u.id = e.user_id
-      JOIN ministerios m ON m.id = e.ministerio_id
-      WHERE e.evento_id = ANY(${eventoIds})
-      ORDER BY m.nome, u.nome
-    `
-    for (const c of colegasRows) {
-      const eid = c.evento_id as string
-      if (!colegasPorEvento[eid]) colegasPorEvento[eid] = []
-      colegasPorEvento[eid].push({
-        user_id: c.user_id,
-        nome: c.nome,
-        foto_url: c.foto_url,
-        funcao: c.funcao,
-        ministerio: c.ministerio,
-      })
-    }
-  }
-
-  const proxima = minhas[0]
-  const resto = minhas.slice(1)
+  const proxima = cultos[0]
+  const resto = cultos.slice(1)
   const firstName = session.user.name?.split(" ")[0] || "membro"
 
   return (
@@ -74,42 +69,34 @@ export default async function MinhaAreaV2Page() {
         <DsHero
           kicker="PIB Roraima"
           title={`Olá, ${firstName}`}
-          subtitle="O que você precisa fazer neste culto — e o que vem depois."
+          subtitle="Confirme suas escalas e prepare o próximo culto."
         />
 
         <PushNotificationRegister />
         <InboxSection />
 
         <DsSection title="Sua próxima escala">
-          {minhas.length === 0 ? (
+          {cultos.length === 0 ? (
             <DsEmpty
               title="Nada escalado ainda"
               description="Quando você for escalado, a confirmação aparece aqui primeiro."
             />
           ) : (
-            <div className="space-y-3">
-              {proxima && (
-                <EscalaCardV2
-                  evento={{
-                    id: proxima.id,
-                    titulo: proxima.titulo,
-                    data: proxima.data,
-                    horario: proxima.horario,
-                    observacoes: proxima.observacoes,
-                    is_escalado: true,
-                    escala_id: proxima.escala_id,
-                    minha_funcao: proxima.minha_funcao,
-                    meu_status: proxima.meu_status,
-                    ministerio: proxima.ministerio,
-                    ministerio_id: proxima.meu_ministerio_id,
-                    icone: proxima.icone,
-                  }}
-                  colegas={colegasPorEvento[proxima.id] || []}
-                  userName={firstName}
-                  highlight
-                />
-              )}
-            </div>
+            <EscalaRowV2
+              evento={{
+                id: proxima.id as string,
+                titulo: proxima.titulo as string,
+                data: proxima.data as string,
+                horario: proxima.horario as string | undefined,
+                escala_id: proxima.escala_id as string,
+                minha_funcao: proxima.minha_funcao as string | undefined,
+                meu_status: proxima.meu_status as string | undefined,
+                ministerio: proxima.ministerio as string | undefined,
+                ministerio_id: proxima.meu_ministerio_id as string | undefined,
+                icone: proxima.icone as string | undefined,
+              }}
+              highlight
+            />
           )}
         </DsSection>
 
@@ -117,15 +104,13 @@ export default async function MinhaAreaV2Page() {
           <DsSection title="Depois">
             <div className="space-y-3">
               {resto.map((e: any) => (
-                <EscalaCardV2
+                <EscalaRowV2
                   key={e.id}
                   evento={{
                     id: e.id,
                     titulo: e.titulo,
                     data: e.data,
                     horario: e.horario,
-                    observacoes: e.observacoes,
-                    is_escalado: true,
                     escala_id: e.escala_id,
                     minha_funcao: e.minha_funcao,
                     meu_status: e.meu_status,
@@ -133,8 +118,6 @@ export default async function MinhaAreaV2Page() {
                     ministerio_id: e.meu_ministerio_id,
                     icone: e.icone,
                   }}
-                  colegas={colegasPorEvento[e.id] || []}
-                  userName={firstName}
                 />
               ))}
             </div>
@@ -154,7 +137,7 @@ export default async function MinhaAreaV2Page() {
                     day: "2-digit",
                     month: "short",
                     timeZone: "UTC",
-                  })}${e.horario ? ` · ${e.horario}` : ""}`}
+                  })}${e.horario ? ` · ${String(e.horario).slice(0, 5)}` : ""}`}
                   trailing={<span className="text-xs">{e.tipo || ""}</span>}
                 />
               ))}

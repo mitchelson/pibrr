@@ -28,6 +28,24 @@ Arquivo: `styles/app-v2-ds.css`, escopo `.pib-ds`.
 
 Sempre envolver rotas v2 com `DsRoot` (via shells).
 
+## Fluxos do membro (jobs)
+
+### Hoje (`/minha-area-v2`)
+- **Objetivo:** ver o que precisa de resposta e qual é o próximo culto.
+- **Como:** lista curta (resumo). Inbox no topo.
+- **Por quê:** não misturar decisão/equipe/repertório na home.
+
+### Culto (`/minha-area-v2/culto/[eventoId]`)
+- **Objetivo:** preparar-se para servir naquele dia.
+- **Ordem:** (1) Sua parte — confirmar/recusar/trocar (2) Com você — mesmo ministério (3) Outros ministérios recolhidos (4) Repertório só se existir ou puder editar.
+- **Por quê página e não sheet:** espaço, refresh após confirmar, URL clara. O sheet antigo empilhava repertório vazio + toda a igreja.
+
+### Comunidade (`/feed`)
+- **Objetivo:** vida da igreja além da escala.
+
+### Eu (`/minha-area-v2/perfil`)
+- **Objetivo:** identidade e “quero servir” (form-ministerios). Sem duplicar pedido de ministério na home.
+
 ## IA do membro
 
 | Aba | Job |

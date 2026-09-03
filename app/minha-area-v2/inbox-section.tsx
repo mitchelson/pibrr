@@ -2,6 +2,7 @@
 
 import useSWR from "swr"
 import { useSession } from "next-auth/react"
+import Link from "next/link"
 import { ArrowLeftRight, Check, ClipboardList, Loader2, MessageSquare, Users, X } from "lucide-react"
 import { useState } from "react"
 import { toast } from "@/components/ui/use-toast"
@@ -53,9 +54,22 @@ export function InboxSection() {
                 Confirmar escala
               </p>
               <p className="pib-mute mt-1 text-sm">
-                {escalas.length} pendente{escalas.length !== 1 ? "s" : ""}. Abra a escala abaixo e
-                confirme ou recuse.
+                {escalas.length} pendente{escalas.length !== 1 ? "s" : ""}. Abra o culto e confirme se
+                você vai servir.
               </p>
+              <ul className="mt-3 space-y-1.5">
+                {escalas.slice(0, 4).map((e: any) => (
+                  <li key={e.id}>
+                    <Link
+                      href={`/minha-area-v2/culto/${e.evento_id}`}
+                      className="text-sm font-medium underline-offset-2 hover:underline"
+                    >
+                      {e.evento_titulo || e.titulo || "Ver culto"}
+                      {e.ministerio ? ` · ${e.ministerio}` : ""}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
             <DsStatus tone="pending">Pendente</DsStatus>
           </div>

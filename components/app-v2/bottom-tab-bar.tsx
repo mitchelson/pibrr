@@ -16,6 +16,7 @@ export function BottomTabBarV2() {
 
   const hojeActive =
     pathname === paths.escalas ||
+    pathname.startsWith("/minha-area-v2/culto") ||
     (pathname.startsWith("/minha-area-v2") && !pathname.startsWith("/minha-area-v2/perfil"))
   const feedActive = pathname.startsWith("/feed")
   const adminActive = pathname.startsWith("/admin-v2") || pathname.startsWith("/admin")

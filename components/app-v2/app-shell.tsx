@@ -56,6 +56,7 @@ export function AppShellV2({ children, showTabs = true }: AppShellV2Props) {
             const active =
               tab.href === paths.escalas
                 ? pathname === paths.escalas ||
+                  pathname.startsWith("/minha-area-v2/culto") ||
                   (pathname.startsWith("/minha-area-v2") && !pathname.startsWith(paths.perfil))
                 : pathname === tab.href || pathname.startsWith(`${tab.href}/`)
             const Icon = tab.icon

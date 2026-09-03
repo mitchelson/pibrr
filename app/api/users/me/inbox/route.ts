@@ -17,7 +17,8 @@ export async function GET(request: NextRequest) {
   const showWhatsapp = canAccessAcolhimento(session.role, session.ministerioIds, acolhimentoId)
 
   const escalasPendentes = await sql`
-    SELECT es.id, e.titulo, e.data, e.horario, es.funcao, m.nome as ministerio, m.icone
+    SELECT es.id, es.evento_id, e.titulo as evento_titulo, e.data, e.horario, es.funcao,
+           m.nome as ministerio, m.icone
     FROM escalas es
     JOIN eventos e ON e.id = es.evento_id
     JOIN ministerios m ON m.id = es.ministerio_id
