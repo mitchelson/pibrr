@@ -6,7 +6,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Sparkles, ChevronDown, ChevronUp, Search } from "lucide-react"
+import { ChevronDown, ChevronUp, Search } from "lucide-react"
+import { AdminScreen } from "@/components/app-v2/admin-screen"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
@@ -38,25 +39,23 @@ export default function AdminDonsEspirituaisPage() {
     .slice(0, 5)
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center gap-3">
-        <Sparkles className="h-6 w-6 text-muted-foreground" />
-        <div>
-          <h1 className="text-2xl font-bold">Dons Espirituais</h1>
-          <p className="text-muted-foreground text-sm">{respostas?.length ?? 0} resposta{respostas?.length !== 1 ? "s" : ""}</p>
-        </div>
-      </div>
-
+    <AdminScreen
+      kicker="Descobrir"
+      title="Dons"
+      subtitle={`${respostas?.length ?? 0} resposta${(respostas?.length ?? 0) !== 1 ? "s" : ""} do teste`}
+    >
       {/* Top dons da igreja */}
       {topGifts.length > 0 && (
         <div>
-          <h2 className="text-base font-semibold mb-3">Dons mais presentes na igreja</h2>
+          <h2 className="pib-section-title mb-3">Mais presentes na igreja</h2>
           <div className="flex flex-wrap gap-2">
             {topGifts.map(([gift, count], i) => (
-              <div key={gift} className="flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 px-3 py-2">
-                <span className="text-sm font-bold text-green-700">{i + 1}°</span>
-                <span className="text-sm font-medium text-green-800">{gift}</span>
-                <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">{count}</Badge>
+              <div key={gift} className="pib-panel flex items-center gap-2 px-3 py-2">
+                <span className="text-sm font-bold tabular-nums">{i + 1}°</span>
+                <span className="text-sm font-medium">{gift}</span>
+                <Badge variant="secondary" className="text-xs">
+                  {count}
+                </Badge>
               </div>
             ))}
           </div>
@@ -138,6 +137,6 @@ export default function AdminDonsEspirituaisPage() {
           </div>
         )}
       </div>
-    </div>
+    </AdminScreen>
   )
 }

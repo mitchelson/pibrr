@@ -41,6 +41,7 @@ import {
   Loader2,
 } from "lucide-react"
 import type { MensagemCategoria, MensagemModelo } from "@/types/supabase"
+import { AdminScreen } from "@/components/app-v2/admin-screen"
 
 export default function MensagensPage() {
   const router = useRouter()
@@ -248,29 +249,26 @@ export default function MensagensPage() {
   }
 
   return (
-    <div>
-      <div className="mb-6 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => router.push("/admin-v2")}>
-            <ArrowLeft className="h-5 w-5" />
-            <span className="sr-only">Voltar</span>
-          </Button>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold text-foreground">Gerenciar Mensagens</h1>
-            <p className="text-sm text-muted-foreground">
-              Configure categorias e modelos de mensagens
-            </p>
-          </div>
-        </div>
-
+    <AdminScreen
+      kicker="Cuidar"
+      title="Mensagens"
+      subtitle="Modelos de WhatsApp para o acompanhamento"
+      action={
+        <Button variant="ghost" size="icon" onClick={() => router.push("/admin-v2/visitantes")}>
+          <ArrowLeft className="h-5 w-5" />
+          <span className="sr-only">Voltar</span>
+        </Button>
+      }
+    >
         {/* Info about placeholders */}
-        <Card className="mb-6 border-primary/20 bg-primary/5">
+        <Card className="mb-2 border-[var(--pib-line)]">
           <CardContent className="p-4">
-            <p className="text-sm font-medium text-foreground mb-2">Variaveis disponiveis nos modelos:</p>
+            <p className="mb-2 text-sm font-medium">Variáveis nos modelos:</p>
             <div className="flex flex-wrap gap-2">
               {["[Nome]", "[Seu Nome]", "[Nome da Igreja]", "[horario]", "[data]", "[bem-vindo]", "[abracado]", "[convidado]"].map((v) => (
                 <span
                   key={v}
-                  className="rounded-md bg-background px-2 py-1 text-xs font-mono text-muted-foreground border"
+                  className="rounded-[var(--pib-radius-xs)] border border-[var(--pib-line)] bg-[var(--pib-paper)] px-2 py-1 font-mono text-xs text-[var(--pib-mute)]"
                 >
                   {v}
                 </span>
@@ -569,6 +567,6 @@ export default function MensagensPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </AdminScreen>
   )
 }

@@ -370,20 +370,30 @@ export default function FeedPage() {
 
   return (
     <MemberShell showTabs={!!session}>
-      <div className="border-b bg-background sticky top-0 z-30 md:static">
-        <div className="mx-auto flex h-12 max-w-2xl items-center justify-between px-4 md:h-auto md:py-4">
-          <h1 className="font-semibold md:text-xl">Feed</h1>
-          {session ? (
-            version === "v1" ? <NotificationsButton /> : <span />
-          ) : (
-            <Link href="/login" className="text-sm font-semibold text-primary">
-              Entrar
-            </Link>
-          )}
+      {version === "v2" ? (
+        <div className="mx-auto max-w-2xl px-4 pt-6">
+          <header className="mb-6">
+            <p className="pib-kicker">PIB Roraima</p>
+            <h1 className="pib-title mt-1 text-3xl">Comunidade</h1>
+            <p className="pib-mute mt-1 text-sm">Vida da igreja além da escala</p>
+          </header>
         </div>
-      </div>
+      ) : (
+        <div className="sticky top-0 z-30 border-b bg-background md:static">
+          <div className="mx-auto flex h-12 max-w-2xl items-center justify-between px-4 md:h-auto md:py-4">
+            <h1 className="font-semibold md:text-xl">Feed</h1>
+            {session ? (
+              <NotificationsButton />
+            ) : (
+              <Link href="/login" className="text-sm font-semibold text-primary">
+                Entrar
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
 
-      <div className="mx-auto max-w-2xl space-y-4 px-4 py-6">
+      <div className="mx-auto max-w-2xl space-y-4 px-4 py-6 pt-2">
         {canPost && <NewPostForm mutate={mutate} />}
 
         {data?.posts?.map((post: any) => (

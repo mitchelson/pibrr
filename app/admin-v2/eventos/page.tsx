@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Plus, Pencil, Trash2, Settings2, X, BookmarkPlus } from "lucide-react"
 import { toast } from "@/components/ui/use-toast"
 import { MinistryIcon } from "@/components/ministry-icon"
+import { AdminScreen, AdminPrimaryAction } from "@/components/app-v2/admin-screen"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 const tipos = ["Culto", "Conferência", "Especial", "Reunião", "Outro"]
@@ -164,22 +165,32 @@ export default function EventosAdminPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <AdminScreen
+      kicker="Igreja"
+      title="Calendário"
+      subtitle="Cultos, modelos e vagas de escala"
+      action={
+        <AdminPrimaryAction
+          onClick={() => {
+            resetForm()
+            setOpen(true)
+          }}
+        >
+          <Plus className="h-4 w-4" /> Novo culto
+        </AdminPrimaryAction>
+      }
+    >
       <Tabs defaultValue="eventos">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Eventos</h1>
-          <TabsList>
-            <TabsTrigger value="eventos">Eventos</TabsTrigger>
-            <TabsTrigger value="modelos">Modelos</TabsTrigger>
-          </TabsList>
-        </div>
+        <TabsList>
+          <TabsTrigger value="eventos">Cultos</TabsTrigger>
+          <TabsTrigger value="modelos">Modelos</TabsTrigger>
+        </TabsList>
 
         {/* === EVENTOS TAB === */}
         <TabsContent value="eventos" className="space-y-4 mt-4">
-          <Button className="w-full sm:w-auto" onClick={() => { resetForm(); setOpen(true) }}><Plus className="h-4 w-4 mr-1" />Novo Evento</Button>
           <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm() }}>
             <DialogContent className="max-h-[90vh] overflow-y-auto">
-              <DialogHeader><DialogTitle>{editing ? "Editar" : "Novo"} Evento</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>{editing ? "Editar" : "Novo"} culto</DialogTitle></DialogHeader>
               <div className="space-y-4">
                 {!editing && modelos?.length > 0 && (
                   <div>
@@ -418,7 +429,7 @@ export default function EventosAdminPage() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </AdminScreen>
   )
 }
 

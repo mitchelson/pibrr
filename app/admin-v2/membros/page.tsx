@@ -20,6 +20,7 @@ import {
   type RoleBadgeItem,
 } from "@/components/role-badges"
 import { cn } from "@/lib/utils"
+import { AdminScreen, AdminPrimaryAction } from "@/components/app-v2/admin-screen"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -234,14 +235,15 @@ export default function MembrosAdminPage() {
     : []
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-xl font-bold tracking-tight">Membros</h1>
-        <p className="text-sm text-muted-foreground">
-          {filtered ? `${filtered.length} pessoa${filtered.length !== 1 ? "s" : ""}` : "Carregando…"}
-        </p>
-      </div>
-
+    <AdminScreen
+      kicker="Igreja"
+      title="Pessoas"
+      subtitle={
+        filtered
+          ? `${filtered.length} pessoa${filtered.length !== 1 ? "s" : ""} — papéis e ministérios`
+          : "Carregando…"
+      }
+    >
       <div className="flex flex-col gap-2 sm:flex-row">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -626,6 +628,6 @@ export default function MembrosAdminPage() {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </AdminScreen>
   )
 }

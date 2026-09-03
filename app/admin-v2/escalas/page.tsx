@@ -150,7 +150,7 @@ export default function EscalasAdminPage() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="pib-kicker">Igreja</p>
-          <h1 className="pib-display text-3xl">Cultos</h1>
+          <h1 className="pib-title text-3xl">Cultos</h1>
           <p className="pib-mute mt-1 text-sm">Escolha o culto e preencha as escalas de todos os ministérios.</p>
         </div>
         {eventoId && (

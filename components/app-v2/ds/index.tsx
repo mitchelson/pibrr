@@ -52,7 +52,7 @@ export function DsHero({
     <header className="pib-rise flex items-end justify-between gap-4">
       <div className="min-w-0 space-y-2">
         {kicker ? <p className="pib-kicker">{kicker}</p> : null}
-        <h1 className="pib-display text-3xl sm:text-4xl">{title}</h1>
+        <h1 className="pib-title text-3xl sm:text-[2.125rem]">{title}</h1>
         {subtitle ? <p className="pib-mute max-w-prose text-sm leading-relaxed">{subtitle}</p> : null}
       </div>
       {action ? <div className="shrink-0">{action}</div> : null}

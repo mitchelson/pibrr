@@ -18,6 +18,7 @@ import { toast } from "@/components/ui/use-toast"
 import { SearchableSelect } from "@/components/searchable-select"
 import { UserProfileDialog } from "@/components/user-profile-dialog"
 import { MinistryIcon } from "@/components/ministry-icon"
+import { AdminScreen } from "@/components/app-v2/admin-screen"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
@@ -163,25 +164,42 @@ export default function MinisterioDetailPage() {
     return map[s] || ""
   }
 
-  if (!ministerio) return <div className="p-8 text-center text-muted-foreground">Carregando...</div>
+  if (!ministerio) {
+    return (
+      <AdminScreen kicker="Ministério" title="Carregando…">
+        <p className="pib-mute text-sm">Buscando dados do ministério…</p>
+      </AdminScreen>
+    )
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <MinistryIcon name={ministerio.icone} ministryName={ministerio.nome} color={ministerio.cor} size={36} />
-        <div>
-          <h1 className="text-2xl font-bold">{ministerio.nome}</h1>
-          {ministerio.descricao && <p className="text-muted-foreground text-sm">{ministerio.descricao}</p>}
-        </div>
-        <div className="ml-auto h-6 w-6 rounded-full border" style={{ backgroundColor: ministerio.cor }} />
-      </div>
-
-      <Tabs defaultValue="membros">
-        <TabsList className="flex-wrap h-auto">
-          <TabsTrigger value="membros"><Users className="h-4 w-4 mr-1" />Membros</TabsTrigger>
-          <TabsTrigger value="funcoes"><Tag className="h-4 w-4 mr-1" />Funções</TabsTrigger>
-          <TabsTrigger value="escala"><CalendarDays className="h-4 w-4 mr-1" />Escala</TabsTrigger>
+    <AdminScreen
+      kicker="Ministério"
+      title={ministerio.nome}
+      subtitle={ministerio.descricao || "Pedidos, time e escala do culto"}
+      action={
+        <MinistryIcon
+          name={ministerio.icone}
+          ministryName={ministerio.nome}
+          color={ministerio.cor}
+          size={36}
+        />
+      }
+    >
+      <Tabs defaultValue="escala">
+        <TabsList className="flex h-auto flex-wrap">
+          <TabsTrigger value="escala">
+            <CalendarDays className="mr-1 h-4 w-4" />
+            Escala
+          </TabsTrigger>
+          <TabsTrigger value="membros">
+            <Users className="mr-1 h-4 w-4" />
+            Time
+          </TabsTrigger>
+          <TabsTrigger value="funcoes">
+            <Tag className="mr-1 h-4 w-4" />
+            Funções
+          </TabsTrigger>
         </TabsList>
 
         {/* Membros */}
@@ -484,6 +502,6 @@ export default function MinisterioDetailPage() {
           </DialogContent>
         </Dialog>
       )}
-    </div>
+    </AdminScreen>
   )
 }

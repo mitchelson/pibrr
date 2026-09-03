@@ -5,9 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
-import { ClipboardList, Lock } from "lucide-react"
+import { Lock } from "lucide-react"
 import { toast } from "@/components/ui/use-toast"
 import { MinistryIcon } from "@/components/ministry-icon"
+import { AdminScreen } from "@/components/app-v2/admin-screen"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
@@ -35,27 +36,21 @@ export default function AdminFormMinisteriosPage() {
   const ativos = ministerios?.filter((m: any) => m.ativo) ?? []
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center gap-3">
-        <ClipboardList className="h-6 w-6 text-muted-foreground" />
-        <div>
-          <h1 className="text-2xl font-bold">Interesses em ministérios</h1>
-          <p className="text-muted-foreground text-sm">
-            {respostas?.length ?? 0} resposta{respostas?.length !== 1 ? "s" : ""}
-          </p>
-        </div>
-      </div>
-
+    <AdminScreen
+      kicker="Descobrir"
+      title="Quem quer servir"
+      subtitle={`${respostas?.length ?? 0} resposta${(respostas?.length ?? 0) !== 1 ? "s" : ""} do formulário`}
+    >
       {/* Configurar obrigatórios */}
       <div>
-        <div className="flex items-center gap-2 mb-3">
+        <div className="mb-3 flex items-center gap-2">
           <Lock className="h-4 w-4 text-muted-foreground" />
-          <h2 className="text-base font-semibold">Ministérios obrigatórios</h2>
+          <h2 className="pib-section-title">Ministérios obrigatórios</h2>
         </div>
-        <p className="text-sm text-muted-foreground mb-4">
-          Ministérios marcados como obrigatórios ficam pré-selecionados e não podem ser desmarcados no formulário.
+        <p className="pib-mute mb-4 text-sm">
+          Marcados ficam pré-selecionados e não podem ser desmarcados no formulário.
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {ativos.map((m: any) => (
             <div
               key={m.id}
@@ -149,6 +144,6 @@ export default function AdminFormMinisteriosPage() {
           </div>
         )}
       </div>
-    </div>
+    </AdminScreen>
   )
 }

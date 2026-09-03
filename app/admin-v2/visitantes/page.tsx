@@ -86,7 +86,7 @@ export default function VisitantesV2Page() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="pib-kicker">Cuidar</p>
-          <h1 className="pib-display text-3xl">Pessoas novas</h1>
+          <h1 className="pib-title text-3xl">Pessoas novas</h1>
           <p className="pib-mute mt-1 text-sm">Cadastro e follow-up de quem visitou a igreja</p>
         </div>
         <div className="flex gap-2">
