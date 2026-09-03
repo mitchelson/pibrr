@@ -3,7 +3,8 @@ import { auth } from "@/lib/auth"
 import { Calendar, ClipboardList, MessageSquare, Users, ChevronRight, Music } from "lucide-react"
 import Link from "next/link"
 import { MinistryIcon } from "@/components/ministry-icon"
-import { canAccessAcolhimento, getAcolhimentoMinisterioId } from "@/lib/acolhimento"
+import { canAccessAcolhimento } from "@/lib/acolhimento"
+import { getAcolhimentoMinisterioId } from "@/lib/acolhimento-server"
 
 export const dynamic = "force-dynamic"
 

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/mobile-auth"
 import { sql } from "@/lib/neon"
-import { canAccessAcolhimento, getAcolhimentoMinisterioId } from "@/lib/acolhimento"
+import { canAccessAcolhimento } from "@/lib/acolhimento"
+import { getAcolhimentoMinisterioId } from "@/lib/acolhimento-server"
 
 export const dynamic = "force-dynamic"
 
