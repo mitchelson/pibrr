@@ -4,6 +4,7 @@ import {
   ClipboardList,
   Home,
   MessageSquare,
+  Music,
   Settings,
   Sparkles,
   UserCog,
@@ -58,22 +59,22 @@ export const LEGAL_NAV: NavLink[] = [
 
 /** Member app tabs — hrefs follow NEXT_PUBLIC_APP_UI_VERSION when set */
 export const APP_TABS: Array<NavLink & { id: string; adminOnly?: boolean }> = [
-  { id: "feed", href: "/feed", label: "Feed" },
   {
     id: "escalas",
     href: process.env.NEXT_PUBLIC_APP_UI_VERSION === "v2" ? "/minha-area-v2" : "/minha-area",
-    label: "Escalas",
+    label: process.env.NEXT_PUBLIC_APP_UI_VERSION === "v2" ? "Hoje" : "Escalas",
   },
+  { id: "feed", href: "/feed", label: process.env.NEXT_PUBLIC_APP_UI_VERSION === "v2" ? "Comunidade" : "Feed" },
   {
     id: "admin",
     href: process.env.NEXT_PUBLIC_APP_UI_VERSION === "v2" ? "/admin-v2" : "/admin",
-    label: "Admin",
+    label: process.env.NEXT_PUBLIC_APP_UI_VERSION === "v2" ? "Gestão" : "Admin",
     adminOnly: true,
   },
   {
     id: "perfil",
     href: process.env.NEXT_PUBLIC_APP_UI_VERSION === "v2" ? "/minha-area-v2/perfil" : "/minha-area/perfil",
-    label: "Perfil",
+    label: process.env.NEXT_PUBLIC_APP_UI_VERSION === "v2" ? "Eu" : "Perfil",
   },
 ]
 
@@ -185,49 +186,48 @@ export type AdminNavGroupV2 = {
   items: AdminNavItemV2[]
 }
 
-/** Admin v2 sidebar — acolhimento is filtered by ministry config, not by every líder */
+/**
+ * Admin v2 — organized by job, not by legacy CRUD folders.
+ * Fila = work queue · Ministério = leader workspace · Cultos = pastor gathering tool
+ * Cuidar = visitors · Pessoas · Descobrir (dons/interesses) · Ajustes
+ */
 export const ADMIN_NAV_GROUPS_V2: AdminNavGroupV2[] = [
   {
-    id: "inicio",
-    label: "Início",
-    items: [{ href: "/admin-v2", title: "Dashboard", icon: Home }],
+    id: "trabalho",
+    label: "Trabalho",
+    items: [{ href: "/admin-v2", title: "Fila", icon: Home }],
   },
   {
-    id: "acolhimento",
-    label: "Acolhimento",
+    id: "cuidar",
+    label: "Cuidar",
     items: [
-      { href: "/admin-v2/visitantes", title: "Visitantes", icon: Users, acolhimento: true },
+      { href: "/admin-v2/visitantes", title: "Pessoas novas", icon: Users, acolhimento: true },
       { href: "/admin-v2/mensagens", title: "Mensagens", icon: MessageSquare, acolhimento: true },
     ],
   },
   {
-    id: "pessoas",
-    label: "Pessoas",
+    id: "igreja",
+    label: "Igreja",
     items: [
-      { href: "/admin-v2/membros", title: "Membros", icon: UserCog, roles: ["admin"] },
+      { href: "/admin-v2/membros", title: "Pessoas", icon: UserCog, roles: ["admin"] },
+      { href: "/admin-v2/escalas", title: "Cultos", icon: ClipboardList, roles: ["admin"] },
+      { href: "/admin-v2/eventos", title: "Calendário", icon: Calendar, roles: ["admin"] },
+      { href: "/admin-v2/ministerios", title: "Ministérios", icon: Music, roles: ["admin"] },
     ],
   },
   {
-    id: "programacao",
-    label: "Programação",
+    id: "descobrir",
+    label: "Descobrir",
     items: [
-      { href: "/admin-v2/eventos", title: "Eventos", icon: Calendar, roles: ["admin"] },
-      { href: "/admin-v2/escalas", title: "Escalas", icon: ClipboardList, roles: ["admin"] },
+      { href: "/admin-v2/dons-espirituais", title: "Dons", icon: Sparkles, roles: ["admin"] },
+      { href: "/admin-v2/interesses", title: "Quem quer servir", icon: BookOpen, roles: ["admin"] },
     ],
   },
   {
-    id: "formacao",
-    label: "Formação",
+    id: "ajustes",
+    label: "Ajustes",
     items: [
-      { href: "/admin-v2/dons-espirituais", title: "Dons Espirituais", icon: Sparkles, roles: ["admin"] },
-      { href: "/admin-v2/interesses", title: "Interesses", icon: BookOpen, roles: ["admin"] },
-    ],
-  },
-  {
-    id: "sistema",
-    label: "Sistema",
-    items: [
-      { href: "/admin-v2/configuracoes", title: "Configurações", icon: Settings, roles: ["admin"] },
+      { href: "/admin-v2/configuracoes", title: "Configuração", icon: Settings, roles: ["admin"] },
     ],
   },
 ]

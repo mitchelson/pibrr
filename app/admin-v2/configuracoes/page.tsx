@@ -4,12 +4,11 @@ import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import useSWR from "swr"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/use-toast"
-import { Settings } from "lucide-react"
 import { MinistryIcon } from "@/components/ministry-icon"
+import { DsHero, DsPage, DsPanel, DsSection } from "@/components/app-v2/ds"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -52,20 +51,18 @@ export default function ConfiguracoesV2Page() {
   const ativos = ministerios?.filter((m: any) => m.ativo) ?? []
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Configurações</h1>
+    <DsPage wide>
+      <DsHero
+        kicker="Ajustes"
+        title="Configuração"
+        subtitle="Quem publica no feed e quem cuida de pessoas novas."
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5" />
-            Feed de postagens
-          </CardTitle>
-          <CardDescription>
-            Ministério que pode criar postagens no feed. Membros desse ministério (e administradores) publicam em /feed.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <DsSection title="Feed">
+      <DsPanel className="p-5 space-y-4">
+          <p className="pib-mute text-sm">
+            Ministério que pode criar postagens. Membros desse ministério (e administradores) publicam em Comunidade.
+          </p>
           <Select value={feedMinisterioId} onValueChange={setFeedMinisterioId}>
             <SelectTrigger className="w-full max-w-sm">
               <SelectValue placeholder="Selecione um ministério" />
@@ -87,20 +84,14 @@ export default function ConfiguracoesV2Page() {
           >
             {saving === "feed" ? "Salvando..." : "Salvar"}
           </Button>
-        </CardContent>
-      </Card>
+      </DsPanel>
+      </DsSection>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5" />
-            Acolhimento
-          </CardTitle>
-          <CardDescription>
-            Ministério que vê Visitantes e Mensagens no painel novo. Administradores sempre veem.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <DsSection title="Cuidar">
+      <DsPanel className="p-5 space-y-4">
+          <p className="pib-mute text-sm">
+            Ministério que vê Pessoas novas e Mensagens. Administradores sempre veem.
+          </p>
           <Select value={acolhimentoMinisterioId} onValueChange={setAcolhimentoMinisterioId}>
             <SelectTrigger className="w-full max-w-sm">
               <SelectValue placeholder="Selecione um ministério" />
@@ -138,8 +129,8 @@ export default function ConfiguracoesV2Page() {
               </Button>
             )}
           </div>
-        </CardContent>
-      </Card>
-    </div>
+      </DsPanel>
+      </DsSection>
+    </DsPage>
   )
 }

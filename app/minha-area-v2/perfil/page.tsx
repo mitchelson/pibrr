@@ -15,6 +15,7 @@ import { MinistryIcon } from "@/components/ministry-icon"
 import { RoleBadges } from "@/components/role-badges"
 import { APP_PATHS } from "@/lib/app-ui"
 import { useAppUi } from "@/hooks/use-app-ui"
+import { DsBtn, DsCount, DsHero, DsPage, DsPanel, DsSection } from "@/components/app-v2/ds"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -68,23 +69,34 @@ export default function PerfilV2Page() {
     setSaving(false)
   }
 
-  if (!profile) return <div className="p-6 text-center text-muted-foreground">Carregando…</div>
+  if (!profile) {
+    return (
+      <DsPage>
+        <p className="pib-mute text-center">Carregando…</p>
+      </DsPage>
+    )
+  }
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold tracking-tight">Perfil</h1>
-        {!editing ? (
-          <Button variant="ghost" size="sm" onClick={() => { setEditing(true); setForm(profile) }}>
-            <Pencil className="h-4 w-4" />
-          </Button>
-        ) : (
-          <Button variant="ghost" size="sm" onClick={() => { setEditing(false); setForm(null) }}>
-            <X className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
+    <DsPage>
+      <DsHero
+        kicker="Sua conta"
+        title="Eu"
+        subtitle="Quem você é na igreja — e como quer servir."
+        action={
+          !editing ? (
+            <DsBtn variant="ghost" size="icon" onClick={() => { setEditing(true); setForm(profile) }}>
+              <Pencil className="h-4 w-4" />
+            </DsBtn>
+          ) : (
+            <DsBtn variant="ghost" size="icon" onClick={() => { setEditing(false); setForm(null) }}>
+              <X className="h-4 w-4" />
+            </DsBtn>
+          )
+        }
+      />
 
+      <DsPanel className="p-5">
       <div className="flex items-center gap-4">
         <div className="relative">
           <Avatar className="h-20 w-20">
@@ -94,7 +106,7 @@ export default function PerfilV2Page() {
           {editing && (
             <button
               onClick={() => fileRef.current?.click()}
-              className="absolute bottom-0 right-0 rounded-full bg-foreground p-1.5 text-background"
+              className="absolute bottom-0 right-0 rounded-full bg-[var(--pib-ink)] p-1.5 text-white"
               disabled={uploading}
             >
               {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Camera className="h-3 w-3" />}
@@ -104,19 +116,20 @@ export default function PerfilV2Page() {
         </div>
         <div className="flex gap-6 text-center">
           <div>
-            <p className="text-lg font-bold">{profile.ministerios?.length || 0}</p>
-            <p className="text-xs text-muted-foreground">Ministérios</p>
+            <DsCount>{profile.ministerios?.length || 0}</DsCount>
+            <p className="pib-mute mt-1 text-xs">Ministérios</p>
           </div>
           <div>
-            <p className="text-lg font-bold">{donsTop.length}</p>
-            <p className="text-xs text-muted-foreground">Dons</p>
+            <DsCount>{donsTop.length}</DsCount>
+            <p className="pib-mute mt-1 text-xs">Dons</p>
           </div>
           <div>
-            <p className="text-lg font-bold">{profile.proximas_escalas?.length || 0}</p>
-            <p className="text-xs text-muted-foreground">Escalas</p>
+            <DsCount>{profile.proximas_escalas?.length || 0}</DsCount>
+            <p className="pib-mute mt-1 text-xs">Escalas</p>
           </div>
         </div>
       </div>
+      </DsPanel>
 
       {editing ? (
         <div className="space-y-3">
@@ -232,7 +245,7 @@ export default function PerfilV2Page() {
       <Button variant="outline" className="w-full" onClick={() => signOut({ callbackUrl: "/" })}>
         Sair da conta
       </Button>
-    </div>
+    </DsPage>
   )
 }
 

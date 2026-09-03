@@ -2,6 +2,7 @@ import type React from "react";
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Sora } from "next/font/google";
 import "./globals.css";
+import "@/styles/app-v2-ds.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import AuthSessionProvider from "@/components/session-provider";

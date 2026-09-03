@@ -4,9 +4,8 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { useSession, signOut } from "next-auth/react"
-import { LogOut, Newspaper, ClipboardList, Shield } from "lucide-react"
+import { LogOut, Sun, UsersRound, Briefcase } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
 import { isAdminRole } from "@/lib/nav-config"
 import { CHURCH_INFO } from "@/lib/constants"
 import { cn } from "@/lib/utils"
@@ -16,18 +15,11 @@ import { BottomTabBarV2 } from "@/components/app-v2/bottom-tab-bar"
 import { VersionBanner } from "@/components/app-v2/version-banner"
 import { UiCookieSync } from "@/components/app-v2/ui-cookie-sync"
 import { useAppUi } from "@/hooks/use-app-ui"
+import { DsRoot } from "@/components/app-v2/ds"
 
 type AppShellV2Props = {
   children: React.ReactNode
   showTabs?: boolean
-}
-
-function tabActive(pathname: string, href: string, perfilHref: string, escalasHref: string) {
-  if (href === perfilHref) return pathname.startsWith(perfilHref)
-  if (href === escalasHref) {
-    return pathname === escalasHref
-  }
-  return pathname === href || pathname.startsWith(`${href}/`)
 }
 
 export function AppShellV2({ children, showTabs = true }: AppShellV2Props) {
@@ -37,96 +29,91 @@ export function AppShellV2({ children, showTabs = true }: AppShellV2Props) {
   const showAdmin = isAdminRole(session?.user?.role)
 
   const desktopTabs = [
-    { href: paths.feed, label: "Feed", icon: Newspaper },
-    { href: paths.escalas, label: "Escalas", icon: ClipboardList },
-    ...(showAdmin ? [{ href: paths.admin, label: "Admin", icon: Shield }] : []),
-    { href: paths.perfil, label: "Perfil", icon: null as unknown as typeof Newspaper },
+    { href: paths.escalas, label: "Hoje", icon: Sun },
+    { href: paths.feed, label: "Comunidade", icon: UsersRound },
+    ...(showAdmin ? [{ href: paths.admin, label: "Gestão", icon: Briefcase }] : []),
   ]
 
+  const perfilActive = pathname.startsWith(paths.perfil)
+
   return (
-    <div className={cn("min-h-screen bg-muted/30", showTabs && "pb-16 md:pb-0")}>
+    <DsRoot className={cn(showTabs && "pb-0")}>
       <UiCookieSync version="v2" />
       <VersionBanner />
-      <header className="sticky top-0 z-40 hidden border-b bg-background/95 backdrop-blur md:block">
-        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-4 px-4">
-          <Link href={paths.escalas} className="shrink-0">
-            <Image
-              src="/pib-logo-black.png"
-              alt={CHURCH_INFO.SHORT_NAME}
-              width={100}
-              height={32}
-              className="h-7 w-auto"
-            />
-          </Link>
-          <nav className="flex items-center gap-1">
-            {desktopTabs.map((tab) => {
-              const active = tabActive(pathname, tab.href, paths.perfil, paths.escalas)
-              if (tab.href === paths.perfil) {
-                return (
-                  <Link
-                    key={tab.href}
-                    href={tab.href}
-                    className={cn(
-                      "flex items-center gap-2 rounded-full px-3 py-1.5 text-sm transition-colors",
-                      active
-                        ? "bg-primary/15 text-foreground font-semibold"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    )}
-                  >
-                    <Avatar className={cn("h-6 w-6", active && "ring-2 ring-primary")}>
-                      <AvatarImage src={session?.user?.image ?? undefined} />
-                      <AvatarFallback className="text-[10px]">
-                        {session?.user?.name?.[0] ?? "U"}
-                      </AvatarFallback>
-                    </Avatar>
-                    Perfil
-                  </Link>
-                )
-              }
-              const Icon = tab.icon
-              return (
-                <Link
-                  key={tab.href}
-                  href={tab.href}
-                  className={cn(
-                    "flex items-center gap-2 rounded-full px-3 py-1.5 text-sm transition-colors",
-                    active
-                      ? "bg-primary/15 text-foreground font-semibold"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  )}
-                >
-                  <Icon className="h-4 w-4" />
-                  {tab.label}
-                </Link>
-              )
-            })}
-          </nav>
-          <div className="flex items-center gap-2">
-            {session && <NotificationsButton />}
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/">Site</Link>
-            </Button>
-            {session && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => signOut({ callbackUrl: "/" })}
-                title="Sair"
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        </div>
-      </header>
 
-      <header className="sticky top-0 z-40 flex h-12 items-center justify-between border-b bg-background px-4 md:hidden">
-        <Link href={paths.escalas}>
+      <header className="pib-topbar--ink pib-topbar hidden md:flex">
+        <Link href={paths.escalas} className="shrink-0">
           <Image
             src="/pib-logo-black.png"
             alt={CHURCH_INFO.SHORT_NAME}
-            width={80}
+            width={110}
+            height={36}
+            className="h-7 w-auto invert"
+          />
+        </Link>
+        <nav className="flex items-center gap-1">
+          {desktopTabs.map((tab) => {
+            const active =
+              tab.href === paths.escalas
+                ? pathname === paths.escalas ||
+                  (pathname.startsWith("/minha-area-v2") && !pathname.startsWith(paths.perfil))
+                : pathname === tab.href || pathname.startsWith(`${tab.href}/`)
+            const Icon = tab.icon
+            return (
+              <Link
+                key={tab.href}
+                href={tab.href}
+                className={cn(
+                  "flex items-center gap-2 rounded-full px-3.5 py-2 text-sm transition-colors",
+                  active
+                    ? "bg-white text-black font-semibold"
+                    : "text-white/70 hover:bg-white/10 hover:text-white"
+                )}
+              >
+                <Icon className="h-4 w-4" />
+                {tab.label}
+              </Link>
+            )
+          })}
+          <Link
+            href={paths.perfil}
+            className={cn(
+              "ml-1 flex items-center gap-2 rounded-full px-3 py-1.5 text-sm transition-colors",
+              perfilActive ? "bg-white text-black font-semibold" : "text-white/70 hover:bg-white/10"
+            )}
+          >
+            <Avatar className="h-6 w-6">
+              <AvatarImage src={session?.user?.image ?? undefined} />
+              <AvatarFallback className="text-[10px] bg-white/20 text-white">
+                {session?.user?.name?.[0] ?? "U"}
+              </AvatarFallback>
+            </Avatar>
+            Eu
+          </Link>
+        </nav>
+        <div className="flex items-center gap-1">
+          {session && (
+            <div className="[&_button]:text-white [&_button]:hover:bg-white/10">
+              <NotificationsButton />
+            </div>
+          )}
+          <button
+            type="button"
+            className="pib-btn pib-btn--sm rounded-full border-white/20 bg-transparent text-white hover:bg-white/10"
+            onClick={() => signOut({ callbackUrl: "/" })}
+            title="Sair"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
+        </div>
+      </header>
+
+      <header className="pib-topbar md:hidden">
+        <Link href={paths.escalas} className="flex items-center gap-2">
+          <Image
+            src="/pib-logo-black.png"
+            alt={CHURCH_INFO.SHORT_NAME}
+            width={88}
             height={28}
             className="h-6 w-auto"
           />
@@ -138,6 +125,6 @@ export function AppShellV2({ children, showTabs = true }: AppShellV2Props) {
 
       {showTabs && <BottomTabBarV2 />}
       <PwaInstallPrompt />
-    </div>
+    </DsRoot>
   )
 }

@@ -82,11 +82,12 @@ export default function VisitantesV2Page() {
   const lista = dataSelecionada ? visitantesPorData[dataSelecionada] || [] : []
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-4 py-5 md:px-0 md:py-0">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold tracking-tight">Visitantes</h1>
-          <p className="text-sm text-muted-foreground">Cadastro e follow-up de acolhimento</p>
+          <p className="pib-kicker">Cuidar</p>
+          <h1 className="pib-display text-3xl">Pessoas novas</h1>
+          <p className="pib-mute mt-1 text-sm">Cadastro e follow-up de quem visitou a igreja</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" asChild>

@@ -146,9 +146,13 @@ export default function EscalasAdminPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Escalas</h1>
+    <div className="space-y-6 px-4 py-5 md:px-0 md:py-0">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="pib-kicker">Igreja</p>
+          <h1 className="pib-display text-3xl">Cultos</h1>
+          <p className="pib-mute mt-1 text-sm">Escolha o culto e preencha as escalas de todos os ministérios.</p>
+        </div>
         {eventoId && (
           <Button
             onClick={() => {
@@ -165,7 +169,7 @@ export default function EscalasAdminPage() {
 
       {!eventoId ? (
         <>
-          <p className="text-sm text-muted-foreground">Selecione um evento para gerenciar escalas:</p>
+          <p className="text-sm text-[var(--pib-mute)]">Selecione um culto:</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {futureEventos?.map((ev: any) => {
               const d = new Date(ev.data);

@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation"
 import { auth } from "@/lib/auth"
 import { sql } from "@/lib/neon"
-import { Calendar } from "lucide-react"
 import { PullToRefresh } from "@/components/pull-to-refresh"
 import { PushNotificationRegister } from "@/components/push-notification-register"
 import { EscalaCardV2 } from "./escala-card"
 import { InboxSection } from "./inbox-section"
+import { DsEmpty, DsHero, DsList, DsPage, DsRow, DsSection } from "@/components/app-v2/ds"
 
 export const dynamic = "force-dynamic"
 
@@ -70,26 +70,24 @@ export default async function MinhaAreaV2Page() {
 
   return (
     <PullToRefresh>
-      <div className="mx-auto max-w-lg space-y-6 px-4 py-6">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight">Escalas</h1>
-          <p className="text-sm text-muted-foreground">Olá, {firstName}</p>
-        </div>
+      <DsPage>
+        <DsHero
+          kicker="PIB Roraima"
+          title={`Olá, ${firstName}`}
+          subtitle="O que você precisa fazer neste culto — e o que vem depois."
+        />
 
         <PushNotificationRegister />
         <InboxSection />
 
-        <section className="space-y-3">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Minhas escalas
-          </h2>
+        <DsSection title="Sua próxima escala">
           {minhas.length === 0 ? (
-            <div className="py-8 text-center">
-              <Calendar className="mx-auto mb-2 h-10 w-10 text-muted-foreground/40" />
-              <p className="text-sm text-muted-foreground">Nenhuma escala futura</p>
-            </div>
+            <DsEmpty
+              title="Nada escalado ainda"
+              description="Quando você for escalado, a confirmação aparece aqui primeiro."
+            />
           ) : (
-            <div className="flex flex-col gap-3">
+            <div className="space-y-3">
               {proxima && (
                 <EscalaCardV2
                   evento={{
@@ -111,6 +109,13 @@ export default async function MinhaAreaV2Page() {
                   highlight
                 />
               )}
+            </div>
+          )}
+        </DsSection>
+
+        {resto.length > 0 && (
+          <DsSection title="Depois">
+            <div className="space-y-3">
               {resto.map((e: any) => (
                 <EscalaCardV2
                   key={e.id}
@@ -133,32 +138,30 @@ export default async function MinhaAreaV2Page() {
                 />
               ))}
             </div>
-          )}
-        </section>
+          </DsSection>
+        )}
 
         {programacao.length > 0 && (
-          <details className="rounded-xl border bg-card p-4">
-            <summary className="cursor-pointer text-sm font-medium">
-              Programação da igreja
-            </summary>
-            <ul className="mt-3 space-y-2">
+          <DsSection title="Na igreja">
+            <DsList>
               {programacao.map((e: any) => (
-                <li key={e.id} className="flex items-baseline justify-between gap-2 text-sm">
-                  <span className="truncate">{e.titulo}</span>
-                  <span className="shrink-0 text-xs text-muted-foreground">
-                    {new Date(e.data).toLocaleDateString("pt-BR", {
-                      day: "2-digit",
-                      month: "short",
-                      timeZone: "UTC",
-                    })}
-                    {e.horario ? ` · ${e.horario}` : ""}
-                  </span>
-                </li>
+                <DsRow
+                  key={e.id}
+                  as="div"
+                  title={e.titulo}
+                  meta={`${new Date(e.data).toLocaleDateString("pt-BR", {
+                    weekday: "short",
+                    day: "2-digit",
+                    month: "short",
+                    timeZone: "UTC",
+                  })}${e.horario ? ` · ${e.horario}` : ""}`}
+                  trailing={<span className="text-xs">{e.tipo || ""}</span>}
+                />
               ))}
-            </ul>
-          </details>
+            </DsList>
+          </DsSection>
         )}
-      </div>
+      </DsPage>
     </PullToRefresh>
   )
 }

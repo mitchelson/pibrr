@@ -2,12 +2,10 @@
 
 import useSWR from "swr"
 import { useSession } from "next-auth/react"
-import Link from "next/link"
 import { ArrowLeftRight, Check, ClipboardList, Loader2, MessageSquare, Users, X } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import { toast } from "@/components/ui/use-toast"
-import { MinistryIcon } from "@/components/ministry-icon"
+import { DsBtn, DsList, DsPanel, DsRow, DsSection, DsStatus } from "@/components/app-v2/ds"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -45,100 +43,90 @@ export function InboxSection() {
   if (!hasInbox) return null
 
   return (
-    <section className="space-y-3">
-      <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Para fazer</h2>
-
+    <DsSection title="Para fazer agora">
       {escalas.length > 0 && (
-        <div className="rounded-xl border bg-card p-4">
-          <p className="mb-2 flex items-center gap-2 text-sm font-medium">
-            <ClipboardList className="h-4 w-4" />
-            Confirmar escalas ({escalas.length})
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Use os botões em Minhas escalas abaixo para confirmar ou recusar.
-          </p>
-        </div>
+        <DsPanel className="p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="flex items-center gap-2 text-sm font-semibold">
+                <ClipboardList className="h-4 w-4" />
+                Confirmar escala
+              </p>
+              <p className="pib-mute mt-1 text-sm">
+                {escalas.length} pendente{escalas.length !== 1 ? "s" : ""}. Abra a escala abaixo e
+                confirme ou recuse.
+              </p>
+            </div>
+            <DsStatus tone="pending">Pendente</DsStatus>
+          </div>
+        </DsPanel>
       )}
 
       {trocas.length > 0 && (
-        <div className="space-y-2 rounded-xl border bg-card p-4">
-          <p className="flex items-center gap-2 text-sm font-medium">
-            <ArrowLeftRight className="h-4 w-4" />
-            Trocas
-          </p>
+        <DsList>
           {trocas.map((t: any) => {
             const isDestinatario = t.destinatario_id === userId
             const outraPessoa = isDestinatario ? t.solicitante_nome : t.destinatario_nome
             return (
-              <div key={t.id} className="space-y-2 border-t pt-3 first:border-0 first:pt-0">
-                <div className="flex items-center gap-2">
-                  <MinistryIcon name={t.ministerio_icone} ministryName={t.ministerio} size={16} />
-                  <p className="text-sm">{t.ministerio}</p>
+              <div key={t.id} className="p-4">
+                <div className="flex items-center gap-2 text-sm font-semibold">
+                  <ArrowLeftRight className="h-4 w-4" />
+                  Troca · {t.ministerio}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  <span className="font-medium text-foreground">{outraPessoa}</span>
+                <p className="pib-mute mt-1 text-sm">
+                  <span className="font-medium text-[var(--pib-ink)]">{outraPessoa}</span>
                   {isDestinatario ? " quer trocar com você" : " — aguardando resposta"}
                 </p>
                 {isDestinatario && (
-                  <div className="flex gap-2">
-                    <Button
+                  <div className="mt-3 flex gap-2">
+                    <DsBtn
                       size="sm"
-                      className="h-8 flex-1 text-xs"
+                      className="flex-1"
                       disabled={loading === t.id}
                       onClick={() => handleTroca(t.id, "aceita")}
                     >
                       {loading === t.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
                       Aceitar
-                    </Button>
-                    <Button
+                    </DsBtn>
+                    <DsBtn
+                      variant="ghost"
                       size="sm"
-                      variant="outline"
-                      className="h-8 flex-1 text-xs"
+                      className="flex-1"
                       disabled={loading === t.id}
                       onClick={() => handleTroca(t.id, "recusada")}
                     >
                       <X className="h-3 w-3" /> Recusar
-                    </Button>
+                    </DsBtn>
                   </div>
                 )}
               </div>
             )
           })}
-        </div>
+        </DsList>
       )}
 
       {pedidos.length > 0 && (
-        <div className="rounded-xl border bg-card p-4">
-          <p className="mb-2 flex items-center gap-2 text-sm font-medium">
-            <Users className="h-4 w-4" />
-            Pedidos de ministério ({pedidos.length})
-          </p>
-          <ul className="space-y-1 text-sm">
-            {pedidos.slice(0, 5).map((p: any) => (
-              <li key={`${p.user_id}-${p.ministerio_id}`}>
-                <Link href={`/admin-v2/ministerios/${p.ministerio_id}`} className="hover:underline">
-                  {p.nome} · {p.ministerio}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <DsList>
+          {pedidos.slice(0, 5).map((p: any) => (
+            <DsRow
+              key={`${p.user_id}-${p.ministerio_id}`}
+              href={`/admin-v2/ministerios/${p.ministerio_id}`}
+              leading={<Users className="h-4 w-4 shrink-0" />}
+              title={`${p.nome} quer servir`}
+              meta={p.ministerio}
+            />
+          ))}
+        </DsList>
       )}
 
       {whatsapp.length > 0 && (
-        <Link
+        <DsRow
           href="/admin-v2/visitantes"
-          className="block rounded-xl border bg-card p-4 transition-colors hover:bg-muted/40"
-        >
-          <p className="flex items-center gap-2 text-sm font-medium">
-            <MessageSquare className="h-4 w-4" />
-            WhatsApp pendente
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {whatsapp.length} visitante{whatsapp.length !== 1 ? "s" : ""} com mensagens em aberto
-          </p>
-        </Link>
+          leading={<MessageSquare className="h-4 w-4" />}
+          title="WhatsApp pendente"
+          meta={`${whatsapp.length} pessoa${whatsapp.length !== 1 ? "s" : ""} novas com mensagem em aberto`}
+        />
       )}
-    </section>
+    </DsSection>
   )
 }

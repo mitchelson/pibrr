@@ -3,10 +3,9 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useSession } from "next-auth/react"
-import { Newspaper, ClipboardList, Shield } from "lucide-react"
+import { Sun, UsersRound, Briefcase } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { isAdminRole } from "@/lib/nav-config"
-import { cn } from "@/lib/utils"
 import { useAppUi } from "@/hooks/use-app-ui"
 
 export function BottomTabBarV2() {
@@ -15,61 +14,55 @@ export function BottomTabBarV2() {
   const { paths } = useAppUi()
   const showAdmin = isAdminRole(session?.user?.role)
 
-  const feedActive = pathname.startsWith("/feed")
-  const escalasActive =
+  const hojeActive =
     pathname === paths.escalas ||
     (pathname.startsWith("/minha-area-v2") && !pathname.startsWith("/minha-area-v2/perfil"))
+  const feedActive = pathname.startsWith("/feed")
   const adminActive = pathname.startsWith("/admin-v2") || pathname.startsWith("/admin")
   const perfilActive = pathname.startsWith(paths.perfil)
 
+  const items = [
+    { href: paths.escalas, label: "Hoje", icon: Sun, active: hojeActive },
+    { href: paths.feed, label: "Comunidade", icon: UsersRound, active: feedActive },
+    ...(showAdmin
+      ? [{ href: paths.admin, label: "Gestão", icon: Briefcase, active: adminActive }]
+      : []),
+    { href: paths.perfil, label: "Eu", icon: null, active: perfilActive },
+  ]
+
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-50 border-t bg-background pb-[env(safe-area-inset-bottom)] md:hidden">
-      <div className="flex h-16 items-center justify-around">
-        <Link
-          href={paths.feed}
-          className={cn(
-            "flex flex-col items-center gap-0.5 text-[11px]",
-            feedActive ? "font-semibold text-foreground" : "text-muted-foreground"
-          )}
-        >
-          <Newspaper className={cn("h-5 w-5", feedActive ? "text-primary" : undefined)} />
-          Feed
-        </Link>
-        <Link
-          href={paths.escalas}
-          className={cn(
-            "flex flex-col items-center gap-0.5 text-[11px]",
-            escalasActive ? "font-semibold text-foreground" : "text-muted-foreground"
-          )}
-        >
-          <ClipboardList className={cn("h-5 w-5", escalasActive ? "text-primary" : undefined)} />
-          Escalas
-        </Link>
-        {showAdmin && (
-          <Link
-            href={paths.admin}
-            className={cn(
-              "flex flex-col items-center gap-0.5 text-[11px]",
-              adminActive ? "font-semibold text-foreground" : "text-muted-foreground"
-            )}
-          >
-            <Shield className={cn("h-5 w-5", adminActive ? "text-primary" : undefined)} />
-            Admin
-          </Link>
-        )}
-        <Link
-          href={paths.perfil}
-          className={cn(
-            "flex flex-col items-center gap-0.5 text-[11px]",
-            perfilActive ? "font-semibold text-foreground" : "text-muted-foreground"
-          )}
-        >
-          <Avatar className={cn("h-5 w-5", perfilActive && "ring-2 ring-primary")}>
-            <AvatarImage src={session?.user?.image ?? undefined} />
-            <AvatarFallback className="text-[8px]">{session?.user?.name?.[0]}</AvatarFallback>
-          </Avatar>
-          Perfil
-        </Link>
+    <nav className="pib-dock md:hidden" aria-label="Navegação principal">
+      <div className="pib-dock__inner" style={{ gridTemplateColumns: `repeat(${items.length}, 1fr)` }}>
+        {items.map((item) => {
+          if (!item.icon) {
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="pib-dock__item"
+                data-active={item.active}
+              >
+                <Avatar className="h-5 w-5">
+                  <AvatarImage src={session?.user?.image ?? undefined} />
+                  <AvatarFallback className="text-[8px]">{session?.user?.name?.[0]}</AvatarFallback>
+                </Avatar>
+                {item.label}
+              </Link>
+            )
+          }
+          const Icon = item.icon
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="pib-dock__item"
+              data-active={item.active}
+            >
+              <Icon className="h-5 w-5" strokeWidth={item.active ? 2.25 : 1.75} />
+              {item.label}
+            </Link>
+          )
+        })}
       </div>
     </nav>
   )

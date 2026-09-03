@@ -3,36 +3,42 @@
 import { signOut } from "next-auth/react"
 import { LogOut } from "lucide-react"
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
-import { Separator } from "@/components/ui/separator"
-import { Button } from "@/components/ui/button"
 import { AdminSidebarV2 } from "@/components/app-v2/admin-sidebar"
 import { BottomTabBarV2 } from "@/components/app-v2/bottom-tab-bar"
 import { VersionBanner } from "@/components/app-v2/version-banner"
 import { UiCookieSync } from "@/components/app-v2/ui-cookie-sync"
 import { NotificationsButton } from "@/components/notifications-button"
+import { DsRoot } from "@/components/app-v2/ds"
 
 export function AdminShellV2({ children }: { children: React.ReactNode }) {
   return (
-    <>
+    <DsRoot>
       <UiCookieSync version="v2" />
       <VersionBanner />
       <SidebarProvider>
         <AdminSidebarV2 />
-        <SidebarInset>
-          <header className="flex h-14 items-center gap-2 border-b px-4">
-            <SidebarTrigger />
-            <Separator orientation="vertical" className="h-6" />
-            <div className="flex-1" />
-            <NotificationsButton />
-            <Button variant="ghost" size="sm" onClick={() => signOut({ callbackUrl: "/" })}>
-              <LogOut className="h-4 w-4 md:mr-1" />
-              <span className="hidden md:inline">Sair</span>
-            </Button>
+        <SidebarInset className="bg-[var(--pib-paper)]">
+          <header className="pib-topbar">
+            <div className="flex items-center gap-2">
+              <SidebarTrigger className="-ml-1" />
+              <p className="pib-kicker hidden sm:block">Gestão</p>
+            </div>
+            <div className="flex items-center gap-1">
+              <NotificationsButton />
+              <button
+                type="button"
+                className="pib-btn pib-btn--ghost pib-btn--sm"
+                onClick={() => signOut({ callbackUrl: "/" })}
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden md:inline">Sair</span>
+              </button>
+            </div>
           </header>
-          <div className="p-4 pb-20 md:p-6 md:pb-6">{children}</div>
+          <div className="pb-20 md:pb-0">{children}</div>
         </SidebarInset>
       </SidebarProvider>
       <BottomTabBarV2 />
-    </>
+    </DsRoot>
   )
 }
