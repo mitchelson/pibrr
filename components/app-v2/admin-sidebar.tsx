@@ -68,10 +68,10 @@ export function AdminSidebarV2() {
             {myMinisterios.slice(0, 6).map((m: any) => (
               <Link
                 key={m.id}
-                href={`/admin-v2/ministerios/${m.id}`}
+                href={`/admin/ministerios/${m.id}`}
                 onClick={closeMobile}
                 className="pib-rail__link"
-                data-active={pathname === `/admin-v2/ministerios/${m.id}`}
+                data-active={pathname === `/admin/ministerios/${m.id}`}
               >
                 <MinistryIcon name={m.icone} ministryName={m.nome} mono size={18} />
                 <span className="truncate">{m.nome}</span>
@@ -89,8 +89,8 @@ export function AdminSidebarV2() {
               {items.map((item) => {
                 const Icon = item.icon
                 const active =
-                  item.href === "/admin-v2"
-                    ? pathname === "/admin-v2"
+                  item.href === "/admin"
+                    ? pathname === "/admin"
                     : pathname === item.href || pathname.startsWith(`${item.href}/`)
                 return (
                   <Link

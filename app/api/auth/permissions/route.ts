@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
     ]);
     
     // Get user's journey stage
-    const { sql } = await import('@/lib/neon');
+    const { sql } = await import('@/lib/db');
     const accountResult = await sql`
       SELECT journey_stage FROM accounts WHERE id = ${userId}::uuid
     `;

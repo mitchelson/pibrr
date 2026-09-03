@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { sql } from "@/lib/neon"
+import { sql } from "@/lib/db"
 import { requireMinisterioAccess } from "@/lib/authorization"
 import { removeAccountRole, syncMinistryLeaderRole, getOrCreateMinistryContext } from "@/lib/account-roles"
 

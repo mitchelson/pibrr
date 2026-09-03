@@ -5,7 +5,7 @@
  */
 import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/mobile-auth"
-import { sql } from "@/lib/neon"
+import { sql } from "@/lib/db"
 
 export async function GET(request: NextRequest) {
   const session = await getSession(request)

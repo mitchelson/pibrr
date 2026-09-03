@@ -9,10 +9,10 @@
  * - Use isFeatureEnabled() to check if a feature is enabled
  * - Update feature flags via environment variables or database
  * 
- * @requires @vercel/postgres (optional, for database-backed flags)
+ * @requires @/lib/db (optional, for database-backed flags)
  */
 
-import { sql } from '@vercel/postgres';
+import { sql } from '@/lib/db'
 
 // ============================================================================
 // FEATURE FLAG DEFINITIONS
@@ -91,8 +91,8 @@ export async function isFeatureEnabled(flagName: string): Promise<boolean> {
         LIMIT 1
       `;
       
-      if (result.rows.length > 0) {
-        const flag = result.rows[0];
+      if (result.length > 0) {
+        const flag = result[0];
         
         // If rollout_percentage is set, use it for gradual rollout
         if (flag.rollout_percentage !== null && flag.rollout_percentage < 100) {
@@ -125,7 +125,7 @@ export async function getAllFeatureFlags(): Promise<FeatureFlag[]> {
       ORDER BY name
     `;
     
-    return result.rows as FeatureFlag[];
+    return result as FeatureFlag[];
   } catch (error) {
     // Return in-memory flags if database query fails
     return Object.entries(inMemoryFlags).map(([name, enabled]) => ({

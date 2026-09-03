@@ -1,5 +1,5 @@
 import webpush from "web-push"
-import { sql } from "@/lib/neon"
+import { sql } from "@/lib/db"
 
 let configured = false
 function ensureConfigured() {

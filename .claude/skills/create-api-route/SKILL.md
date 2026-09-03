@@ -10,7 +10,7 @@ Ao criar uma nova API route em `app/api/`:
 2. Importar auth e sql:
 ```typescript
 import { auth } from "@/lib/auth"
-import { sql } from "@/lib/neon"
+import { sql } from "@/lib/db"
 import { NextResponse } from "next/server"
 ```
 3. Verificar autenticação:

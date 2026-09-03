@@ -1,4 +1,4 @@
-import { sql } from "@/lib/neon"
+import { sql } from "@/lib/db"
 import { NextResponse } from "next/server"
 
 // GET /api/mensagens/enviadas?visitante_id=xxx

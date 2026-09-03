@@ -2,14 +2,6 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { useVisitantes } from "@/hooks/use-visitantes"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -19,340 +11,198 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { formatarData } from "@/lib/utils"
-import {
-  Search,
-  Plus,
-  User,
-  AlertCircle,
-  FileText,
-  Users,
-  MessageSquare,
-} from "lucide-react"
-import Link from "next/link"
+import { Search, Plus, FileText, MessageSquare, ChevronRight } from "lucide-react"
+import useSWR from "swr"
 import VisitanteDialog from "@/components/visitante-dialog"
 import NovoVisitanteDialog from "@/components/novo-visitante-dialog"
 import RelatorioMensalDialog from "@/components/relatorio-mensal-dialog"
 import type { Visitante, VisitanteComResponsavel } from "@/types/supabase"
+import { AdminScreen, AdminPrimaryAction } from "@/components/app-v2/admin-screen"
+import { DsBtn, DsEmpty, DsList, DsRow, DsWell } from "@/components/app-v2/ds"
 
-export default function AdminPage() {
-  const { visitantes, isLoading, criar, atualizar, deletar, mutate } =
-    useVisitantes()
-  const [visitantesFiltrados, setVisitantesFiltrados] = useState<
-    VisitanteComResponsavel[]
-  >([])
+const fetcher = (url: string) => fetch(url).then((r) => r.json())
+
+export default function VisitantesV2Page() {
+  const { visitantes, isLoading, mutate } = useVisitantes()
+  const { data: categorias } = useSWR("/api/mensagens/categorias", fetcher)
   const [termoBusca, setTermoBusca] = useState("")
-  const [visitanteSelecionado, setVisitanteSelecionado] =
-    useState<VisitanteComResponsavel | null>(null)
-  const [novoVisitanteDialogAberto, setNovoVisitanteDialogAberto] =
-    useState(false)
-  const [relatorioDialogAberto, setRelatorioDialogAberto] = useState(false)
-  const [dataSelecionada, setDataSelecionada] = useState<string>("")
+  const [visitanteSelecionado, setVisitanteSelecionado] = useState<VisitanteComResponsavel | null>(null)
+  const [novoAberto, setNovoAberto] = useState(false)
+  const [relatorioAberto, setRelatorioAberto] = useState(false)
+  const [dataSelecionada, setDataSelecionada] = useState("")
+  const [visitantesPorData, setVisitantesPorData] = useState<Record<string, VisitanteComResponsavel[]>>({})
   const [datasAgrupadas, setDatasAgrupadas] = useState<string[]>([])
-  const [visitantesPorData, setVisitantesPorData] = useState<
-    Record<string, VisitanteComResponsavel[]>
-  >({})
-  const [mensagensEnviadas, setMensagensEnviadas] = useState<
-    Record<string, Set<string>>
-  >({})
+  const [mensagensEnviadas, setMensagensEnviadas] = useState<Record<string, Set<string>>>({})
 
-  useEffect(() => {
-    if (!isLoading && visitantes.length > 0) {
-      setVisitantesFiltrados(visitantes)
-      agruparPorData(visitantes)
-      carregarMensagensEnviadas()
-    }
-  }, [visitantes, isLoading])
-
-  const carregarMensagensEnviadas = async () => {
-    try {
-      const res = await fetch("/api/visitantes/mensagens-status")
-      if (res.ok) {
-        const dados: Record<string, string[]> = await res.json()
-        // Convert arrays to Sets for easier lookup
-        const mapa: Record<string, Set<string>> = {}
-        for (const [visitanteId, categorias] of Object.entries(dados)) {
-          mapa[visitanteId] = new Set(categorias)
-        }
-        setMensagensEnviadas(mapa)
-      }
-    } catch (error) {
-      console.error("Erro ao carregar mensagens enviadas:", error)
-    }
-  }
+  const categoriasAtivas = (categorias || []).filter((c: any) => c.ativa)
 
   const agruparPorData = useCallback((lista: VisitanteComResponsavel[]) => {
     const grupos: Record<string, VisitanteComResponsavel[]> = {}
-
     lista.forEach((visitante) => {
       const dataFormatada = formatarData(visitante.data_cadastro)
-      if (!grupos[dataFormatada]) {
-        grupos[dataFormatada] = []
-      }
+      if (!grupos[dataFormatada]) grupos[dataFormatada] = []
       grupos[dataFormatada].push(visitante)
     })
-
-    setVisitantesPorData(grupos)
-    setDatasAgrupadas(
-      Object.keys(grupos).sort((a, b) => {
-        const [diaA, mesA, anoA] = a.split("/").map(Number)
-        const [diaB, mesB, anoB] = b.split("/").map(Number)
-        if (anoA && anoB && mesA && mesB && diaA && diaB)
-          return (
-            new Date(anoB, mesB - 1, diaB).getTime() -
-            new Date(anoA, mesA - 1, diaA).getTime()
-          )
-        return 0
-      }),
-    )
-
-    // Set dataSelecionada to the first date
-    const primeiradata = Object.keys(grupos).sort((a, b) => {
+    const datas = Object.keys(grupos).sort((a, b) => {
       const [diaA, mesA, anoA] = a.split("/").map(Number)
       const [diaB, mesB, anoB] = b.split("/").map(Number)
-      if (anoA && anoB && mesA && mesB && diaA && diaB)
-        return (
-          new Date(anoB, mesB - 1, diaB).getTime() -
-          new Date(anoA, mesA - 1, diaA).getTime()
-        )
-      return 0
-    })[0]
-    if (primeiradata && !dataSelecionada) {
-      setDataSelecionada(primeiradata)
-    }
+      return new Date(anoB, mesB - 1, diaB).getTime() - new Date(anoA, mesA - 1, diaA).getTime()
+    })
+    setVisitantesPorData(grupos)
+    setDatasAgrupadas(datas)
+    if (datas[0] && !dataSelecionada) setDataSelecionada(datas[0])
   }, [dataSelecionada])
 
-  const carregarVisitantes = async () => {
-    try {
-      await mutate()
-    } catch (error) {
-      console.error("Erro ao carregar visitantes:", error)
-    }
-  }
+  useEffect(() => {
+    if (isLoading) return
+    const termo = termoBusca.toLowerCase().trim()
+    const listaBase = Array.isArray(visitantes) ? visitantes : []
+    const filtrados = !termo
+      ? listaBase
+      : listaBase.filter(
+          (v) =>
+            v.nome.toLowerCase().includes(termo) ||
+            v.celular.includes(termo) ||
+            v.responsavel_nome?.toLowerCase().includes(termo)
+        )
+    agruparPorData(filtrados)
+  }, [termoBusca, visitantes, isLoading, agruparPorData])
 
   useEffect(() => {
-    if (termoBusca.trim() === "") {
-      setVisitantesFiltrados(visitantes)
-      agruparPorData(visitantes)
-    } else {
-      const termo = termoBusca.toLowerCase()
-      const filtrados = visitantes.filter(
-        (v) =>
-          v.nome.toLowerCase().includes(termo) ||
-          v.celular.includes(termo) ||
-          v.responsavel_nome?.toLowerCase().includes(termo),
-      )
-      setVisitantesFiltrados(filtrados)
-      agruparPorData(filtrados)
-    }
-  }, [termoBusca, visitantes])
+    fetch("/api/visitantes/mensagens-status")
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((dados: Record<string, string[]>) => {
+        const mapa: Record<string, Set<string>> = {}
+        for (const [id, cats] of Object.entries(dados)) mapa[id] = new Set(cats)
+        setMensagensEnviadas(mapa)
+      })
+      .catch(() => {})
+  }, [visitantes])
 
-  const handleVisitanteAtualizado = async (visitanteAtualizado: Visitante) => {
-    await mutate() // Recarrega a lista de visitantes para atualizar o responsavel
-    carregarMensagensEnviadas()
-    setVisitanteSelecionado(null)
-  }
-
-  const handleNovoVisitante = () => {
-    carregarVisitantes()
-    setNovoVisitanteDialogAberto(false)
-  }
-
-  const renderMensagemStatus = (visitante: VisitanteComResponsavel) => {
-    if (visitante.sem_whatsapp) {
-      return null
-    }
-    // Show dots for each category - green if sent, gray if not
-    const categoriasEnviadas = mensagensEnviadas[visitante.id] || new Set()
-    // Assuming 3 categories - adjust based on actual number
-    const categoriasDots = Array(3).fill(0)
-    return (
-      <div className="flex items-center gap-1">
-        {categoriasDots.map((_, idx) => (
-          <div
-            key={idx}
-            className={`h-2 w-2 rounded-full ${
-              idx < categoriasEnviadas.size
-                ? "bg-green-500"
-                : "bg-muted-foreground/40"
-            }`}
-            title={
-              idx < categoriasEnviadas.size
-                ? "Mensagem enviada"
-                : "Mensagem não enviada"
-            }
-          />
-        ))}
-      </div>
-    )
-  }
+  const lista = dataSelecionada ? visitantesPorData[dataSelecionada] || [] : []
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Administracao de Visitantes</CardTitle>
-                <CardDescription>
-                  Gerencie os visitantes cadastrados
-                </CardDescription>
-              </div>
-            </div>
-            <div className="flex gap-2 flex-wrap">
-              <Button variant="outline" size="sm" asChild className="hidden sm:flex">
-                <Link href="/admin/responsaveis">
-                  <Users className="mr-2 h-4 w-4" /> Responsaveis
-                </Link>
-              </Button>
-              <Button variant="outline" size="icon" asChild className="sm:hidden">
-                <Link href="/admin/responsaveis">
-                  <Users className="h-4 w-4" />
-                </Link>
-              </Button>
-              <Button variant="outline" size="sm" asChild className="hidden sm:flex">
-                <Link href="/admin/mensagens">
-                  <MessageSquare className="mr-2 h-4 w-4" /> Mensagens
-                </Link>
-              </Button>
-              <Button variant="outline" size="icon" asChild className="sm:hidden">
-                <Link href="/admin/mensagens">
-                  <MessageSquare className="h-4 w-4" />
-                </Link>
-              </Button>
-              <Button 
-                onClick={() => setRelatorioDialogAberto(true)}
-                variant="outline"
-                size="sm"
-                className="hidden sm:flex"
-              >
-                <FileText className="mr-2 h-4 w-4" /> Relatorio
-              </Button>
-              <Button 
-                onClick={() => setRelatorioDialogAberto(true)}
-                variant="outline"
-                size="icon"
-                className="sm:hidden"
-              >
-                <FileText className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="relative mb-6">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por nome, telefone ou responsavel"
-              className="pl-8"
-              value={termoBusca}
-              onChange={(e) => setTermoBusca(e.target.value)}
-            />
-          </div>
+    <AdminScreen
+      kicker="Cuidar"
+      title="Pessoas novas"
+      subtitle="Cadastro e follow-up de quem visitou a igreja"
+      action={
+        <div className="flex items-center gap-2">
+          <DsBtn variant="ghost" size="icon" href="/admin/mensagens" title="Mensagens">
+            <MessageSquare className="h-4 w-4" />
+          </DsBtn>
+          <DsBtn variant="ghost" size="icon" onClick={() => setRelatorioAberto(true)} title="Relatório">
+            <FileText className="h-4 w-4" />
+          </DsBtn>
+          <AdminPrimaryAction onClick={() => setNovoAberto(true)}>
+            <Plus className="h-4 w-4" /> Novo
+          </AdminPrimaryAction>
+        </div>
+      }
+    >
+      <DsWell className="!items-stretch sm:!items-center">
+        <div className="relative min-w-0 flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--pib-mute)]" />
+          <Input
+            placeholder="Buscar por nome, telefone ou responsável"
+            className="border-0 bg-[var(--pib-paper-raised)] pl-9 shadow-none"
+            value={termoBusca}
+            onChange={(e) => setTermoBusca(e.target.value)}
+          />
+        </div>
+        {datasAgrupadas.length > 1 && (
+          <Select value={dataSelecionada} onValueChange={setDataSelecionada}>
+            <SelectTrigger className="w-full border-0 bg-[var(--pib-paper-raised)] shadow-none sm:w-44">
+              <SelectValue placeholder="Data" />
+            </SelectTrigger>
+            <SelectContent>
+              {datasAgrupadas.map((data) => (
+                <SelectItem key={data} value={data}>
+                  {data}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </DsWell>
 
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-            </div>
-          ) : visitantesFiltrados.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              {termoBusca
-                ? "Nenhum visitante encontrado para esta busca."
-                : "Nenhum visitante cadastrado."}
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {datasAgrupadas.length > 1 && (
-                <div className="flex items-center gap-2">
-                  <label
-                    htmlFor="select-data"
-                    className="text-sm font-medium whitespace-nowrap"
-                  >
-                    Data:
-                  </label>
-                  <Select
-                    value={dataSelecionada}
-                    onValueChange={setDataSelecionada}
-                  >
-                    <SelectTrigger id="select-data" className="w-full sm:w-40">
-                      <SelectValue placeholder="Selecione uma data" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {datasAgrupadas.map((data) => (
-                        <SelectItem key={data} value={data}>
-                          {data}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              <div className="space-y-3">
-                {dataSelecionada &&
-                  visitantesPorData[dataSelecionada]?.map((visitante) => (
-                    <button
-                      key={visitante.id}
-                      className="flex flex-row w-full items-center justify-between p-3 border rounded-lg hover:bg-accent cursor-pointer gap-3"
-                      onClick={() => setVisitanteSelecionado(visitante)}
-                    >
-                      <div className="flex flex-col text-left min-w-0">
-                        <h3 className="font-medium text-sm truncate">
-                          {visitante.nome}
-                        </h3>
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2 text-xs text-muted-foreground">
-                          <span>{visitante.celular}</span>
-                          {visitante.responsavel_nome && (
-                            <div className="flex items-center text-emerald-600">
-                              <User className="h-3 w-3 mr-0.5" />
-                              <span>{visitante.responsavel_nome}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      {renderMensagemStatus(visitante) && (
-                        <div className="flex-shrink-0">
-                          {renderMensagemStatus(visitante)}
+      {isLoading ? (
+        <p className="pib-mute py-8 text-center text-sm">Carregando…</p>
+      ) : lista.length === 0 && datasAgrupadas.length === 0 ? (
+        <DsEmpty
+          title={termoBusca ? "Nenhum visitante nesta busca" : "Nenhum visitante cadastrado"}
+          description={!termoBusca ? "Cadastre a primeira visita da igreja." : undefined}
+        />
+      ) : (
+        <div className="space-y-4">
+          <DsList>
+            {lista.map((visitante) => {
+              const enviadas = mensagensEnviadas[visitante.id] || new Set()
+              return (
+                <DsRow
+                  key={visitante.id}
+                  onClick={() => setVisitanteSelecionado(visitante)}
+                  title={visitante.nome}
+                  meta={
+                    visitante.responsavel_nome
+                      ? `${visitante.celular} · ${visitante.responsavel_nome}`
+                      : visitante.celular
+                  }
+                  trailing={
+                    <div className="flex items-center gap-2">
+                      {!visitante.sem_whatsapp && categoriasAtivas.length > 0 && (
+                        <div className="flex gap-1">
+                          {categoriasAtivas.map((cat: { id: string; nome: string }) => (
+                            <span
+                              key={cat.id}
+                              title={cat.nome}
+                              className={`h-1.5 w-1.5 rounded-full ${
+                                enviadas.has(cat.id) ? "bg-[var(--pib-ink)]" : "bg-[var(--pib-line-strong)]"
+                              }`}
+                            />
+                          ))}
                         </div>
                       )}
-                    </button>
-                  ))}
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                      <ChevronRight className="h-4 w-4 text-[var(--pib-mute-soft)]" />
+                    </div>
+                  }
+                />
+              )
+            })}
+          </DsList>
+        </div>
+      )}
 
       {visitanteSelecionado && (
         <VisitanteDialog
           visitante={visitanteSelecionado}
           onClose={() => setVisitanteSelecionado(null)}
-          onUpdate={handleVisitanteAtualizado}
-          onDelete={() => { mutate(); setVisitanteSelecionado(null) }}
+          onUpdate={async (_v: Visitante) => {
+            await mutate()
+            setVisitanteSelecionado(null)
+          }}
+          onDelete={() => {
+            mutate()
+            setVisitanteSelecionado(null)
+          }}
         />
       )}
 
-      {novoVisitanteDialogAberto && (
+      {novoAberto && (
         <NovoVisitanteDialog
-          onClose={() => setNovoVisitanteDialogAberto(false)}
-          onSave={handleNovoVisitante}
+          onClose={() => setNovoAberto(false)}
+          onSave={() => {
+            mutate()
+            setNovoAberto(false)
+          }}
         />
       )}
 
       <RelatorioMensalDialog
-        isOpen={relatorioDialogAberto}
-        onClose={() => setRelatorioDialogAberto(false)}
+        isOpen={relatorioAberto}
+        onClose={() => setRelatorioAberto(false)}
         visitantes={visitantes}
       />
-
-      {/* FAB - Novo Visitante */}
-      <button
-        onClick={() => setNovoVisitanteDialogAberto(true)}
-        className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95"
-        aria-label="Novo Visitante"
-      >
-        <Plus className="h-6 w-6" />
-      </button>
-    </div>
+    </AdminScreen>
   )
 }

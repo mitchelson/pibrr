@@ -17,14 +17,14 @@ export const APP_PATHS: Record<AppUiVersion, AppPaths> = {
   },
   v2: {
     feed: "/feed",
-    escalas: "/minha-area-v2",
-    admin: "/admin-v2",
-    perfil: "/minha-area-v2/perfil",
+    escalas: "/minha-area",
+    admin: "/admin",
+    perfil: "/minha-area/perfil",
   },
 }
 
 export function envUiVersion(): AppUiVersion {
-  return process.env.NEXT_PUBLIC_APP_UI_VERSION === "v2" ? "v2" : "v1"
+  return "v2"
 }
 
 export function parseUiCookie(value?: string | null): AppUiVersion | null {

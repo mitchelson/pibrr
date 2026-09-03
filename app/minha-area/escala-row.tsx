@@ -47,7 +47,7 @@ export function EscalaRowV2({
 
   return (
     <Link
-      href={`/minha-area-v2/culto/${evento.id}`}
+      href={`/minha-area/culto/${evento.id}`}
       className={cn(
         "pib-panel flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-black/[0.02]",
         highlight && "ring-1 ring-[var(--pib-ink)]"

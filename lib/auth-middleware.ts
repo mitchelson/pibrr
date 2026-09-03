@@ -268,12 +268,12 @@ export function withOldStyleRole(
         
         // Fallback: check old users table
         try {
-          const { sql } = require('@vercel/postgres');
+          const { sql } = await import('@/lib/db');
           const result = await sql`
             SELECT role FROM users WHERE id = ${req.user.id}::uuid
           `;
           
-          if (result.rows[0] && allowedRoles.includes(result.rows[0].role)) {
+          if (result[0] && allowedRoles.includes(result[0].role)) {
             return handler(req, res);
           }
         } catch (error) {

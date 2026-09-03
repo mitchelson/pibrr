@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Play, MapPin, Clock, ChevronRight } from "lucide-react";
-import { sql } from "@/lib/neon";
+import { sql } from "@/lib/db";
 import { MinistryIcon } from "@/components/ministry-icon";
 import { FeijoadaCampanhaSection } from "@/components/feijoada-campanha-section";
 import { SiteShell } from "@/components/site-shell";

@@ -61,7 +61,7 @@ export function InboxSection() {
                 {escalas.slice(0, 4).map((e: any) => (
                   <li key={e.id}>
                     <Link
-                      href={`/minha-area-v2/culto/${e.evento_id}`}
+                      href={`/minha-area/culto/${e.evento_id}`}
                       className="text-sm font-medium underline-offset-2 hover:underline"
                     >
                       {e.evento_titulo || e.titulo || "Ver culto"}
@@ -124,7 +124,7 @@ export function InboxSection() {
           {pedidos.slice(0, 5).map((p: any) => (
             <DsRow
               key={`${p.user_id}-${p.ministerio_id}`}
-              href={`/admin-v2/ministerios/${p.ministerio_id}`}
+              href={`/admin/ministerios/${p.ministerio_id}`}
               leading={<Users className="h-4 w-4 shrink-0" />}
               title={`${p.nome} quer servir`}
               meta={p.ministerio}
@@ -135,7 +135,7 @@ export function InboxSection() {
 
       {whatsapp.length > 0 && (
         <DsRow
-          href="/admin-v2/visitantes"
+          href="/admin/visitantes"
           leading={<MessageSquare className="h-4 w-4" />}
           title="WhatsApp pendente"
           meta={`${whatsapp.length} pessoa${whatsapp.length !== 1 ? "s" : ""} novas com mensagem em aberto`}

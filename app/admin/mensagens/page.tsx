@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -35,12 +34,13 @@ import {
   Plus,
   Pencil,
   Trash2,
-  MessageSquare,
   ArrowLeft,
   GripVertical,
   Loader2,
 } from "lucide-react"
 import type { MensagemCategoria, MensagemModelo } from "@/types/supabase"
+import { AdminScreen } from "@/components/app-v2/admin-screen"
+import { DsBtn, DsChip, DsEmpty, DsPanel } from "@/components/app-v2/ds"
 
 export default function MensagensPage() {
   const router = useRouter()
@@ -248,61 +248,48 @@ export default function MensagensPage() {
   }
 
   return (
-    <div>
-      <div className="mb-6 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => router.push("/admin")}>
-            <ArrowLeft className="h-5 w-5" />
-            <span className="sr-only">Voltar</span>
-          </Button>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold text-foreground">Gerenciar Mensagens</h1>
-            <p className="text-sm text-muted-foreground">
-              Configure categorias e modelos de mensagens
-            </p>
-          </div>
-        </div>
-
+    <AdminScreen
+      kicker="Cuidar"
+      title="Mensagens"
+      subtitle="Modelos de WhatsApp para o acompanhamento"
+      action={
+        <Button variant="ghost" size="icon" onClick={() => router.push("/admin/visitantes")}>
+          <ArrowLeft className="h-5 w-5" />
+          <span className="sr-only">Voltar</span>
+        </Button>
+      }
+    >
         {/* Info about placeholders */}
-        <Card className="mb-6 border-primary/20 bg-primary/5">
-          <CardContent className="p-4">
-            <p className="text-sm font-medium text-foreground mb-2">Variaveis disponiveis nos modelos:</p>
-            <div className="flex flex-wrap gap-2">
-              {["[Nome]", "[Seu Nome]", "[Nome da Igreja]", "[horario]", "[data]", "[bem-vindo]", "[abracado]", "[convidado]"].map((v) => (
-                <span
-                  key={v}
-                  className="rounded-md bg-background px-2 py-1 text-xs font-mono text-muted-foreground border"
-                >
-                  {v}
-                </span>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <DsPanel className="mb-2 p-4">
+          <p className="pib-mute mb-2 text-sm">Variáveis nos modelos:</p>
+          <div className="flex flex-wrap gap-2">
+            {["[Nome]", "[Seu Nome]", "[Nome da Igreja]", "[horario]", "[data]", "[bem-vindo]", "[abracado]", "[convidado]"].map((v) => (
+              <DsChip key={v} className="font-mono">
+                {v}
+              </DsChip>
+            ))}
+          </div>
+        </DsPanel>
 
         {/* Add category button */}
-        <Button onClick={openNewCat} className="mb-4 w-full gap-2">
+        <DsBtn onClick={openNewCat} className="mb-4 w-full">
           <Plus className="h-4 w-4" />
           Nova Categoria
-        </Button>
+        </DsBtn>
 
         {loading ? (
           <div className="flex justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <Loader2 className="pib-mute h-8 w-8 animate-spin" />
           </div>
         ) : categorias.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <MessageSquare className="h-12 w-12 text-muted-foreground/50 mb-3" />
-              <p className="text-muted-foreground">Nenhuma categoria cadastrada</p>
-            </CardContent>
-          </Card>
+          <DsEmpty title="Nenhuma categoria cadastrada" />
         ) : (
           <Accordion type="multiple" className="space-y-3">
             {categorias.map((cat) => (
               <AccordionItem
                 key={cat.id}
                 value={cat.id}
-                className="rounded-lg border bg-card overflow-hidden"
+                className="pib-panel overflow-hidden border-[var(--pib-line)]"
               >
                 <div className="flex items-center gap-2 px-4 pt-3 pb-0">
                   <GripVertical className="h-4 w-4 text-muted-foreground/40 shrink-0" />
@@ -358,48 +345,42 @@ export default function MensagensPage() {
                 <AccordionContent className="px-4 pb-4 pt-2">
                   <div className="space-y-2">
                     {cat.modelos.length === 0 ? (
-                      <p className="text-sm text-muted-foreground py-3 text-center">
+                      <p className="pib-mute py-3 text-center text-sm">
                         Nenhum modelo cadastrado
                       </p>
                     ) : (
                       cat.modelos.map((modelo, idx) => (
-                        <Card key={modelo.id} className="bg-muted/30">
-                          <CardHeader className="p-3 pb-1">
-                            <div className="flex items-start justify-between gap-2">
-                              <CardTitle className="text-sm font-medium">
-                                <span className="text-muted-foreground mr-1.5">
-                                  {idx + 1}.
-                                </span>
-                                {modelo.titulo}
-                              </CardTitle>
-                              <div className="flex gap-1 shrink-0">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7"
-                                  onClick={() => openEditModel(modelo)}
-                                >
-                                  <Pencil className="h-3 w-3" />
-                                  <span className="sr-only">Editar modelo</span>
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 text-destructive hover:text-destructive"
-                                  onClick={() => setDeleteModelId(modelo.id)}
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                  <span className="sr-only">Deletar modelo</span>
-                                </Button>
-                              </div>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="p-3 pt-0">
-                            <p className="text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed line-clamp-4">
-                              {modelo.corpo}
+                        <div key={modelo.id} className="rounded-[var(--pib-radius)] border border-[var(--pib-line)] bg-[var(--pib-paper)] p-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="text-sm font-medium">
+                              <span className="pib-mute mr-1.5">{idx + 1}.</span>
+                              {modelo.titulo}
                             </p>
-                          </CardContent>
-                        </Card>
+                            <div className="flex gap-1 shrink-0">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={() => openEditModel(modelo)}
+                              >
+                                <Pencil className="h-3 w-3" />
+                                <span className="sr-only">Editar modelo</span>
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-destructive hover:text-destructive"
+                                onClick={() => setDeleteModelId(modelo.id)}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                                <span className="sr-only">Deletar modelo</span>
+                              </Button>
+                            </div>
+                          </div>
+                          <p className="pib-mute mt-1 whitespace-pre-wrap text-xs leading-relaxed line-clamp-4">
+                            {modelo.corpo}
+                          </p>
+                        </div>
                       ))
                     )}
                     <Button
@@ -569,6 +550,6 @@ export default function MensagensPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </AdminScreen>
   )
 }

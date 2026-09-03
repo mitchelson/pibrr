@@ -11,15 +11,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
-import { Search, Plus, X, Crown, Trash2, ChevronRight } from "lucide-react"
+import { Search, Plus, X, Crown, Trash2 } from "lucide-react"
 import { toast } from "@/components/ui/use-toast"
-import {
-  RoleBadges,
-  formatRoleBadge,
-  roleColor,
-  type RoleBadgeItem,
-} from "@/components/role-badges"
-import { cn } from "@/lib/utils"
+import type { RoleBadgeItem } from "@/components/role-badges"
+import { AdminScreen, AdminPrimaryAction } from "@/components/app-v2/admin-screen"
+import { DsEmpty, DsList, DsRow, DsStatus, DsWell, RoleBadgesV2 } from "@/components/app-v2/ds"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -234,26 +230,27 @@ export default function MembrosAdminPage() {
     : []
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-xl font-bold tracking-tight">Membros</h1>
-        <p className="text-sm text-muted-foreground">
-          {filtered ? `${filtered.length} pessoa${filtered.length !== 1 ? "s" : ""}` : "Carregando…"}
-        </p>
-      </div>
-
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+    <AdminScreen
+      kicker="Igreja"
+      title="Pessoas"
+      subtitle={
+        filtered
+          ? `${filtered.length} pessoa${filtered.length !== 1 ? "s" : ""} — papéis e ministérios`
+          : "Carregando…"
+      }
+    >
+      <DsWell className="!items-stretch sm:!items-center">
+        <div className="relative min-w-0 flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--pib-mute)]" />
           <Input
             placeholder="Buscar por nome ou email"
-            className="pl-9"
+            className="border-0 bg-[var(--pib-paper-raised)] pl-9 shadow-none"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         <Select value={filterMin} onValueChange={setFilterMin}>
-          <SelectTrigger className="w-full sm:w-52">
+          <SelectTrigger className="w-full border-0 bg-[var(--pib-paper-raised)] shadow-none sm:w-52">
             <SelectValue placeholder="Ministério" />
           </SelectTrigger>
           <SelectContent>
@@ -266,68 +263,56 @@ export default function MembrosAdminPage() {
             ))}
           </SelectContent>
         </Select>
-      </div>
+      </DsWell>
 
-      <div className="overflow-hidden rounded-xl border bg-card">
-        {!filtered ? (
-          <p className="p-8 text-center text-sm text-muted-foreground">Carregando membros…</p>
-        ) : filtered.length === 0 ? (
-          <p className="p-8 text-center text-sm text-muted-foreground">Nenhum membro encontrado</p>
-        ) : (
-          <ul className="divide-y">
-            {filtered.map((u: any) => {
-              const role = primaryRole(u)
-              const minCount = u.ministerios?.length || 0
-              const liderCount = u.ministerios?.filter((m: any) => m.is_lider).length || 0
-              return (
-                <li key={u.id}>
-                  <button
-                    type="button"
-                    onClick={() => openEdit(u)}
-                    className="flex w-full items-center gap-3 px-3 py-3 text-left transition-colors hover:bg-muted/50 sm:px-4"
-                  >
-                    <Avatar className="h-10 w-10 shrink-0">
-                      <AvatarImage src={u.foto_url} />
-                      <AvatarFallback>{u.nome?.[0]}</AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="truncate font-medium text-sm">{u.nome}</p>
-                        {!u.ativo && (
-                          <span className="shrink-0 rounded bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium text-destructive">
-                            Inativo
-                          </span>
-                        )}
-                      </div>
-                      <p className="truncate text-xs text-muted-foreground">{u.email}</p>
-                      <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
-                        <span
-                          className={cn(
-                            "rounded px-1.5 py-0.5 font-medium",
-                            roleColor(role.role_name)
-                          )}
-                        >
-                          {formatRoleBadge(role)}
+      {!filtered ? (
+        <p className="pib-mute py-8 text-center text-sm">Carregando membros…</p>
+      ) : filtered.length === 0 ? (
+        <DsEmpty title="Nenhum membro encontrado" />
+      ) : (
+        <DsList>
+          {filtered.map((u: any) => {
+            const role = primaryRole(u)
+            const minCount = u.ministerios?.length || 0
+            const liderCount = u.ministerios?.filter((m: any) => m.is_lider).length || 0
+            return (
+              <DsRow
+                key={u.id}
+                onClick={() => openEdit(u)}
+                leading={
+                  <Avatar className="h-10 w-10 shrink-0">
+                    <AvatarImage src={u.foto_url} />
+                    <AvatarFallback>{u.nome?.[0]}</AvatarFallback>
+                  </Avatar>
+                }
+                title={
+                  <span className="flex items-center gap-2">
+                    <span className="truncate">{u.nome}</span>
+                    {!u.ativo && <DsStatus tone="no">Inativo</DsStatus>}
+                  </span>
+                }
+                meta={
+                  <span className="flex flex-col gap-1">
+                    <span className="truncate">{u.email}</span>
+                    <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <RoleBadgesV2 roles={[role]} size="xs" />
+                      {u.roles?.length > 1 && (
+                        <span>+{u.roles.length - 1} papel{u.roles.length > 2 ? "es" : ""}</span>
+                      )}
+                      {minCount > 0 && (
+                        <span>
+                          {minCount} ministério{minCount !== 1 ? "s" : ""}
+                          {liderCount > 0 ? ` · ${liderCount} liderança${liderCount !== 1 ? "s" : ""}` : ""}
                         </span>
-                        {u.roles?.length > 1 && (
-                          <span>+{u.roles.length - 1} papel{u.roles.length > 2 ? "es" : ""}</span>
-                        )}
-                        {minCount > 0 && (
-                          <span>
-                            {minCount} ministério{minCount !== 1 ? "s" : ""}
-                            {liderCount > 0 ? ` · ${liderCount} liderança${liderCount !== 1 ? "s" : ""}` : ""}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  </button>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </div>
+                      )}
+                    </span>
+                  </span>
+                }
+              />
+            )
+          })}
+        </DsList>
+      )}
 
       <Dialog
         open={!!editUser}
@@ -349,7 +334,7 @@ export default function MembrosAdminPage() {
                     <p className="truncate text-sm text-muted-foreground">{editUser.email}</p>
                   </div>
                 </div>
-                <RoleBadges
+                <RoleBadgesV2
                   roles={editUser.roles}
                   legacyRole={editUser.role}
                   size="xs"
@@ -431,14 +416,7 @@ export default function MembrosAdminPage() {
                         key={`${role.role_name}-${role.context_id || "g"}-${idx}`}
                         className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2"
                       >
-                        <span
-                          className={cn(
-                            "rounded px-2 py-0.5 text-xs font-medium",
-                            roleColor(role.role_name)
-                          )}
-                        >
-                          {formatRoleBadge(role)}
-                        </span>
+                        <RoleBadgesV2 roles={[role]} size="sm" />
                         <Button
                           variant="ghost"
                           size="icon"
@@ -626,6 +604,6 @@ export default function MembrosAdminPage() {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </AdminScreen>
   )
 }

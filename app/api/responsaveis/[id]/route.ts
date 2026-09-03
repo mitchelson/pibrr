@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { sql } from "@/lib/neon"
+import { sql } from "@/lib/db"
 
 export async function DELETE(
   _request: NextRequest,

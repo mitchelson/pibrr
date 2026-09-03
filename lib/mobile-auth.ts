@@ -1,7 +1,7 @@
 import { jwtVerify } from "jose"
 import { NextRequest } from "next/server"
 import { auth } from "@/lib/auth"
-import { sql } from "@/lib/neon"
+import { sql } from "@/lib/db"
 import { getMobileJwtSecret } from "@/lib/jwt-secret"
 
 const secret = getMobileJwtSecret()

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { sql } from "@/lib/neon"
+import { sql } from "@/lib/db"
 import { requireMinisterioAccess, requireAdmin } from "@/lib/authorization"
 import { getSession } from "@/lib/mobile-auth"
 

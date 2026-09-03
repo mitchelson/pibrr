@@ -1,8 +1,8 @@
-const { neon } = require("@neondatabase/serverless");
+const postgres = require("postgres");
 require("dotenv").config({ path: ".env.local" });
 
 async function main() {
-  const sql = neon(process.env.DATABASE_URL);
+  const sql = postgres(process.env.DATABASE_URL);
 
   // 1. Campos extras em users
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT`;

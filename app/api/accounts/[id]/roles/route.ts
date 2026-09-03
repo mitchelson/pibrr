@@ -8,7 +8,7 @@ import {
   syncLegacyPrimaryRole,
   getOrCreateMinistryContext,
 } from "@/lib/account-roles"
-import { sql } from "@/lib/neon"
+import { sql } from "@/lib/db"
 
 export async function GET(
   request: NextRequest,

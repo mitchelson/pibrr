@@ -1,4 +1,4 @@
-import { sql } from "@/lib/neon"
+import { sql } from "@/lib/db"
 
 export async function getAcolhimentoMinisterioId(): Promise<string | null> {
   try {

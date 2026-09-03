@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/mobile-auth"
-import { sql } from "@/lib/neon"
+import { sql } from "@/lib/db"
 import { canAccessAcolhimento } from "@/lib/acolhimento"
 import { getAcolhimentoMinisterioId } from "@/lib/acolhimento-server"
 

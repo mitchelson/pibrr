@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { sql } from "@/lib/neon"
+import { sql } from "@/lib/db"
 import { fetchAccountRoles } from "@/lib/account-roles"
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

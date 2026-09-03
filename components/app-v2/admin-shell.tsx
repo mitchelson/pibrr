@@ -4,7 +4,6 @@ import { signOut } from "next-auth/react"
 import { LogOut } from "lucide-react"
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { AdminSidebarV2 } from "@/components/app-v2/admin-sidebar"
-import { VersionBanner } from "@/components/app-v2/version-banner"
 import { UiCookieSync } from "@/components/app-v2/ui-cookie-sync"
 import { NotificationsButton } from "@/components/notifications-button"
 import { DsRoot } from "@/components/app-v2/ds"
@@ -14,7 +13,6 @@ export function AdminShellV2({ children }: { children: React.ReactNode }) {
   return (
     <DsRoot>
       <UiCookieSync version="v2" />
-      <VersionBanner />
       <SidebarProvider>
         <AdminSidebarV2 />
         <SidebarInset className="bg-[var(--pib-paper)]">

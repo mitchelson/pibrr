@@ -40,6 +40,16 @@ const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
   images: { unoptimized: true },
+  async redirects() {
+    return [
+      { source: "/admin-v2", destination: "/admin", permanent: true },
+      { source: "/admin-v2/:path*", destination: "/admin/:path*", permanent: true },
+      { source: "/minha-area-v2", destination: "/minha-area", permanent: true },
+      { source: "/minha-area-v2/:path*", destination: "/minha-area/:path*", permanent: true },
+      { source: "/admin/form-ministerios", destination: "/admin/interesses", permanent: true },
+      { source: "/admin/responsaveis", destination: "/admin/visitantes", permanent: true },
+    ]
+  },
 };
 
 module.exports = withPWA(nextConfig);

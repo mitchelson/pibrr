@@ -9,10 +9,10 @@
  * - Import these functions in your API routes
  * - Use hasPermission() to check if a user can perform an action
  * 
- * @requires pg or @vercel/postgres for database queries
+ * @requires postgres (`@/lib/db`) for database queries
  */
 
-import { sql } from '@/lib/neon';
+import { sql } from '@/lib/db';
 
 // ============================================================================
 // TYPES

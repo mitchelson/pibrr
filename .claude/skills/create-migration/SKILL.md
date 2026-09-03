@@ -1,6 +1,6 @@
 ---
 name: create-migration
-description: Criar nova migração SQL para o banco NeonDB
+description: Criar nova migração SQL para o Postgres da VPS (pibrr_gestao)
 ---
 # Criar Migração SQL
 
@@ -17,9 +17,9 @@ Ao criar uma nova migração em `scripts/`:
 ```
 6. Se necessário script JS para executar, criar `015-descricao.js`:
 ```javascript
-const { neon } = require("@neondatabase/serverless")
-const sql = neon(process.env.DATABASE_URL)
+const postgres = require("postgres")
+const sql = postgres(process.env.DATABASE_URL)
 async function main() { /* ... */ }
 main().catch(console.error)
 ```
-7. Testar no Neon Console antes de commitar
+7. Testar no Postgres da VPS antes de commitar

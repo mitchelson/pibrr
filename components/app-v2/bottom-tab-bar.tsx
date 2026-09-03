@@ -17,10 +17,10 @@ export function BottomTabBarV2() {
 
   const hojeActive =
     pathname === paths.escalas ||
-    pathname.startsWith("/minha-area-v2/culto") ||
-    (pathname.startsWith("/minha-area-v2") && !pathname.startsWith("/minha-area-v2/perfil"))
+    pathname.startsWith("/minha-area/culto") ||
+    (pathname.startsWith("/minha-area") && !pathname.startsWith("/minha-area/perfil"))
   const feedActive = pathname.startsWith("/feed")
-  const adminActive = pathname.startsWith("/admin-v2") || pathname.startsWith("/admin")
+  const adminActive = pathname.startsWith("/admin")
   const perfilActive = pathname.startsWith(paths.perfil)
 
   const items = [

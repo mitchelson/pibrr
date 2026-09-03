@@ -2,7 +2,7 @@
 
 ## Stack
 - Next.js 15 (App Router) + React 19 + TypeScript
-- NeonDB (Postgres serverless) via `@neondatabase/serverless`
+- PostgreSQL na VPS (`pibrr_gestao`) via `postgres` (`lib/db.ts`)
 - NextAuth v5 (Google OAuth, JWT strategy)
 - Tailwind CSS + Radix UI + shadcn/ui
 - PWA com next-pwa + web-push notifications
@@ -21,13 +21,13 @@ npm run lint     # eslint
 - `app/admin/` — Painel administrativo (admin, supervisor, lider)
 - `app/minha-area/` — Área do membro logado
 - `components/` — Componentes reutilizáveis + `components/ui/` (shadcn)
-- `lib/` — Utilitários (auth, neon, push, pdf, constants)
+- `lib/` — Utilitários (auth, db, push, pdf, constants)
 - `scripts/` — Migrações SQL numeradas (001-014)
 
 ## Banco de Dados
-- Conexão: `import { sql } from "@/lib/neon"` (tagged template)
+- Conexão: `import { sql } from "@/lib/db"` (tagged template)
 - Queries: `` sql`SELECT * FROM users WHERE id = ${id}` ``
-- Migrações em `scripts/` — executar no Neon Console
+- Migrações em `scripts/` — executar no Postgres da VPS
 
 ## Autenticação
 - NextAuth v5 em `lib/auth.ts`, middleware em `middleware.ts`

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { sql } from "@/lib/neon"
+import { sql } from "@/lib/db"
 
 const ASSUNTOS: Record<string, string> = {
   visitante: "Primeira Visita",

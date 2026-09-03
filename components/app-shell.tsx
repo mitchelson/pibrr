@@ -23,7 +23,7 @@ type AppShellProps = {
 function tabActive(pathname: string, href: string, perfilHref: string, escalasHref: string) {
   if (href === perfilHref) return pathname.startsWith(perfilHref)
   if (href === escalasHref) {
-    return pathname === escalasHref || pathname === "/minha-area" || pathname === "/minha-area-v2"
+    return pathname === escalasHref || pathname === "/minha-area" || pathname === "/minha-area"
   }
   return pathname === href || pathname.startsWith(`${href}/`)
 }

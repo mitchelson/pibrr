@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { sql } from "@/lib/neon"
+import { sql } from "@/lib/db"
 import { getSession } from "@/lib/mobile-auth"
 
 async function canEdit(userId: string, eventoId: string): Promise<boolean> {

@@ -20,7 +20,7 @@ export function AcolhimentoGate({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (status === "loading" || !config) return
-    if (!ok) router.replace("/admin-v2")
+    if (!ok) router.replace("/admin")
   }, [status, config, ok, router])
 
   if (status === "loading" || !config || !ok) {

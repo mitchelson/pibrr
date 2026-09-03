@@ -12,7 +12,6 @@ import { cn } from "@/lib/utils"
 import { PwaInstallPrompt } from "@/components/pwa-install-prompt"
 import { NotificationsButton } from "@/components/notifications-button"
 import { BottomTabBarV2 } from "@/components/app-v2/bottom-tab-bar"
-import { VersionBanner } from "@/components/app-v2/version-banner"
 import { UiCookieSync } from "@/components/app-v2/ui-cookie-sync"
 import { useAppUi } from "@/hooks/use-app-ui"
 import { DsRoot } from "@/components/app-v2/ds"
@@ -45,8 +44,8 @@ export function AppShellV2({ children, showTabs = true }: AppShellV2Props) {
     if (href === paths.escalas) {
       return (
         pathname === paths.escalas ||
-        pathname.startsWith("/minha-area-v2/culto") ||
-        (pathname.startsWith("/minha-area-v2") && !pathname.startsWith(paths.perfil))
+        pathname.startsWith("/minha-area/culto") ||
+        (pathname.startsWith("/minha-area") && !pathname.startsWith(paths.perfil))
       )
     }
     return pathname === href || pathname.startsWith(`${href}/`)
@@ -55,7 +54,6 @@ export function AppShellV2({ children, showTabs = true }: AppShellV2Props) {
   return (
     <DsRoot className={cn(showTabs && "pb-0")}>
       <UiCookieSync version="v2" />
-      <VersionBanner />
 
       <header className="pib-topbar pib-topbar--ink pib-topbar--member-desktop">
         <Link href={paths.escalas} className="justify-self-start">

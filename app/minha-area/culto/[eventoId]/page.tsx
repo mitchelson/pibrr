@@ -1,7 +1,7 @@
 import { redirect, notFound } from "next/navigation"
 import Link from "next/link"
 import { auth } from "@/lib/auth"
-import { sql } from "@/lib/neon"
+import { sql } from "@/lib/db"
 import { ArrowLeft, Clock } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { MinistryIcon } from "@/components/ministry-icon"
@@ -13,8 +13,8 @@ import {
   DsSection,
   DsStatus,
 } from "@/components/app-v2/ds"
-import { EscalaActionsV2 } from "@/app/minha-area-v2/escala-actions-v2"
-import { RepertoireV2 } from "@/app/minha-area-v2/culto/repertoire-v2"
+import { EscalaActionsV2 } from "@/app/minha-area/escala-actions-v2"
+import { RepertoireV2 } from "@/app/minha-area/culto/repertoire-v2"
 
 export const dynamic = "force-dynamic"
 
@@ -54,7 +54,7 @@ export default async function CultoV2Page({
   `
 
   if (minhasEscalas.length === 0) {
-    redirect("/minha-area-v2")
+    redirect("/minha-area")
   }
 
   const equipe = await sql`
@@ -100,7 +100,7 @@ export default async function CultoV2Page({
   return (
     <DsPage>
       <Link
-        href="/minha-area-v2"
+        href="/minha-area"
         className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--pib-mute)] transition-colors hover:text-[var(--pib-ink)]"
       >
         <ArrowLeft className="h-4 w-4" /> Hoje

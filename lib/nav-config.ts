@@ -57,25 +57,12 @@ export const LEGAL_NAV: NavLink[] = [
   { href: "/excluir-conta", label: "Excluir conta" },
 ]
 
-/** Member app tabs — hrefs follow NEXT_PUBLIC_APP_UI_VERSION when set */
+/** Member app tabs */
 export const APP_TABS: Array<NavLink & { id: string; adminOnly?: boolean }> = [
-  {
-    id: "escalas",
-    href: process.env.NEXT_PUBLIC_APP_UI_VERSION === "v2" ? "/minha-area-v2" : "/minha-area",
-    label: process.env.NEXT_PUBLIC_APP_UI_VERSION === "v2" ? "Hoje" : "Escalas",
-  },
-  { id: "feed", href: "/feed", label: process.env.NEXT_PUBLIC_APP_UI_VERSION === "v2" ? "Comunidade" : "Feed" },
-  {
-    id: "admin",
-    href: process.env.NEXT_PUBLIC_APP_UI_VERSION === "v2" ? "/admin-v2" : "/admin",
-    label: process.env.NEXT_PUBLIC_APP_UI_VERSION === "v2" ? "Gestão" : "Admin",
-    adminOnly: true,
-  },
-  {
-    id: "perfil",
-    href: process.env.NEXT_PUBLIC_APP_UI_VERSION === "v2" ? "/minha-area-v2/perfil" : "/minha-area/perfil",
-    label: process.env.NEXT_PUBLIC_APP_UI_VERSION === "v2" ? "Eu" : "Perfil",
-  },
+  { id: "escalas", href: "/minha-area", label: "Hoje" },
+  { id: "feed", href: "/feed", label: "Comunidade" },
+  { id: "admin", href: "/admin", label: "Gestão", adminOnly: true },
+  { id: "perfil", href: "/minha-area/perfil", label: "Eu" },
 ]
 
 /** Admin sidebar groups by task */
@@ -195,39 +182,39 @@ export const ADMIN_NAV_GROUPS_V2: AdminNavGroupV2[] = [
   {
     id: "trabalho",
     label: "Trabalho",
-    items: [{ href: "/admin-v2", title: "Fila", icon: Home }],
+    items: [{ href: "/admin", title: "Fila", icon: Home }],
   },
   {
     id: "cuidar",
     label: "Cuidar",
     items: [
-      { href: "/admin-v2/visitantes", title: "Pessoas novas", icon: Users, acolhimento: true },
-      { href: "/admin-v2/mensagens", title: "Mensagens", icon: MessageSquare, acolhimento: true },
+      { href: "/admin/visitantes", title: "Pessoas novas", icon: Users, acolhimento: true },
+      { href: "/admin/mensagens", title: "Mensagens", icon: MessageSquare, acolhimento: true },
     ],
   },
   {
     id: "igreja",
     label: "Igreja",
     items: [
-      { href: "/admin-v2/membros", title: "Pessoas", icon: UserCog, roles: ["admin"] },
-      { href: "/admin-v2/escalas", title: "Cultos", icon: ClipboardList, roles: ["admin"] },
-      { href: "/admin-v2/eventos", title: "Calendário", icon: Calendar, roles: ["admin"] },
-      { href: "/admin-v2/ministerios", title: "Ministérios", icon: Music, roles: ["admin"] },
+      { href: "/admin/membros", title: "Pessoas", icon: UserCog, roles: ["admin"] },
+      { href: "/admin/escalas", title: "Cultos", icon: ClipboardList, roles: ["admin"] },
+      { href: "/admin/eventos", title: "Calendário", icon: Calendar, roles: ["admin"] },
+      { href: "/admin/ministerios", title: "Ministérios", icon: Music, roles: ["admin"] },
     ],
   },
   {
     id: "descobrir",
     label: "Descobrir",
     items: [
-      { href: "/admin-v2/dons-espirituais", title: "Dons", icon: Sparkles, roles: ["admin"] },
-      { href: "/admin-v2/interesses", title: "Quem quer servir", icon: BookOpen, roles: ["admin"] },
+      { href: "/admin/dons-espirituais", title: "Dons", icon: Sparkles, roles: ["admin"] },
+      { href: "/admin/interesses", title: "Quem quer servir", icon: BookOpen, roles: ["admin"] },
     ],
   },
   {
     id: "ajustes",
     label: "Ajustes",
     items: [
-      { href: "/admin-v2/configuracoes", title: "Configuração", icon: Settings, roles: ["admin"] },
+      { href: "/admin/configuracoes", title: "Configuração", icon: Settings, roles: ["admin"] },
     ],
   },
 ]

@@ -17,7 +17,7 @@ export function BottomTabBar() {
 
   const feedActive = pathname.startsWith("/feed")
   const escalasActive =
-    pathname === paths.escalas || pathname === "/minha-area" || pathname === "/minha-area-v2"
+    pathname === paths.escalas || pathname === "/minha-area" || pathname === "/minha-area"
   const adminActive = pathname.startsWith("/admin")
   const perfilActive = pathname.startsWith(paths.perfil) || pathname.startsWith("/minha-area/perfil")
 

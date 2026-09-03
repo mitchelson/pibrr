@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { SignJWT } from "jose"
-import { sql } from "@/lib/neon"
+import { sql } from "@/lib/db"
 import { verifyAppleIdentityToken } from "@/lib/apple-auth"
 import { verifyFirebaseIdToken } from "@/lib/firebase-auth"
 import { verifyGoogleIdToken } from "@/lib/google-auth"

@@ -473,7 +473,7 @@ export { sql }
 - Validação fail-fast se `DATABASE_URL` ausente
 - Timeout explícito
 
-**Inconsistência:** `app/api/visitantes/mensagens-status/route.ts` usa `@vercel/postgres` enquanto todo o resto usa `@/lib/neon`.
+**Inconsistência:** `app/api/visitantes/mensagens-status/route.ts` usa `@vercel/postgres` enquanto todo o resto usa `@/lib/db`.
 
 ---
 

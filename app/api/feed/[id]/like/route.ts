@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { sql } from "@/lib/neon"
+import { sql } from "@/lib/db"
 import { getSession } from "@/lib/mobile-auth"
 
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

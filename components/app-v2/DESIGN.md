@@ -1,6 +1,6 @@
 # Design system — App v2 (PIB Roraima)
 
-Escopo: `/minha-area-v2`, `/admin-v2`, shells em `components/app-v2`.
+Escopo: `/minha-area`, `/admin`, shells em `components/app-v2`.
 Mapa de fluxos: [`FLOWS.md`](./FLOWS.md).
 
 ## Tema

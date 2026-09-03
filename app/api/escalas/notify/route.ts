@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/mobile-auth"
-import { sql } from "@/lib/neon"
+import { sql } from "@/lib/db"
 import { sendPushToUser } from "@/lib/push"
 
 export async function POST(request: NextRequest) {

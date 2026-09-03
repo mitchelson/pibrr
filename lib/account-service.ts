@@ -10,12 +10,12 @@
  * - Replace direct database writes with calls to these service functions
  * - Once migration is complete, remove the dual-write logic
  * 
- * @requires @vercel/postgres
+ * @requires @/lib/db
  * @requires ./feature-flags
  * @requires ./permissions
  */
 
-import { sql } from '@vercel/postgres';
+import { sql } from '@/lib/db'
 import { isFeatureEnabled } from './feature-flags';
 import { assignRole, removeRole, createContext } from './permissions';
 
@@ -72,7 +72,7 @@ export async function createAccount(input: CreateAccountInput): Promise<string> 
         RETURNING id
       `;
       
-      const accountId = result.rows[0].id;
+      const accountId = result[0].id;
       
       // Assign default role based on journey_stage
       const defaultRole = input.journey_stage || 'visitante';
@@ -100,7 +100,7 @@ export async function createAccount(input: CreateAccountInput): Promise<string> 
         RETURNING id
       `;
       
-      const userId = oldResult.rows[0].id;
+      const userId = oldResult[0].id;
       
       // 2. Write to new accounts table (with same ID)
       await sql`
@@ -341,7 +341,7 @@ export async function createMinistry(
       RETURNING id
     `;
     
-    const ministryId = result.rows[0].id;
+    const ministryId = result[0].id;
     
     // Create context for this ministry
     await createContext('ministry', ministryId, name, description);
@@ -352,7 +352,7 @@ export async function createMinistry(
         SELECT id FROM contexts 
         WHERE context_type = 'ministry' AND context_id = ${ministryId}::uuid
       `;
-      const contextId = contextResult.rows[0].id;
+      const contextId = contextResult[0].id;
       
       await assignRole(leaderId, 'lider', contextId);
     }
@@ -385,8 +385,8 @@ export async function addMemberToMinistry(
       WHERE context_type = 'ministry' AND context_id = ${ministryId}::uuid
     `;
     
-    if (contextResult.rows.length > 0) {
-      const contextId = contextResult.rows[0].id;
+    if (contextResult.length > 0) {
+      const contextId = contextResult[0].id;
       await assignRole(userId, 'membro', contextId);
     }
   } catch (error) {
@@ -415,8 +415,8 @@ export async function removeMemberFromMinistry(
       WHERE context_type = 'ministry' AND context_id = ${ministryId}::uuid
     `;
     
-    if (contextResult.rows.length > 0) {
-      const contextId = contextResult.rows[0].id;
+    if (contextResult.length > 0) {
+      const contextId = contextResult[0].id;
       await removeRole(userId, 'membro', contextId);
     }
   } catch (error) {
@@ -482,11 +482,11 @@ export async function syncUserToAccount(userId: string): Promise<void> {
       SELECT * FROM users WHERE id = ${userId}::uuid
     `;
     
-    if (userResult.rows.length === 0) {
+    if (userResult.length === 0) {
       throw new Error(`User ${userId} not found`);
     }
     
-    const user = userResult.rows[0];
+    const user = userResult[0];
     
     // Insert or update account
     await sql`

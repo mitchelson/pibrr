@@ -1,7 +1,7 @@
 import NextAuth from "next-auth"
 import { cookies } from "next/headers"
 import { authConfig } from "@/lib/auth.config"
-import { sql } from "@/lib/neon"
+import { sql } from "@/lib/db"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
