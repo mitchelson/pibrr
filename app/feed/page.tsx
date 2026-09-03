@@ -11,9 +11,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/use-toast"
-import { AppShell } from "@/components/app-shell"
 import { NotificationsButton } from "@/components/notifications-button"
 import { UserProfileDialog } from "@/components/user-profile-dialog"
+import { MemberShell } from "@/components/app-v2/member-shell"
+import { useAppUi } from "@/hooks/use-app-ui"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
@@ -34,6 +35,8 @@ function PostMencoes({ ministerioIds, userIds }: { ministerioIds?: string[]; use
   const ids = typeof ministerioIds === "string" ? JSON.parse(ministerioIds) : ministerioIds
   const uids = typeof userIds === "string" ? JSON.parse(userIds) : userIds
 
+  const { data: users } = useSWR(uids?.length ? "/api/users" : null, fetcher)
+
   return (
     <div className="px-4 pb-3 flex flex-wrap gap-1.5">
       {ids?.map((id: string) => {
@@ -45,11 +48,14 @@ function PostMencoes({ ministerioIds, userIds }: { ministerioIds?: string[]; use
           </span>
         ) : null
       })}
-      {uids?.map((id: string) => (
-        <span key={id} className="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 text-xs text-gray-600 font-medium">
-          @mencionado
-        </span>
-      ))}
+      {uids?.map((id: string) => {
+        const u = users?.find((x: any) => x.id === id)
+        return (
+          <span key={id} className="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 text-xs text-gray-600 font-medium">
+            @{u?.nome?.split(" ")[0] || "membro"}
+          </span>
+        )
+      })}
     </div>
   )
 }
@@ -358,16 +364,17 @@ export default function FeedPage() {
   const { data: session } = useSession()
   const [page, setPage] = useState(1)
   const { data, mutate } = useSWR(`/api/feed?page=${page}`, fetcher)
+  const { version } = useAppUi()
 
   const canPost = session?.user?.role === "admin" || session?.user?.role === "lider" || session?.user?.role === "supervisor"
 
   return (
-    <AppShell showTabs={!!session}>
+    <MemberShell showTabs={!!session}>
       <div className="border-b bg-background sticky top-0 z-30 md:static">
         <div className="mx-auto flex h-12 max-w-2xl items-center justify-between px-4 md:h-auto md:py-4">
           <h1 className="font-semibold md:text-xl">Feed</h1>
           {session ? (
-            <NotificationsButton />
+            version === "v1" ? <NotificationsButton /> : <span />
           ) : (
             <Link href="/login" className="text-sm font-semibold text-primary">
               Entrar
@@ -401,6 +408,6 @@ export default function FeedPage() {
           </div>
         )}
       </div>
-    </AppShell>
+    </MemberShell>
   )
 }

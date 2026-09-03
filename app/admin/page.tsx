@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth"
 import { Calendar, ClipboardList, MessageSquare, Users, ChevronRight, Music } from "lucide-react"
 import Link from "next/link"
 import { MinistryIcon } from "@/components/ministry-icon"
+import { TryV2Link } from "@/components/app-v2/try-v2-link"
+import { APP_PATHS } from "@/lib/app-ui"
 
 export const dynamic = "force-dynamic"
 
@@ -77,11 +79,14 @@ export default async function AdminDashboard() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">
-          Resumo operacional — use o menu para navegar
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-sm text-muted-foreground">
+            Resumo operacional — use o menu para navegar
+          </p>
+        </div>
+        <TryV2Link href={APP_PATHS.v2.admin} />
       </div>
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

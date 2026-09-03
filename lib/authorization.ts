@@ -21,6 +21,28 @@ function toSession(session: MobileSession) {
   }
 }
 
+export function isStaffRole(role?: string | null): boolean {
+  return role === "admin" || role === "lider" || role === "supervisor"
+}
+
+/** Admin, líder ou supervisor — web + mobile */
+export async function requireStaff(request: NextRequest): Promise<AuthResult> {
+  const session = await getSession(request)
+  if (!session) {
+    return {
+      authorized: false,
+      response: NextResponse.json({ error: "Não autenticado" }, { status: 401 }),
+    }
+  }
+  if (!isStaffRole(session.role)) {
+    return {
+      authorized: false,
+      response: NextResponse.json({ error: "Sem permissão" }, { status: 403 }),
+    }
+  }
+  return { authorized: true, session: toSession(session) }
+}
+
 /** Web (NextAuth cookie) + mobile (Bearer JWT) */
 export async function requireAdmin(request: NextRequest): Promise<AuthResult> {
   const session = await getSession(request)

@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/neon"
+import { requireStaff } from "@/lib/authorization"
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const check = await requireStaff(request)
+  if (!check.authorized) return check.response
+
   try {
     const { id } = await params
     const rows = await sql`
@@ -37,6 +41,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const check = await requireStaff(request)
+  if (!check.authorized) return check.response
+
   try {
     const { id } = await params
     const body = await request.json()
@@ -92,9 +99,12 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const check = await requireStaff(request)
+  if (!check.authorized) return check.response
+
   try {
     const { id } = await params
     const rows = await sql`

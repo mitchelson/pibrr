@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/neon"
+import { requireStaff } from "@/lib/authorization"
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const check = await requireStaff(request)
+  if (!check.authorized) return check.response
+
   try {
     const rows = await sql`
       SELECT

@@ -6,20 +6,21 @@ import { useSession } from "next-auth/react"
 import { Newspaper, ClipboardList, Shield } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { isAdminRole } from "@/lib/nav-config"
-import { APP_PATHS, envUiVersion } from "@/lib/app-ui"
 import { cn } from "@/lib/utils"
+import { useAppUi } from "@/hooks/use-app-ui"
 
-export function BottomTabBar() {
+export function BottomTabBarV2() {
   const pathname = usePathname()
   const { data: session } = useSession()
+  const { paths } = useAppUi()
   const showAdmin = isAdminRole(session?.user?.role)
-  const paths = APP_PATHS[envUiVersion()]
 
   const feedActive = pathname.startsWith("/feed")
   const escalasActive =
-    pathname === paths.escalas || pathname === "/minha-area" || pathname === "/minha-area-v2"
-  const adminActive = pathname.startsWith("/admin")
-  const perfilActive = pathname.startsWith(paths.perfil) || pathname.startsWith("/minha-area/perfil")
+    pathname === paths.escalas ||
+    (pathname.startsWith("/minha-area-v2") && !pathname.startsWith("/minha-area-v2/perfil"))
+  const adminActive = pathname.startsWith("/admin-v2") || pathname.startsWith("/admin")
+  const perfilActive = pathname.startsWith(paths.perfil)
 
   return (
     <nav className="fixed bottom-0 inset-x-0 z-50 border-t bg-background pb-[env(safe-area-inset-bottom)] md:hidden">

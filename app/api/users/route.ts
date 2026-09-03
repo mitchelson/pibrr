@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/neon"
-import { requireAdminUniversal } from "@/lib/mobile-auth"
+import { getSession, requireAdminUniversal } from "@/lib/mobile-auth"
 import {
   assignAccountRole,
   ensureAccountExists,
@@ -8,11 +8,25 @@ import {
   fromLegacyRole,
   syncLegacyPrimaryRole,
 } from "@/lib/account-roles"
+import { isStaffRole } from "@/lib/authorization"
 
 export async function GET(request: NextRequest) {
-  const check = await requireAdminUniversal(request)
-  if (!check.authorized) {
-    return NextResponse.json({ error: check.error }, { status: check.status })
+  const session = await getSession(request)
+  if (!session) {
+    return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
+  }
+
+  if (!isStaffRole(session.role)) {
+    return NextResponse.json({ error: "Sem permissão" }, { status: 403 })
+  }
+
+  if (session.role !== "admin") {
+    const lite = await sql`
+      SELECT id, nome, foto_url FROM users
+      WHERE coalesce(ativo, true) = true
+      ORDER BY nome ASC
+    `
+    return NextResponse.json(lite)
   }
 
   const rows = await sql`

@@ -7,45 +7,46 @@ import { useSession, signOut } from "next-auth/react"
 import { LogOut, Newspaper, ClipboardList, Shield } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { BottomTabBar } from "@/components/bottom-tab-bar"
 import { isAdminRole } from "@/lib/nav-config"
-import { APP_PATHS, envUiVersion } from "@/lib/app-ui"
 import { CHURCH_INFO } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 import { PwaInstallPrompt } from "@/components/pwa-install-prompt"
+import { NotificationsButton } from "@/components/notifications-button"
+import { BottomTabBarV2 } from "@/components/app-v2/bottom-tab-bar"
+import { VersionBanner } from "@/components/app-v2/version-banner"
+import { UiCookieSync } from "@/components/app-v2/ui-cookie-sync"
+import { useAppUi } from "@/hooks/use-app-ui"
 
-type AppShellProps = {
+type AppShellV2Props = {
   children: React.ReactNode
-  /** Show bottom tabs (default true) */
   showTabs?: boolean
 }
 
 function tabActive(pathname: string, href: string, perfilHref: string, escalasHref: string) {
   if (href === perfilHref) return pathname.startsWith(perfilHref)
   if (href === escalasHref) {
-    return pathname === escalasHref || pathname === "/minha-area" || pathname === "/minha-area-v2"
+    return pathname === escalasHref
   }
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
-export function AppShell({ children, showTabs = true }: AppShellProps) {
+export function AppShellV2({ children, showTabs = true }: AppShellV2Props) {
   const pathname = usePathname()
   const { data: session } = useSession()
+  const { paths } = useAppUi()
   const showAdmin = isAdminRole(session?.user?.role)
-  const paths = APP_PATHS[envUiVersion()]
 
   const desktopTabs = [
     { href: paths.feed, label: "Feed", icon: Newspaper },
     { href: paths.escalas, label: "Escalas", icon: ClipboardList },
-    ...(showAdmin
-      ? [{ href: paths.admin, label: "Admin", icon: Shield }]
-      : []),
+    ...(showAdmin ? [{ href: paths.admin, label: "Admin", icon: Shield }] : []),
     { href: paths.perfil, label: "Perfil", icon: null as unknown as typeof Newspaper },
   ]
 
   return (
     <div className={cn("min-h-screen bg-muted/30", showTabs && "pb-16 md:pb-0")}>
-      {/* Desktop top nav — parity with BottomTabBar */}
+      <UiCookieSync version="v2" />
+      <VersionBanner />
       <header className="sticky top-0 z-40 hidden border-b bg-background/95 backdrop-blur md:block">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-4 px-4">
           <Link href={paths.escalas} className="shrink-0">
@@ -101,6 +102,7 @@ export function AppShell({ children, showTabs = true }: AppShellProps) {
             })}
           </nav>
           <div className="flex items-center gap-2">
+            {session && <NotificationsButton />}
             <Button variant="ghost" size="sm" asChild>
               <Link href="/">Site</Link>
             </Button>
@@ -119,9 +121,22 @@ export function AppShell({ children, showTabs = true }: AppShellProps) {
         </div>
       </header>
 
+      <header className="sticky top-0 z-40 flex h-12 items-center justify-between border-b bg-background px-4 md:hidden">
+        <Link href={paths.escalas}>
+          <Image
+            src="/pib-logo-black.png"
+            alt={CHURCH_INFO.SHORT_NAME}
+            width={80}
+            height={28}
+            className="h-6 w-auto"
+          />
+        </Link>
+        {session ? <NotificationsButton /> : null}
+      </header>
+
       {children}
 
-      {showTabs && <BottomTabBar />}
+      {showTabs && <BottomTabBarV2 />}
       <PwaInstallPrompt />
     </div>
   )

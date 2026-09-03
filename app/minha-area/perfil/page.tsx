@@ -15,6 +15,7 @@ import { RoleBadges } from "@/components/role-badges"
 import { SolicitarMinisterio } from "@/app/minha-area/solicitar-ministerio"
 import { signOut } from "next-auth/react"
 import Link from "next/link"
+import { TryV2Link } from "@/components/app-v2/try-v2-link"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
@@ -220,6 +221,10 @@ export default function PerfilPage() {
 
         {/* Indisponibilidades */}
         <IndisponibilidadesSection />
+
+        <div className="pt-2">
+          <TryV2Link />
+        </div>
 
         {/* Sair */}
         <Button variant="outline" className="w-full text-red-500 border-red-200" onClick={() => signOut({ callbackUrl: "/" })}>

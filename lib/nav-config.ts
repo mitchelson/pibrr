@@ -56,12 +56,25 @@ export const LEGAL_NAV: NavLink[] = [
   { href: "/excluir-conta", label: "Excluir conta" },
 ]
 
-/** Member app tabs — href kept for PWA compatibility */
+/** Member app tabs — hrefs follow NEXT_PUBLIC_APP_UI_VERSION when set */
 export const APP_TABS: Array<NavLink & { id: string; adminOnly?: boolean }> = [
   { id: "feed", href: "/feed", label: "Feed" },
-  { id: "escalas", href: "/minha-area", label: "Escalas" },
-  { id: "admin", href: "/admin", label: "Admin", adminOnly: true },
-  { id: "perfil", href: "/minha-area/perfil", label: "Perfil" },
+  {
+    id: "escalas",
+    href: process.env.NEXT_PUBLIC_APP_UI_VERSION === "v2" ? "/minha-area-v2" : "/minha-area",
+    label: "Escalas",
+  },
+  {
+    id: "admin",
+    href: process.env.NEXT_PUBLIC_APP_UI_VERSION === "v2" ? "/admin-v2" : "/admin",
+    label: "Admin",
+    adminOnly: true,
+  },
+  {
+    id: "perfil",
+    href: process.env.NEXT_PUBLIC_APP_UI_VERSION === "v2" ? "/minha-area-v2/perfil" : "/minha-area/perfil",
+    label: "Perfil",
+  },
 ]
 
 /** Admin sidebar groups by task */
@@ -160,4 +173,73 @@ export function filterAdminItems(
 
 export function isAdminRole(role?: string | null): boolean {
   return role === "admin" || role === "lider" || role === "supervisor"
+}
+
+export type AdminNavItemV2 = AdminNavItem & {
+  acolhimento?: boolean
+}
+
+export type AdminNavGroupV2 = {
+  id: string
+  label: string
+  items: AdminNavItemV2[]
+}
+
+/** Admin v2 sidebar — acolhimento is filtered by ministry config, not by every líder */
+export const ADMIN_NAV_GROUPS_V2: AdminNavGroupV2[] = [
+  {
+    id: "inicio",
+    label: "Início",
+    items: [{ href: "/admin-v2", title: "Dashboard", icon: Home }],
+  },
+  {
+    id: "acolhimento",
+    label: "Acolhimento",
+    items: [
+      { href: "/admin-v2/visitantes", title: "Visitantes", icon: Users, acolhimento: true },
+      { href: "/admin-v2/mensagens", title: "Mensagens", icon: MessageSquare, acolhimento: true },
+    ],
+  },
+  {
+    id: "pessoas",
+    label: "Pessoas",
+    items: [
+      { href: "/admin-v2/membros", title: "Membros", icon: UserCog, roles: ["admin"] },
+    ],
+  },
+  {
+    id: "programacao",
+    label: "Programação",
+    items: [
+      { href: "/admin-v2/eventos", title: "Eventos", icon: Calendar, roles: ["admin"] },
+      { href: "/admin-v2/escalas", title: "Escalas", icon: ClipboardList, roles: ["admin"] },
+    ],
+  },
+  {
+    id: "formacao",
+    label: "Formação",
+    items: [
+      { href: "/admin-v2/dons-espirituais", title: "Dons Espirituais", icon: Sparkles, roles: ["admin"] },
+      { href: "/admin-v2/interesses", title: "Interesses", icon: BookOpen, roles: ["admin"] },
+    ],
+  },
+  {
+    id: "sistema",
+    label: "Sistema",
+    items: [
+      { href: "/admin-v2/configuracoes", title: "Configurações", icon: Settings, roles: ["admin"] },
+    ],
+  },
+]
+
+export function filterAdminItemsV2(
+  items: AdminNavItemV2[],
+  opts: { role?: string | null; canAcolhimento?: boolean }
+): AdminNavItemV2[] {
+  return items.filter((item) => {
+    if (item.acolhimento && !opts.canAcolhimento) return false
+    if (!item.roles) return true
+    if (!opts.role) return false
+    return item.roles.includes(opts.role as "admin" | "lider" | "supervisor")
+  })
 }

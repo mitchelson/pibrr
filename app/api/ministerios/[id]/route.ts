@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/neon"
 import { requireMinisterioAccess, requireAdmin } from "@/lib/authorization"
+import { getSession } from "@/lib/mobile-auth"
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await getSession(req)
+  if (!session) {
+    return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
+  }
+
   const { id } = await params
+  const dataParam = req.nextUrl.searchParams.get("data")
+
   const rows = await sql`
     SELECT m.*,
       COALESCE(json_agg(json_build_object('user_id', u.id, 'nome', u.nome, 'email', u.email, 'foto_url', u.foto_url, 'is_lider', mm.is_lider, 'role', u.role, 'pendente', mm.pendente))
@@ -15,7 +23,30 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     GROUP BY m.id
   `
   if (rows.length === 0) return NextResponse.json({ error: "não encontrado" }, { status: 404 })
-  return NextResponse.json(rows[0])
+
+  const ministerio = rows[0] as { membros: Array<{ user_id: string; indisponivel?: boolean }> }
+
+  if (dataParam && Array.isArray(ministerio.membros)) {
+    const ids = ministerio.membros.map((m) => m.user_id).filter(Boolean)
+    if (ids.length > 0) {
+      try {
+        const blocked = await sql`
+          SELECT DISTINCT user_id FROM user_indisponibilidades
+          WHERE user_id = ANY(${ids})
+            AND ${dataParam}::date BETWEEN data_inicio AND data_fim
+        `
+        const blockedSet = new Set(blocked.map((r: { user_id: string }) => r.user_id))
+        ministerio.membros = ministerio.membros.map((m) => ({
+          ...m,
+          indisponivel: blockedSet.has(m.user_id),
+        }))
+      } catch {
+        // table may not exist yet
+      }
+    }
+  }
+
+  return NextResponse.json(ministerio)
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
