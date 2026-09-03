@@ -27,7 +27,7 @@ export function RepertoireV2({ eventoId }: { eventoId: string }) {
 
   if (editing) {
     return (
-      <DsSection title="Repertório">
+      <DsSection eyebrow="Preparação" title="Repertório">
         <RepertoireForm
           eventoId={eventoId}
           initialItems={hasItems ? items : undefined}
@@ -43,6 +43,7 @@ export function RepertoireV2({ eventoId }: { eventoId: string }) {
 
   return (
     <DsSection
+      eyebrow="Preparação"
       title="Repertório"
       action={
         canEdit ? (

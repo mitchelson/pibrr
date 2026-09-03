@@ -18,11 +18,14 @@ export function EscalaActionsV2({
   status,
   ministerioId,
   layout = "row",
+  compactStatus = false,
 }: {
   id: string
   status: string
   ministerioId?: string
   layout?: "row" | "stack"
+  /** Quando o card já mostra o status, só mantém ações secundárias */
+  compactStatus?: boolean
 }) {
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
@@ -50,24 +53,29 @@ export function EscalaActionsV2({
   }
 
   if (status === "confirmado") {
-    return (
-      <div className={layout === "stack" ? "flex flex-col gap-2" : "flex flex-wrap items-center gap-2"}>
+    if (!ministerioId) {
+      return compactStatus ? null : (
         <DsStatus tone="ok">
           <Check className="h-3 w-3" /> Confirmado
         </DsStatus>
-        {ministerioId && (
-          <>
-            <DsBtn variant="ghost" size="sm" onClick={() => setShowTroca(true)}>
-              <ArrowLeftRight className="h-3.5 w-3.5" /> Pedir troca
-            </DsBtn>
-            <TrocaDialogV2
-              open={showTroca}
-              onClose={() => setShowTroca(false)}
-              escalaId={id}
-              ministerioId={ministerioId}
-            />
-          </>
+      )
+    }
+    return (
+      <div className={layout === "stack" ? "flex flex-col gap-2" : "flex flex-wrap items-center gap-2"}>
+        {!compactStatus && (
+          <DsStatus tone="ok">
+            <Check className="h-3 w-3" /> Confirmado
+          </DsStatus>
         )}
+        <DsBtn variant="ghost" size="sm" onClick={() => setShowTroca(true)}>
+          <ArrowLeftRight className="h-3.5 w-3.5" /> Pedir troca
+        </DsBtn>
+        <TrocaDialogV2
+          open={showTroca}
+          onClose={() => setShowTroca(false)}
+          escalaId={id}
+          ministerioId={ministerioId}
+        />
       </div>
     )
   }
@@ -75,10 +83,18 @@ export function EscalaActionsV2({
   if (status === "recusado") {
     return (
       <div className={layout === "stack" ? "flex flex-col gap-2" : "flex flex-wrap items-center gap-2"}>
-        <DsStatus tone="no">
-          <X className="h-3 w-3" /> Recusado
-        </DsStatus>
-        <DsBtn variant="soft" size="sm" disabled={loading !== null} onClick={() => update("confirmado")}>
+        {!compactStatus && (
+          <DsStatus tone="no">
+            <X className="h-3 w-3" /> Recusado
+          </DsStatus>
+        )}
+        <DsBtn
+          variant="soft"
+          size="sm"
+          className={layout === "stack" ? "w-full" : undefined}
+          disabled={loading !== null}
+          onClick={() => update("confirmado")}
+        >
           {loading === "confirmado" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
           Mudar para confirmar
         </DsBtn>
