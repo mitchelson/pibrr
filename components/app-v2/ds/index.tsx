@@ -1,6 +1,14 @@
+"use client"
+
+import { useEffect, useId, useState } from "react"
 import { cn } from "@/lib/utils"
 import { ChevronRight } from "lucide-react"
 import Link from "next/link"
+import {
+  formatRoleBadge,
+  type RoleBadgeItem,
+  roleLabel,
+} from "@/components/role-badges"
 
 export function DsRoot({
   children,
@@ -157,6 +165,29 @@ export function DsStatus({
   return <span className={cn("pib-status", `pib-status--${tone}`)}>{children}</span>
 }
 
+export function DsChip({
+  children,
+  active,
+  onClick,
+  className,
+}: {
+  children: React.ReactNode
+  active?: boolean
+  onClick?: () => void
+  className?: string
+}) {
+  const Comp = onClick ? "button" : "span"
+  return (
+    <Comp
+      type={onClick ? "button" : undefined}
+      onClick={onClick}
+      className={cn("pib-chip", active && "pib-chip--active", className)}
+    >
+      {children}
+    </Comp>
+  )
+}
+
 export function DsBtn({
   children,
   variant = "primary",
@@ -213,4 +244,153 @@ export function DsEmpty({
 
 export function DsCount({ children }: { children: React.ReactNode }) {
   return <p className="pib-count">{children}</p>
+}
+
+export function DsField({
+  label,
+  children,
+  className,
+}: {
+  label: string
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <label className={cn("pib-field", className)}>
+      <span className="pib-field__label">{label}</span>
+      {children}
+    </label>
+  )
+}
+
+/** Confirmação nativa do DS — substitui window.confirm */
+export function DsConfirm({
+  open,
+  title,
+  description,
+  confirmLabel = "Confirmar",
+  cancelLabel = "Cancelar",
+  danger,
+  onConfirm,
+  onCancel,
+}: {
+  open: boolean
+  title: string
+  description?: string
+  confirmLabel?: string
+  cancelLabel?: string
+  danger?: boolean
+  onConfirm: () => void
+  onCancel: () => void
+}) {
+  const titleId = useId()
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onCancel()
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [open, onCancel])
+
+  if (!open) return null
+
+  return (
+    <div className="pib-confirm" role="dialog" aria-modal="true" aria-labelledby={titleId}>
+      <button type="button" className="pib-confirm__backdrop" aria-label="Fechar" onClick={onCancel} />
+      <div className="pib-confirm__panel">
+        <h3 id={titleId} className="pib-title text-xl">
+          {title}
+        </h3>
+        {description ? <p className="pib-mute mt-2 text-sm leading-relaxed">{description}</p> : null}
+        <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <DsBtn variant="ghost" onClick={onCancel}>
+            {cancelLabel}
+          </DsBtn>
+          <DsBtn variant={danger ? "danger" : "primary"} onClick={onConfirm}>
+            {confirmLabel}
+          </DsBtn>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function useDsConfirm() {
+  const [state, setState] = useState<{
+    title: string
+    description?: string
+    danger?: boolean
+    confirmLabel?: string
+    resolve: (ok: boolean) => void
+  } | null>(null)
+
+  const ask = (opts: {
+    title: string
+    description?: string
+    danger?: boolean
+    confirmLabel?: string
+  }) =>
+    new Promise<boolean>((resolve) => {
+      setState({ ...opts, resolve })
+    })
+
+  const node = (
+    <DsConfirm
+      open={!!state}
+      title={state?.title || ""}
+      description={state?.description}
+      danger={state?.danger}
+      confirmLabel={state?.confirmLabel}
+      onCancel={() => {
+        state?.resolve(false)
+        setState(null)
+      }}
+      onConfirm={() => {
+        state?.resolve(true)
+        setState(null)
+      }}
+    />
+  )
+
+  return { ask, node }
+}
+
+/** Papéis monocromáticos — só no v2 */
+export function RoleBadgesV2({
+  roles,
+  legacyRole,
+  className,
+  size = "sm",
+}: {
+  roles?: RoleBadgeItem[] | null
+  legacyRole?: string | null
+  className?: string
+  size?: "xs" | "sm"
+}) {
+  const items: RoleBadgeItem[] =
+    roles && roles.length > 0
+      ? roles
+      : legacyRole
+        ? [{ role_name: legacyRole === "visitor" ? "visitante" : legacyRole }]
+        : []
+
+  if (items.length === 0) return null
+
+  return (
+    <div className={cn("flex flex-wrap gap-1", className)}>
+      {items.map((role, i) => (
+        <span
+          key={`${role.role_name}-${role.context_id || "global"}-${i}`}
+          className={cn("pib-chip", size === "xs" && "pib-chip--xs")}
+        >
+          {formatRoleBadge(role)}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+export function roleLabelV2(roleName: string, displayName?: string | null) {
+  return roleLabel(roleName, displayName)
 }

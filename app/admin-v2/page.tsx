@@ -153,7 +153,7 @@ export default async function AdminV2Dashboard() {
               <DsRow
                 key={m.id}
                 href={`/admin-v2/ministerios/${m.id}`}
-                leading={<MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={22} />}
+                leading={<MinistryIcon name={m.icone} ministryName={m.nome} mono size={22} />}
                 title={m.nome}
                 meta="Escala, membros e pedidos"
               />

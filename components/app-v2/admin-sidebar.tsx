@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { MinistryIcon } from "@/components/ministry-icon"
-import { RoleBadges } from "@/components/role-badges"
+import { RoleBadgesV2 } from "@/components/app-v2/ds"
 import { ADMIN_NAV_GROUPS_V2, filterAdminItemsV2 } from "@/lib/nav-config"
 import { canAccessAcolhimento } from "@/lib/acolhimento"
 import { CHURCH_INFO } from "@/lib/constants"
@@ -73,7 +73,7 @@ export function AdminSidebarV2() {
                 className="pib-rail__link"
                 data-active={pathname === `/admin-v2/ministerios/${m.id}`}
               >
-                <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={18} />
+                <MinistryIcon name={m.icone} ministryName={m.nome} mono size={18} />
                 <span className="truncate">{m.nome}</span>
               </Link>
             ))}
@@ -118,10 +118,10 @@ export function AdminSidebarV2() {
           </Avatar>
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold">{session?.user?.name}</p>
-            <RoleBadges legacyRole={role} size="xs" className="mt-0.5" />
+            <RoleBadgesV2 legacyRole={role} size="xs" className="mt-0.5" />
           </div>
         </Link>
-        <Link href={paths.escalas} onClick={closeMobile} className="pib-rail__link mt-1 text-sm">
+        <Link href={paths.escalas} onClick={closeMobile} className="pib-rail__link mt-1 text-sm font-semibold">
           ← Voltar para Hoje
         </Link>
       </SidebarFooter>

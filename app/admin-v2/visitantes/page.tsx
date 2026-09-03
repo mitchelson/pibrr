@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { useVisitantes } from "@/hooks/use-visitantes"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -12,13 +11,14 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { formatarData } from "@/lib/utils"
-import { Search, Plus, FileText, MessageSquare } from "lucide-react"
-import Link from "next/link"
+import { Search, Plus, FileText, MessageSquare, ChevronRight } from "lucide-react"
 import useSWR from "swr"
 import VisitanteDialog from "@/components/visitante-dialog"
 import NovoVisitanteDialog from "@/components/novo-visitante-dialog"
 import RelatorioMensalDialog from "@/components/relatorio-mensal-dialog"
 import type { Visitante, VisitanteComResponsavel } from "@/types/supabase"
+import { AdminScreen, AdminPrimaryAction } from "@/components/app-v2/admin-screen"
+import { DsBtn, DsEmpty, DsList, DsRow } from "@/components/app-v2/ds"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -82,43 +82,41 @@ export default function VisitantesV2Page() {
   const lista = dataSelecionada ? visitantesPorData[dataSelecionada] || [] : []
 
   return (
-    <div className="space-y-6 px-4 py-5 md:px-0 md:py-0">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="pib-kicker">Cuidar</p>
-          <h1 className="pib-title text-3xl">Pessoas novas</h1>
-          <p className="pib-mute mt-1 text-sm">Cadastro e follow-up de quem visitou a igreja</p>
+    <AdminScreen
+      kicker="Cuidar"
+      title="Pessoas novas"
+      subtitle="Cadastro e follow-up de quem visitou a igreja"
+      action={
+        <div className="flex items-center gap-2">
+          <DsBtn variant="ghost" size="icon" href="/admin-v2/mensagens" title="Mensagens">
+            <MessageSquare className="h-4 w-4" />
+          </DsBtn>
+          <DsBtn variant="ghost" size="icon" onClick={() => setRelatorioAberto(true)} title="Relatório">
+            <FileText className="h-4 w-4" />
+          </DsBtn>
+          <AdminPrimaryAction onClick={() => setNovoAberto(true)}>
+            <Plus className="h-4 w-4" /> Novo
+          </AdminPrimaryAction>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/admin-v2/mensagens">
-              <MessageSquare className="mr-1 h-4 w-4" />
-              Mensagens
-            </Link>
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setRelatorioAberto(true)}>
-            <FileText className="mr-1 h-4 w-4" />
-            Relatório
-          </Button>
-        </div>
-      </div>
-
+      }
+    >
       <div className="relative">
-        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--pib-mute)]" />
         <Input
           placeholder="Buscar por nome, telefone ou responsável"
-          className="pl-8"
+          className="pl-9"
           value={termoBusca}
           onChange={(e) => setTermoBusca(e.target.value)}
         />
       </div>
 
       {isLoading ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">Carregando…</p>
+        <p className="pib-mute py-8 text-center text-sm">Carregando…</p>
       ) : lista.length === 0 && datasAgrupadas.length === 0 ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">
-          {termoBusca ? "Nenhum visitante nesta busca." : "Nenhum visitante cadastrado."}
-        </p>
+        <DsEmpty
+          title={termoBusca ? "Nenhum visitante nesta busca" : "Nenhum visitante cadastrado"}
+          description={!termoBusca ? "Cadastre a primeira visita da igreja." : undefined}
+        />
       ) : (
         <div className="space-y-4">
           {datasAgrupadas.length > 1 && (
@@ -135,37 +133,41 @@ export default function VisitantesV2Page() {
               </SelectContent>
             </Select>
           )}
-          <div className="space-y-2">
+          <DsList>
             {lista.map((visitante) => {
               const enviadas = mensagensEnviadas[visitante.id] || new Set()
               return (
-                <button
+                <DsRow
                   key={visitante.id}
-                  className="flex w-full items-center justify-between gap-3 rounded-xl border bg-card p-3 text-left hover:bg-muted/40"
                   onClick={() => setVisitanteSelecionado(visitante)}
-                >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{visitante.nome}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {visitante.celular}
-                      {visitante.responsavel_nome ? ` · ${visitante.responsavel_nome}` : ""}
-                    </p>
-                  </div>
-                  {!visitante.sem_whatsapp && categoriasAtivas.length > 0 && (
-                    <div className="flex shrink-0 gap-1">
-                      {categoriasAtivas.map((cat: { id: string; nome: string }) => (
-                        <span
-                          key={cat.id}
-                          title={cat.nome}
-                          className={`h-2 w-2 rounded-full ${enviadas.has(cat.id) ? "bg-foreground" : "bg-muted-foreground/30"}`}
-                        />
-                      ))}
+                  title={visitante.nome}
+                  meta={
+                    visitante.responsavel_nome
+                      ? `${visitante.celular} · ${visitante.responsavel_nome}`
+                      : visitante.celular
+                  }
+                  trailing={
+                    <div className="flex items-center gap-2">
+                      {!visitante.sem_whatsapp && categoriasAtivas.length > 0 && (
+                        <div className="flex gap-1">
+                          {categoriasAtivas.map((cat: { id: string; nome: string }) => (
+                            <span
+                              key={cat.id}
+                              title={cat.nome}
+                              className={`h-1.5 w-1.5 rounded-full ${
+                                enviadas.has(cat.id) ? "bg-[var(--pib-ink)]" : "bg-[var(--pib-line-strong)]"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      )}
+                      <ChevronRight className="h-4 w-4 text-[var(--pib-mute-soft)]" />
                     </div>
-                  )}
-                </button>
+                  }
+                />
               )
             })}
-          </div>
+          </DsList>
         </div>
       )}
 
@@ -199,14 +201,6 @@ export default function VisitantesV2Page() {
         onClose={() => setRelatorioAberto(false)}
         visitantes={visitantes}
       />
-
-      <button
-        onClick={() => setNovoAberto(true)}
-        className="fixed bottom-20 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg md:bottom-6 md:right-6"
-        aria-label="Novo visitante"
-      >
-        <Plus className="h-6 w-6" />
-      </button>
-    </div>
+    </AdminScreen>
   )
 }

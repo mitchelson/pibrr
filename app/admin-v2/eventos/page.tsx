@@ -3,10 +3,8 @@
 import { useState } from "react"
 import useSWR from "swr"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -14,11 +12,13 @@ import { Plus, Pencil, Trash2, Settings2, X, BookmarkPlus } from "lucide-react"
 import { toast } from "@/components/ui/use-toast"
 import { MinistryIcon } from "@/components/ministry-icon"
 import { AdminScreen, AdminPrimaryAction } from "@/components/app-v2/admin-screen"
+import { DsChip, useDsConfirm } from "@/components/app-v2/ds"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 const tipos = ["Culto", "Conferência", "Especial", "Reunião", "Outro"]
 
 export default function EventosAdminPage() {
+  const { ask, node: confirmNode } = useDsConfirm()
   const { data: eventos, mutate } = useSWR("/api/eventos", fetcher)
   const { data: modelos, mutate: mutateModelos } = useSWR("/api/eventos/modelos", fetcher)
   const { data: ministerios } = useSWR("/api/ministerios", fetcher)
@@ -86,7 +86,13 @@ export default function EventosAdminPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Excluir este evento e todas as escalas associadas?")) return
+    const ok = await ask({
+      title: "Excluir evento?",
+      description: "Excluir este evento e todas as escalas associadas.",
+      danger: true,
+      confirmLabel: "Excluir",
+    })
+    if (!ok) return
     await fetch(`/api/eventos/${id}`, { method: "DELETE" })
     toast({ title: "Evento excluído" }); mutate()
   }
@@ -130,7 +136,13 @@ export default function EventosAdminPage() {
   }
 
   const handleDeleteModelo = async (id: string) => {
-    if (!confirm("Excluir este modelo?")) return
+    const ok = await ask({
+      title: "Excluir modelo?",
+      description: "Esta ação não pode ser desfeita.",
+      danger: true,
+      confirmLabel: "Excluir",
+    })
+    if (!ok) return
     await fetch(`/api/eventos/modelos/${id}`, { method: "DELETE" })
     toast({ title: "Modelo excluído" }); mutateModelos()
   }
@@ -157,11 +169,6 @@ export default function EventosAdminPage() {
       body: JSON.stringify({ posicao_id: posicaoId })
     })
     toast({ title: "Posição removida" }); mutatePosicoes()
-  }
-
-  const tipoColor = (tipo: string) => {
-    const map: Record<string, string> = { Culto: "bg-blue-100 text-blue-700", Conferência: "bg-purple-100 text-purple-700", Especial: "bg-amber-100 text-amber-700", Reunião: "bg-gray-100 text-gray-700" }
-    return map[tipo] || "bg-gray-100 text-gray-700"
   }
 
   return (
@@ -232,7 +239,7 @@ export default function EventosAdminPage() {
                       {ministerios?.map((m: any) => (
                         <SelectItem key={m.id} value={m.id}>
                           <span className="inline-flex items-center gap-2">
-                            <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={16} />
+                            <MinistryIcon mono name={m.icone} ministryName={m.nome} size={16} />
                             {m.nome}
                           </span>
                         </SelectItem>
@@ -263,32 +270,30 @@ export default function EventosAdminPage() {
               const dia = d.toLocaleDateString("pt-BR", { day: "2-digit", timeZone: "UTC" })
               const mes = d.toLocaleDateString("pt-BR", { month: "short", timeZone: "UTC" }).replace(".", "")
               return (
-                <Card key={ev.id}>
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="flex flex-col items-center justify-center rounded-lg bg-primary/10 text-primary min-w-[3rem] py-2 px-2">
-                          <span className="text-lg font-bold leading-none">{dia}</span>
-                          <span className="text-[10px] uppercase font-medium mt-0.5">{mes}</span>
-                        </div>
-                        <div>
-                          <p className="font-semibold text-sm">{ev.titulo}</p>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                            {ev.horario && <span>{ev.horario}</span>}
-                            <span className={`px-1.5 py-0.5 rounded ${tipoColor(ev.tipo)}`}>{ev.tipo}</span>
-                          </div>
+                <div key={ev.id} className="pib-panel p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="pib-hero-date shrink-0 min-w-[3rem] py-2 px-2">
+                        <span className="pib-hero-date__day">{dia}</span>
+                        <span className="pib-hero-date__meta">{mes}</span>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm">{ev.titulo}</p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                          {ev.horario && <span>{ev.horario}</span>}
+                          <DsChip>{ev.tipo}</DsChip>
                         </div>
                       </div>
                     </div>
-                    {ev.descricao && <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{ev.descricao}</p>}
-                    <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleSaveAsModelo(ev)} title="Salvar como modelo"><BookmarkPlus className="h-3.5 w-3.5" /></Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setPosOpen(ev)} title="Posições"><Settings2 className="h-3.5 w-3.5" /></Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(ev)}><Pencil className="h-3.5 w-3.5" /></Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(ev.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                  {ev.descricao && <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{ev.descricao}</p>}
+                  <div className="flex justify-end gap-1">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleSaveAsModelo(ev)} title="Salvar como modelo"><BookmarkPlus className="h-3.5 w-3.5" /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setPosOpen(ev)} title="Posições"><Settings2 className="h-3.5 w-3.5" /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(ev)}><Pencil className="h-3.5 w-3.5" /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(ev.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                  </div>
+                </div>
               )
             })}
             {eventos?.length === 0 && <p className="text-center text-muted-foreground py-8 col-span-full">Nenhum evento cadastrado.</p>}
@@ -324,7 +329,7 @@ export default function EventosAdminPage() {
                       return (
                         <div key={i} className="flex items-center gap-2 text-sm border rounded p-2">
                           <span className="flex-1 truncate inline-flex items-center gap-1.5 min-w-0">
-                            <MinistryIcon name={min?.icone} ministryName={min?.nome} color={min?.cor} size={14} className="shrink-0" />
+                            <MinistryIcon mono name={min?.icone} ministryName={min?.nome} size={14} className="shrink-0" />
                             <span className="truncate">{min?.nome} — {p.funcao} (x{p.quantidade})</span>
                           </span>
                           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setModeloPosicoes(ps => ps.filter((_, j) => j !== i))}><X className="h-3 w-3" /></Button>
@@ -342,38 +347,37 @@ export default function EventosAdminPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {modelos?.map((m: any) => (
-              <Card key={m.id}>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <p className="font-semibold text-sm">{m.nome}</p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                        <span className={`px-1.5 py-0.5 rounded ${tipoColor(m.tipo)}`}>{m.tipo}</span>
-                        {m.horario && <span>{m.horario}</span>}
-                      </div>
-                    </div>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditModelo(m)}><Pencil className="h-3.5 w-3.5" /></Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteModelo(m.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+              <div key={m.id} className="pib-panel p-4">
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <p className="font-semibold text-sm">{m.nome}</p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                      <DsChip>{m.tipo}</DsChip>
+                      {m.horario && <span>{m.horario}</span>}
                     </div>
                   </div>
-                  {m.posicoes?.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {m.posicoes.map((p: any) => (
-                        <Badge key={p.id} variant="outline" className="text-[10px] gap-1">
-                          <MinistryIcon name={p.ministerio_icone} ministryName={p.ministerio_nome} size={12} />
-                          {p.funcao} x{p.quantidade}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditModelo(m)}><Pencil className="h-3.5 w-3.5" /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteModelo(m.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                  </div>
+                </div>
+                {m.posicoes?.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {m.posicoes.map((p: any) => (
+                      <DsChip key={p.id} className="gap-1">
+                        <MinistryIcon mono name={p.ministerio_icone} ministryName={p.ministerio_nome} size={12} />
+                        {p.funcao} x{p.quantidade}
+                      </DsChip>
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
             {modelos?.length === 0 && <p className="text-center text-muted-foreground py-8 col-span-full">Nenhum modelo cadastrado.</p>}
           </div>
         </TabsContent>
       </Tabs>
+      {confirmNode}
 
       {/* Dialog posições do evento */}
       <Dialog open={!!posOpen} onOpenChange={(v) => { if (!v) { setPosOpen(null); setPosMinId(""); setPosFuncao("") } }}>
@@ -385,7 +389,7 @@ export default function EventosAdminPage() {
                 {eventoPosicoes.map((p: any) => (
                   <div key={p.id} className="flex items-center justify-between text-sm border rounded p-2 gap-2">
                     <span className="truncate inline-flex items-center gap-1.5 min-w-0 flex-1">
-                      <MinistryIcon name={p.ministerio_icone} ministryName={p.ministerio_nome} size={14} className="shrink-0" />
+                      <MinistryIcon mono name={p.ministerio_icone} ministryName={p.ministerio_nome} size={14} className="shrink-0" />
                       <span className="truncate">{p.ministerio_nome} — {p.funcao} (x{p.quantidade})</span>
                     </span>
                     <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive shrink-0" onClick={() => handleRemovePosicao(p.id)}><Trash2 className="h-3 w-3" /></Button>
@@ -404,7 +408,7 @@ export default function EventosAdminPage() {
                   {ministerios?.map((m: any) => (
                     <SelectItem key={m.id} value={m.id}>
                       <span className="inline-flex items-center gap-2">
-                        <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={16} />
+                        <MinistryIcon mono name={m.icone} ministryName={m.nome} size={16} />
                         {m.nome}
                       </span>
                     </SelectItem>
@@ -454,7 +458,7 @@ function ModeloPosicaoAdd({ ministerios, onAdd }: { ministerios: any[]; onAdd: (
           {ministerios?.map((m: any) => (
             <SelectItem key={m.id} value={m.id}>
               <span className="inline-flex items-center gap-2">
-                <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={16} />
+                <MinistryIcon mono name={m.icone} ministryName={m.nome} size={16} />
                 {m.nome}
               </span>
             </SelectItem>

@@ -71,7 +71,7 @@ export default function ConfiguracoesV2Page() {
               {ativos.map((m: any) => (
                 <SelectItem key={m.id} value={m.id}>
                   <span className="inline-flex items-center gap-2">
-                    <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={16} />
+                    <MinistryIcon name={m.icone} ministryName={m.nome} mono size={16} />
                     {m.nome}
                   </span>
                 </SelectItem>
@@ -100,7 +100,7 @@ export default function ConfiguracoesV2Page() {
               {ativos.map((m: any) => (
                 <SelectItem key={m.id} value={m.id}>
                   <span className="inline-flex items-center gap-2">
-                    <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={16} />
+                    <MinistryIcon name={m.icone} ministryName={m.nome} mono size={16} />
                     {m.nome}
                   </span>
                 </SelectItem>

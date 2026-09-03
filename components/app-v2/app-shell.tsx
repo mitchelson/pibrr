@@ -22,6 +22,7 @@ type AppShellV2Props = {
   showTabs?: boolean
 }
 
+/** Membro: desktop = topbar ink; mobile = só dock (sem segundo sticky) */
 export function AppShellV2({ children, showTabs = true }: AppShellV2Props) {
   const pathname = usePathname()
   const { data: session } = useSession()
@@ -65,9 +66,9 @@ export function AppShellV2({ children, showTabs = true }: AppShellV2Props) {
                 key={tab.href}
                 href={tab.href}
                 className={cn(
-                  "flex items-center gap-2 rounded-full px-3.5 py-2 text-sm transition-colors",
+                  "flex items-center gap-2 rounded-[var(--pib-radius-sm)] px-3.5 py-2 text-sm transition-colors",
                   active
-                    ? "bg-white text-black font-semibold"
+                    ? "bg-white font-semibold text-black"
                     : "text-white/70 hover:bg-white/10 hover:text-white"
                 )}
               >
@@ -79,13 +80,13 @@ export function AppShellV2({ children, showTabs = true }: AppShellV2Props) {
           <Link
             href={paths.perfil}
             className={cn(
-              "ml-1 flex items-center gap-2 rounded-full px-3 py-1.5 text-sm transition-colors",
-              perfilActive ? "bg-white text-black font-semibold" : "text-white/70 hover:bg-white/10"
+              "ml-1 flex items-center gap-2 rounded-[var(--pib-radius-sm)] px-3 py-1.5 text-sm transition-colors",
+              perfilActive ? "bg-white font-semibold text-black" : "text-white/70 hover:bg-white/10"
             )}
           >
             <Avatar className="h-6 w-6">
               <AvatarImage src={session?.user?.image ?? undefined} />
-              <AvatarFallback className="text-[10px] bg-white/20 text-white">
+              <AvatarFallback className="bg-white/20 text-[10px] text-white">
                 {session?.user?.name?.[0] ?? "U"}
               </AvatarFallback>
             </Avatar>
@@ -100,7 +101,7 @@ export function AppShellV2({ children, showTabs = true }: AppShellV2Props) {
           )}
           <button
             type="button"
-            className="pib-btn pib-btn--sm rounded-full border-white/20 bg-transparent text-white hover:bg-white/10"
+            className="pib-btn pib-btn--sm border-white/20 bg-transparent text-white hover:bg-white/10"
             onClick={() => signOut({ callbackUrl: "/" })}
             title="Sair"
           >
@@ -109,18 +110,12 @@ export function AppShellV2({ children, showTabs = true }: AppShellV2Props) {
         </div>
       </header>
 
-      <header className="pib-topbar md:hidden">
-        <Link href={paths.escalas} className="flex items-center gap-2">
-          <Image
-            src="/pib-logo-black.png"
-            alt={CHURCH_INFO.SHORT_NAME}
-            width={88}
-            height={28}
-            className="h-6 w-auto"
-          />
-        </Link>
-        {session ? <NotificationsButton /> : null}
-      </header>
+      {/* Mobile: thin notifications row only — brand lives in dock */}
+      {session && (
+        <div className="flex h-10 items-center justify-end px-3 md:hidden">
+          <NotificationsButton />
+        </div>
+      )}
 
       {children}
 

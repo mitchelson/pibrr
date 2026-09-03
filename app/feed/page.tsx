@@ -15,6 +15,7 @@ import { NotificationsButton } from "@/components/notifications-button"
 import { UserProfileDialog } from "@/components/user-profile-dialog"
 import { MemberShell } from "@/components/app-v2/member-shell"
 import { useAppUi } from "@/hooks/use-app-ui"
+import FeedV2 from "./feed-v2"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
@@ -363,35 +364,33 @@ function NewPostForm({ mutate }: { mutate: () => void }) {
 export default function FeedPage() {
   const { data: session } = useSession()
   const [page, setPage] = useState(1)
-  const { data, mutate } = useSWR(`/api/feed?page=${page}`, fetcher)
   const { version } = useAppUi()
+  const { data, mutate } = useSWR(version === "v2" ? null : `/api/feed?page=${page}`, fetcher)
 
   const canPost = session?.user?.role === "admin" || session?.user?.role === "lider" || session?.user?.role === "supervisor"
 
+  if (version === "v2") {
+    return (
+      <MemberShell showTabs={!!session}>
+        <FeedV2 />
+      </MemberShell>
+    )
+  }
+
   return (
     <MemberShell showTabs={!!session}>
-      {version === "v2" ? (
-        <div className="mx-auto max-w-2xl px-4 pt-6">
-          <header className="mb-6">
-            <p className="pib-kicker">PIB Roraima</p>
-            <h1 className="pib-title mt-1 text-3xl">Comunidade</h1>
-            <p className="pib-mute mt-1 text-sm">Vida da igreja além da escala</p>
-          </header>
+      <div className="sticky top-0 z-30 border-b bg-background md:static">
+        <div className="mx-auto flex h-12 max-w-2xl items-center justify-between px-4 md:h-auto md:py-4">
+          <h1 className="font-semibold md:text-xl">Feed</h1>
+          {session ? (
+            <NotificationsButton />
+          ) : (
+            <Link href="/login" className="text-sm font-semibold text-primary">
+              Entrar
+            </Link>
+          )}
         </div>
-      ) : (
-        <div className="sticky top-0 z-30 border-b bg-background md:static">
-          <div className="mx-auto flex h-12 max-w-2xl items-center justify-between px-4 md:h-auto md:py-4">
-            <h1 className="font-semibold md:text-xl">Feed</h1>
-            {session ? (
-              <NotificationsButton />
-            ) : (
-              <Link href="/login" className="text-sm font-semibold text-primary">
-                Entrar
-              </Link>
-            )}
-          </div>
-        </div>
-      )}
+      </div>
 
       <div className="mx-auto max-w-2xl space-y-4 px-4 py-6 pt-2">
         {canPost && <NewPostForm mutate={mutate} />}

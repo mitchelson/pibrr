@@ -107,7 +107,7 @@ export default async function CultoV2Page({
                 <MinistryIcon
                   name={esc.icone}
                   ministryName={esc.ministerio}
-                  color={esc.cor}
+                  mono
                   size={28}
                 />
                 <div className="min-w-0 flex-1">

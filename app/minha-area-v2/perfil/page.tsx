@@ -5,19 +5,32 @@ import useSWR from "swr"
 import { useSession, signOut } from "next-auth/react"
 import Link from "next/link"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
 import { toast } from "@/components/ui/use-toast"
-import { Camera, Loader2, Pencil, X, Calendar, Sparkles, CalendarOff, Plus, Trash2, Crown } from "lucide-react"
+import { Camera, Loader2, Pencil, X, CalendarOff, Plus, Trash2, Crown } from "lucide-react"
 import { MinistryIcon } from "@/components/ministry-icon"
-import { RoleBadges } from "@/components/role-badges"
 import { APP_PATHS } from "@/lib/app-ui"
 import { useAppUi } from "@/hooks/use-app-ui"
-import { DsBtn, DsCount, DsHero, DsPage, DsPanel, DsSection } from "@/components/app-v2/ds"
+import {
+  DsBtn,
+  DsEmpty,
+  DsField,
+  DsHero,
+  DsList,
+  DsPage,
+  DsPanel,
+  DsRow,
+  DsSection,
+  RoleBadgesV2,
+} from "@/components/app-v2/ds"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
+
+function formatDate(value?: string | null) {
+  if (!value) return null
+  return new Date(value).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" })
+}
 
 export default function PerfilV2Page() {
   const { data: session } = useSession()
@@ -97,154 +110,167 @@ export default function PerfilV2Page() {
       />
 
       <DsPanel className="p-5">
-      <div className="flex items-center gap-4">
-        <div className="relative">
-          <Avatar className="h-20 w-20">
-            <AvatarImage src={p.foto_url} />
-            <AvatarFallback className="text-2xl">{p.nome?.[0]}</AvatarFallback>
-          </Avatar>
-          {editing && (
-            <button
-              onClick={() => fileRef.current?.click()}
-              className="absolute bottom-0 right-0 rounded-full bg-[var(--pib-ink)] p-1.5 text-white"
-              disabled={uploading}
-            >
-              {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Camera className="h-3 w-3" />}
-            </button>
-          )}
-          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
-        </div>
-        <div className="flex gap-6 text-center">
-          <div>
-            <DsCount>{profile.ministerios?.length || 0}</DsCount>
-            <p className="pib-mute mt-1 text-xs">Ministérios</p>
+        <div className="flex items-center gap-4">
+          <div className="relative shrink-0">
+            <Avatar className="h-16 w-16">
+              <AvatarImage src={p.foto_url} />
+              <AvatarFallback className="text-xl">{p.nome?.[0]}</AvatarFallback>
+            </Avatar>
+            {editing && (
+              <button
+                onClick={() => fileRef.current?.click()}
+                className="absolute bottom-0 right-0 rounded-full bg-[var(--pib-ink)] p-1.5 text-white"
+                disabled={uploading}
+              >
+                {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Camera className="h-3 w-3" />}
+              </button>
+            )}
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
           </div>
-          <div>
-            <DsCount>{donsTop.length}</DsCount>
-            <p className="pib-mute mt-1 text-xs">Dons</p>
-          </div>
-          <div>
-            <DsCount>{profile.proximas_escalas?.length || 0}</DsCount>
-            <p className="pib-mute mt-1 text-xs">Escalas</p>
+          <div className="min-w-0 flex-1">
+            <p className="pib-title truncate text-lg leading-tight">{profile.nome}</p>
+            <RoleBadgesV2 roles={profile.roles} legacyRole={profile.role} size="xs" className="mt-1.5" />
           </div>
         </div>
-      </div>
       </DsPanel>
 
-      {editing ? (
-        <div className="space-y-3">
-          <div>
-            <Label className="text-xs">Nome</Label>
-            <Input value={p.nome || ""} onChange={(e) => setForm({ ...p, nome: e.target.value })} />
-          </div>
-          <div>
-            <Label className="text-xs">Bio</Label>
-            <Textarea value={p.bio || ""} onChange={(e) => setForm({ ...p, bio: e.target.value })} placeholder="Conte sobre você..." className="h-20 resize-none" />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label className="text-xs">Nascimento</Label>
-              <Input type="date" value={p.nascimento?.split("T")[0] || ""} onChange={(e) => setForm({ ...p, nascimento: e.target.value })} className="text-sm" />
-            </div>
-            <div>
-              <Label className="text-xs">Batismo</Label>
-              <Input type="date" value={p.data_batismo?.split("T")[0] || ""} onChange={(e) => setForm({ ...p, data_batismo: e.target.value })} className="text-sm" />
-            </div>
-          </div>
-          <Button onClick={handleSave} disabled={saving} className="w-full">
-            {saving ? "Salvando..." : "Salvar"}
-          </Button>
-        </div>
-      ) : (
-        <div>
-          <p className="text-sm font-semibold">{profile.nome}</p>
-          <RoleBadges roles={profile.roles} legacyRole={profile.role} size="xs" className="mt-1.5" />
-          {profile.bio && <p className="mt-1 text-sm text-muted-foreground">{profile.bio}</p>}
-        </div>
-      )}
-
-      <section>
-        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Ministérios</h3>
-        {profile.ministerios?.length > 0 ? (
-          <div className="mb-3 flex flex-wrap gap-2">
-            {profile.ministerios.map((m: any) => (
-              <span key={m.nome} className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1.5 text-sm">
-                <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={14} />
-                <span>{m.nome}</span>
-                {m.is_lider && <Crown className="h-3 w-3" />}
-              </span>
-            ))}
-          </div>
-        ) : (
-          <p className="mb-3 text-sm text-muted-foreground">Você ainda não participa de um ministério.</p>
-        )}
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/form-ministerios">Quero servir</Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/form-dons-espirituais">Dons espirituais</Link>
-          </Button>
-        </div>
-      </section>
-
-      {donsTop.length > 0 && (
-        <section>
-          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            <Sparkles className="mr-1 inline h-3 w-3" />
-            Dons espirituais
-          </h3>
-          <div className="space-y-1.5">
-            {donsTop.map((r: any) => (
-              <div key={r.gift} className="flex items-center gap-2 rounded-lg border px-3 py-2">
-                <span className="text-xs font-bold">{r.rank}°</span>
-                <span className="flex-1 text-sm">{r.gift}</span>
-                <span className="text-xs text-muted-foreground">{r.score}/12</span>
+      <DsSection title="Dados">
+        <DsPanel className="p-4">
+          {editing ? (
+            <div className="space-y-3">
+              <DsField label="Nome">
+                <Input value={p.nome || ""} onChange={(e) => setForm({ ...p, nome: e.target.value })} />
+              </DsField>
+              <DsField label="Bio">
+                <Textarea
+                  value={p.bio || ""}
+                  onChange={(e) => setForm({ ...p, bio: e.target.value })}
+                  placeholder="Conte sobre você..."
+                  className="h-20 resize-none"
+                />
+              </DsField>
+              <div className="grid grid-cols-2 gap-3">
+                <DsField label="Nascimento">
+                  <Input
+                    type="date"
+                    value={p.nascimento?.split("T")[0] || ""}
+                    onChange={(e) => setForm({ ...p, nascimento: e.target.value })}
+                  />
+                </DsField>
+                <DsField label="Batismo">
+                  <Input
+                    type="date"
+                    value={p.data_batismo?.split("T")[0] || ""}
+                    onChange={(e) => setForm({ ...p, data_batismo: e.target.value })}
+                  />
+                </DsField>
               </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {profile.proximas_escalas?.length > 0 && (
-        <section>
-          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            <Calendar className="mr-1 inline h-3 w-3" />
-            Próximas escalas
-          </h3>
-          <div className="space-y-2">
-            {profile.proximas_escalas.map((e: any, i: number) => (
-              <div key={i} className="flex items-center gap-3 rounded-lg border p-3">
-                <MinistryIcon name={e.icone} ministryName={e.ministerio} size={20} />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{e.titulo}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {e.ministerio}
-                    {e.funcao ? ` · ${e.funcao}` : ""}
-                  </p>
+              <DsBtn className="w-full" onClick={handleSave} disabled={saving}>
+                {saving ? "Salvando..." : "Salvar"}
+              </DsBtn>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {profile.bio ? (
+                <p className="text-sm leading-relaxed">{profile.bio}</p>
+              ) : (
+                <p className="pib-mute text-sm">Sem bio ainda.</p>
+              )}
+              {(profile.nascimento || profile.data_batismo) && (
+                <div className="pib-mute flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                  {profile.nascimento && <span>Nascimento · {formatDate(profile.nascimento)}</span>}
+                  {profile.data_batismo && <span>Batismo · {formatDate(profile.data_batismo)}</span>}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {new Date(e.data).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", timeZone: "UTC" })}
-                </p>
-              </div>
+              )}
+            </div>
+          )}
+        </DsPanel>
+      </DsSection>
+
+      <DsSection
+        title="Ministérios"
+        action={
+          <DsBtn href="/form-ministerios" variant="ghost" size="sm">
+            Quero servir
+          </DsBtn>
+        }
+      >
+        {profile.ministerios?.length > 0 ? (
+          <DsList>
+            {profile.ministerios.map((m: any) => (
+              <DsRow
+                key={m.nome}
+                as="div"
+                leading={<MinistryIcon mono name={m.icone} ministryName={m.nome} size={20} />}
+                title={m.nome}
+                trailing={m.is_lider ? <Crown className="h-4 w-4" /> : <span className="inline-block h-4 w-4" />}
+              />
             ))}
-          </div>
-        </section>
-      )}
+          </DsList>
+        ) : (
+          <DsEmpty
+            title="Você ainda não participa de um ministério"
+            description="Conte pra gente como você quer servir."
+            action={
+              <DsBtn href="/form-ministerios" size="sm">
+                Quero servir
+              </DsBtn>
+            }
+          />
+        )}
+      </DsSection>
+
+      <DsSection
+        title="Dons"
+        action={
+          <DsBtn href="/form-dons-espirituais" variant="ghost" size="sm">
+            Refazer teste
+          </DsBtn>
+        }
+      >
+        {donsTop.length > 0 ? (
+          <DsList>
+            {donsTop.map((r: any) => (
+              <DsRow
+                key={r.gift}
+                as="div"
+                leading={<span className="pib-kicker w-6 shrink-0">{r.rank}°</span>}
+                title={r.gift}
+                trailing={<span className="pib-mute text-xs">{r.score}/12</span>}
+              />
+            ))}
+          </DsList>
+        ) : (
+          <DsEmpty
+            title="Você ainda não fez o teste"
+            description="Descubra seus dons espirituais em poucos minutos."
+            action={
+              <DsBtn href="/form-dons-espirituais" size="sm">
+                Fazer teste
+              </DsBtn>
+            }
+          />
+        )}
+      </DsSection>
 
       <IndisponibilidadesSection />
 
-      {isPreview && (
-        <Button variant="ghost" className="w-full" asChild>
-          <Link href={APP_PATHS.v1.perfil} onClick={() => switchTo("v1")}>
-            Voltar à versão atual
-          </Link>
-        </Button>
-      )}
-
-      <Button variant="outline" className="w-full" onClick={() => signOut({ callbackUrl: "/" })}>
-        Sair da conta
-      </Button>
+      <DsSection title="Conta">
+        <div className="space-y-2">
+          {isPreview && (
+            <Link
+              href={APP_PATHS.v1.perfil}
+              onClick={() => switchTo("v1")}
+              className="pib-btn pib-btn--ghost w-full"
+            >
+              Voltar à versão atual
+            </Link>
+          )}
+          <DsBtn variant="ghost" className="w-full" onClick={() => signOut({ callbackUrl: "/" })}>
+            Sair da conta
+          </DsBtn>
+        </div>
+      </DsSection>
     </DsPage>
   )
 }
@@ -283,56 +309,65 @@ function IndisponibilidadesSection() {
   }
 
   return (
-    <section>
-      <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          <CalendarOff className="mr-1 inline h-3 w-3" />
-          Indisponibilidades
-        </h3>
-        <button onClick={() => setAdding(!adding)} className="text-muted-foreground hover:text-foreground">
+    <DsSection
+      title="Indisponibilidades"
+      action={
+        <DsBtn variant="ghost" size="icon" onClick={() => setAdding(!adding)}>
           {adding ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-        </button>
-      </div>
+        </DsBtn>
+      }
+    >
       {adding && (
-        <div className="mb-3 space-y-2 rounded-lg border p-3">
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <Label className="text-xs">De</Label>
-              <Input type="date" value={dataInicio} onChange={(e) => { setDataInicio(e.target.value); if (!dataFim) setDataFim(e.target.value) }} className="text-sm" />
-            </div>
-            <div>
-              <Label className="text-xs">Até</Label>
-              <Input type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)} className="text-sm" />
-            </div>
+        <DsPanel className="space-y-3 p-4">
+          <div className="grid grid-cols-2 gap-3">
+            <DsField label="De">
+              <Input
+                type="date"
+                value={dataInicio}
+                onChange={(e) => {
+                  setDataInicio(e.target.value)
+                  if (!dataFim) setDataFim(e.target.value)
+                }}
+              />
+            </DsField>
+            <DsField label="Até">
+              <Input type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)} />
+            </DsField>
           </div>
-          <Input placeholder="Motivo (opcional)" value={motivo} onChange={(e) => setMotivo(e.target.value)} className="text-sm" />
-          <Button size="sm" onClick={handleAdd} disabled={saving || !dataInicio || !dataFim} className="w-full">
+          <DsField label="Motivo (opcional)">
+            <Input value={motivo} onChange={(e) => setMotivo(e.target.value)} />
+          </DsField>
+          <DsBtn className="w-full" onClick={handleAdd} disabled={saving || !dataInicio || !dataFim}>
             {saving ? "Salvando..." : "Adicionar"}
-          </Button>
-        </div>
+          </DsBtn>
+        </DsPanel>
       )}
+
       {items?.length > 0 ? (
-        <div className="space-y-2">
+        <DsList>
           {items.map((item: any) => (
-            <div key={item.id} className="flex items-center gap-2 rounded-lg border px-3 py-2">
-              <CalendarOff className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium">
-                  {new Date(item.data_inicio).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", timeZone: "UTC" })}
-                  {item.data_inicio !== item.data_fim &&
-                    ` — ${new Date(item.data_fim).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", timeZone: "UTC" })}`}
-                </p>
-                {item.motivo && <p className="truncate text-xs text-muted-foreground">{item.motivo}</p>}
-              </div>
-              <button onClick={() => handleDelete(item.id)} className="text-muted-foreground hover:text-foreground">
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
-            </div>
+            <DsRow
+              key={item.id}
+              as="div"
+              leading={<CalendarOff className="h-4 w-4 shrink-0" />}
+              title={
+                <>
+                  {formatDate(item.data_inicio)}
+                  {item.data_inicio !== item.data_fim && ` — ${formatDate(item.data_fim)}`}
+                </>
+              }
+              meta={item.motivo || undefined}
+              trailing={
+                <DsBtn variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
+                  <Trash2 className="h-3.5 w-3.5" />
+                </DsBtn>
+              }
+            />
           ))}
-        </div>
+        </DsList>
       ) : !adding ? (
-        <p className="text-xs text-muted-foreground">Nenhuma indisponibilidade registrada</p>
+        <p className="pib-mute text-xs">Nenhuma indisponibilidade registrada</p>
       ) : null}
-    </section>
+    </DsSection>
   )
 }

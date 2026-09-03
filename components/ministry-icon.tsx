@@ -64,6 +64,8 @@ export type MinistryIconProps = {
   name?: string | null
   ministryName?: string | null
   color?: string | null
+  /** App v2: always ink — ignore ministry color */
+  mono?: boolean
   className?: string
   size?: number
 } & Omit<LucideProps, "ref">
@@ -72,19 +74,22 @@ export function MinistryIcon({
   name,
   ministryName,
   color,
+  mono = false,
   className,
   size = 20,
   ...props
 }: MinistryIconProps) {
   const key = name?.trim()
   const Icon = key && !isEmoji(key) ? ICON_MAP[key] : undefined
+  const ink = "#0a0a0a"
+  const resolved = mono ? ink : color || undefined
 
   if (Icon) {
     return (
       <Icon
         className={cn("shrink-0", className)}
         size={size}
-        style={color ? { color } : undefined}
+        style={resolved ? { color: resolved } : undefined}
         aria-hidden
         {...props}
       />
@@ -102,8 +107,8 @@ export function MinistryIcon({
         width: size,
         height: size,
         fontSize: Math.max(10, size * 0.4),
-        backgroundColor: color ? `${color}22` : "hsl(var(--primary) / 0.15)",
-        color: color || "#8B7355",
+        backgroundColor: mono ? "#e5e5e5" : resolved ? `${resolved}22` : "#e5e5e5",
+        color: mono ? ink : resolved || ink,
       }}
       aria-hidden
     >

@@ -11,11 +11,12 @@ import { Plus, Pencil, Trash2, ChevronRight } from "lucide-react"
 import { toast } from "@/components/ui/use-toast"
 import { MinistryIcon, MinistryIconPicker } from "@/components/ministry-icon"
 import { AdminScreen } from "@/components/app-v2/admin-screen"
-import { DsList, DsRow } from "@/components/app-v2/ds"
+import { DsList, useDsConfirm } from "@/components/app-v2/ds"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 export default function MinisteriosAdminPage() {
+  const { ask, node: confirmNode } = useDsConfirm()
   const { data: ministerios, mutate } = useSWR("/api/ministerios", fetcher)
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<any>(null)
@@ -43,7 +44,13 @@ export default function MinisteriosAdminPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Excluir este ministério?")) return
+    const ok = await ask({
+      title: "Excluir ministério?",
+      description: "Esta ação não pode ser desfeita.",
+      danger: true,
+      confirmLabel: "Excluir",
+    })
+    if (!ok) return
     await fetch(`/api/ministerios/${id}`, { method: "DELETE" })
     toast({ title: "Ministério excluído" })
     mutate()
@@ -132,7 +139,7 @@ export default function MinisteriosAdminPage() {
         {(ministerios || []).map((m: any) => (
           <div key={m.id} className="flex items-center gap-1 pr-2">
             <Link href={`/admin-v2/ministerios/${m.id}`} className="pib-row min-w-0 flex-1">
-              <MinistryIcon name={m.icone} ministryName={m.nome} color={m.cor} size={22} />
+              <MinistryIcon mono name={m.icone} ministryName={m.nome} size={22} />
               <div className="pib-row__body">
                 <div className="pib-row__title">{m.nome}</div>
                 {m.descricao ? <div className="pib-row__meta">{m.descricao}</div> : null}
@@ -153,6 +160,7 @@ export default function MinisteriosAdminPage() {
           </div>
         ))}
       </DsList>
+      {confirmNode}
     </AdminScreen>
   )
 }

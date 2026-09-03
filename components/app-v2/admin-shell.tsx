@@ -4,12 +4,12 @@ import { signOut } from "next-auth/react"
 import { LogOut } from "lucide-react"
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { AdminSidebarV2 } from "@/components/app-v2/admin-sidebar"
-import { BottomTabBarV2 } from "@/components/app-v2/bottom-tab-bar"
 import { VersionBanner } from "@/components/app-v2/version-banner"
 import { UiCookieSync } from "@/components/app-v2/ui-cookie-sync"
 import { NotificationsButton } from "@/components/notifications-button"
 import { DsRoot } from "@/components/app-v2/ds"
 
+/** Gestão: drawer único — sem dock de membro */
 export function AdminShellV2({ children }: { children: React.ReactNode }) {
   return (
     <DsRoot>
@@ -35,10 +35,9 @@ export function AdminShellV2({ children }: { children: React.ReactNode }) {
               </button>
             </div>
           </header>
-          <div className="pb-20 md:pb-0">{children}</div>
+          <div>{children}</div>
         </SidebarInset>
       </SidebarProvider>
-      <BottomTabBarV2 />
     </DsRoot>
   )
 }
