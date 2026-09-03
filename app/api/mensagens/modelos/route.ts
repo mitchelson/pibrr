@@ -1,7 +1,12 @@
 import { sql } from "@/lib/db"
 import { NextResponse } from "next/server"
+import { maybeProxyGestao } from "@/lib/gestao-bff"
+
 
 export async function POST(request: Request) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   try {
     const { categoria_id, titulo, corpo } = await request.json()
     if (!categoria_id || !titulo || !corpo) {

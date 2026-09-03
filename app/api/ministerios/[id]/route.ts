@@ -2,8 +2,13 @@ import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/db"
 import { requireMinisterioAccess, requireAdmin } from "@/lib/authorization"
 import { getSession } from "@/lib/mobile-auth"
+import { maybeProxyGestao } from "@/lib/gestao-bff"
+
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const __gestaoBff = await maybeProxyGestao(req)
+  if (__gestaoBff) return __gestaoBff
+
   const session = await getSession(req)
   if (!session) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
@@ -50,6 +55,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const __gestaoBff = await maybeProxyGestao(req)
+  if (__gestaoBff) return __gestaoBff
+
   const { id } = await params
   const check = await requireMinisterioAccess(id, req)
   if (!check.authorized) return check.response
@@ -74,6 +82,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const __gestaoBff = await maybeProxyGestao(req)
+  if (__gestaoBff) return __gestaoBff
+
   const { id } = await params
   const check = await requireAdmin(req)
   if (!check.authorized) return check.response

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/db"
 import { getSession, type MobileSession } from "@/lib/mobile-auth"
+import { maybeProxyGestao } from "@/lib/gestao-bff"
+
 
 async function canModify(session: MobileSession, postId: string) {
   if (session.role === "admin") return true
@@ -9,6 +11,9 @@ async function canModify(session: MobileSession, postId: string) {
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const __gestaoBff = await maybeProxyGestao(req)
+  if (__gestaoBff) return __gestaoBff
+
   const session = await getSession(req)
   if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
 
@@ -31,6 +36,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const __gestaoBff = await maybeProxyGestao(req)
+  if (__gestaoBff) return __gestaoBff
+
   const session = await getSession(req)
   if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
 

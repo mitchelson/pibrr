@@ -6,20 +6,36 @@ import { sql } from "@/lib/db"
 import { MinistryIcon } from "@/components/ministry-icon"
 import { SiteShell } from "@/components/site-shell"
 import { SITE_IMAGES } from "@/lib/site-images"
+import { isGestaoBffEnabled, ssrGestaoJson } from "@/lib/gestao-ssr"
 
 export const revalidate = 60
 export const dynamic = "force-dynamic"
 
 export default async function MinisteriosPage() {
-  const ministerios = await sql`
-    SELECT m.*, 
-      (SELECT json_agg(json_build_object('nome', u.nome, 'is_lider', mm.is_lider))
-       FROM ministerio_membros mm JOIN users u ON u.id = mm.user_id
-       WHERE mm.ministerio_id = m.id AND mm.is_lider = true) as lideres
-    FROM ministerios m
-    WHERE m.ativo = true
-    ORDER BY m.ordem ASC, m.nome ASC
-  `
+  let ministerios: Array<{
+    id: string
+    nome: string
+    descricao?: string
+    icone?: string
+    cor?: string
+    ativo?: boolean
+    lideres?: Array<{ nome: string; is_lider?: boolean }> | null
+  }> = []
+
+  if (isGestaoBffEnabled()) {
+    const all = await ssrGestaoJson<typeof ministerios>("/v1/ministerios", { public: true })
+    ministerios = (all || []).filter((m) => m.ativo !== false)
+  } else {
+    ministerios = (await sql`
+      SELECT m.*, 
+        (SELECT json_agg(json_build_object('nome', u.nome, 'is_lider', mm.is_lider))
+         FROM ministerio_membros mm JOIN users u ON u.id = mm.user_id
+         WHERE mm.ministerio_id = m.id AND mm.is_lider = true) as lideres
+      FROM ministerios m
+      WHERE m.ativo = true
+      ORDER BY m.ordem ASC, m.nome ASC
+    `) as typeof ministerios
+  }
 
   if (ministerios.length === 0) {
     return (

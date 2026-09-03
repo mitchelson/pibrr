@@ -2,8 +2,13 @@ import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/db"
 import { sendPushToUser } from "@/lib/push"
 import { requireMinisterioAccess } from "@/lib/authorization"
+import { maybeProxyGestao } from "@/lib/gestao-bff"
+
 
 export async function GET(request: NextRequest) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   const eventoId = request.nextUrl.searchParams.get("evento_id")
   const ministerioId = request.nextUrl.searchParams.get("ministerio_id")
 
@@ -55,6 +60,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   const { evento_id, ministerio_id, user_id, funcao } = await request.json()
   if (!evento_id || !ministerio_id || !user_id) {
     return NextResponse.json({ error: "evento_id, ministerio_id e user_id obrigatórios" }, { status: 400 })

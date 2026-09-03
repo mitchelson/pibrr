@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/db"
+import { maybeProxyGestao } from "@/lib/gestao-bff"
+
 
 const ASSUNTOS: Record<string, string> = {
   visitante: "Primeira Visita",
@@ -10,6 +12,9 @@ const ASSUNTOS: Record<string, string> = {
 }
 
 export async function POST(request: NextRequest) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   try {
     const body = await request.json().catch(() => null)
     if (!body || typeof body !== "object") {

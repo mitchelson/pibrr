@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { sql } from "@/lib/db"
+import { maybeProxyGestao } from "@/lib/gestao-bff"
+
 
 export async function POST(request: NextRequest) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
 
@@ -21,6 +26,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
 

@@ -6,16 +6,28 @@ import { sql } from "@/lib/db"
 import { SiteShell } from "@/components/site-shell"
 import { CHURCH_INFO } from "@/lib/constants"
 import { SITE_IMAGES } from "@/lib/site-images"
+import { isGestaoBffEnabled, ssrGestaoJson } from "@/lib/gestao-ssr"
 
 export const revalidate = 60
 export const dynamic = "force-dynamic"
 
 export default async function EventosPage() {
-  const eventos = await sql`
-    SELECT * FROM eventos WHERE data >= CURRENT_DATE ORDER BY data ASC
-  `
+  let eventos: Array<Record<string, unknown>> = []
+  if (isGestaoBffEnabled()) {
+    const all = await ssrGestaoJson<Array<Record<string, unknown>>>("/v1/eventos", {
+      public: true,
+    })
+    const today = new Date().toISOString().slice(0, 10)
+    eventos = (all || [])
+      .filter((e) => String(e.data).slice(0, 10) >= today)
+      .sort((a, b) => String(a.data).localeCompare(String(b.data)))
+  } else {
+    eventos = (await sql`
+      SELECT * FROM eventos WHERE data >= CURRENT_DATE ORDER BY data ASC
+    `) as Array<Record<string, unknown>>
+  }
 
-  const tiposUnicos = ["Todos", ...new Set(eventos.map((e: any) => e.tipo).filter(Boolean))]
+  const tiposUnicos = ["Todos", ...new Set(eventos.map((e) => e.tipo).filter(Boolean))]
 
   return (
     <SiteShell>

@@ -3,11 +3,16 @@ import { sql } from "@/lib/db"
 import { getSession } from "@/lib/mobile-auth"
 import { canAccessAcolhimento } from "@/lib/acolhimento"
 import { getAcolhimentoMinisterioId } from "@/lib/acolhimento-server"
+import { maybeProxyGestao } from "@/lib/gestao-bff"
+
 
 export const dynamic = "force-dynamic"
 
 /** Paridade com gestao-api GET /v1/admin/dashboard — usado pelo pib-app painel. */
 export async function GET(request: NextRequest) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   const session = await getSession(request)
   if (!session) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 })

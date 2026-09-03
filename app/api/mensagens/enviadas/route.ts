@@ -1,8 +1,13 @@
 import { sql } from "@/lib/db"
 import { NextResponse } from "next/server"
+import { maybeProxyGestao } from "@/lib/gestao-bff"
+
 
 // GET /api/mensagens/enviadas?visitante_id=xxx
 export async function GET(request: Request) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   try {
     const { searchParams } = new URL(request.url)
     const visitanteId = searchParams.get("visitante_id")
@@ -31,6 +36,9 @@ export async function GET(request: Request) {
 
 // POST /api/mensagens/enviadas  { visitante_id, categoria_id }
 export async function POST(request: Request) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   try {
     const { visitante_id, categoria_id } = await request.json()
     if (!visitante_id || !categoria_id) {
@@ -61,6 +69,9 @@ export async function POST(request: Request) {
 
 // DELETE /api/mensagens/enviadas?visitante_id=xxx&categoria_id=yyy
 export async function DELETE(request: Request) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   try {
     const { searchParams } = new URL(request.url)
     const visitanteId = searchParams.get("visitante_id")

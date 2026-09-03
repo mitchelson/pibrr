@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/db"
+import { maybeProxyGestao } from "@/lib/gestao-bff"
+
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const __gestaoBff = await maybeProxyGestao(_req)
+  if (__gestaoBff) return __gestaoBff
+
   const { id } = await params
   const rows = await sql`
     SELECT ep.*, m.nome as ministerio_nome, m.icone as ministerio_icone
@@ -14,6 +19,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const __gestaoBff = await maybeProxyGestao(req)
+  if (__gestaoBff) return __gestaoBff
+
   const { id } = await params
   const { ministerio_id, funcao, quantidade } = await req.json()
   if (!ministerio_id || !funcao) return NextResponse.json({ error: "ministerio_id e funcao obrigatórios" }, { status: 400 })
@@ -26,6 +34,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const __gestaoBff = await maybeProxyGestao(req)
+  if (__gestaoBff) return __gestaoBff
+
   const { id } = await params
   const { posicao_id } = await req.json()
   if (posicao_id) {

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/db"
 import { getSession } from "@/lib/mobile-auth"
+import { maybeProxyGestao } from "@/lib/gestao-bff"
+
 
 async function ensureTable() {
   await sql`
@@ -24,6 +26,9 @@ async function ensureTable() {
 }
 
 export async function GET(request: NextRequest) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   const session = await getSession(request)
   if (!session?.userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
@@ -35,6 +40,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   const session = await getSession(request)
   if (!session?.userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 

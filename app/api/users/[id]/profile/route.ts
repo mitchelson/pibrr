@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/db"
 import { fetchAccountRoles } from "@/lib/account-roles"
+import { maybeProxyGestao } from "@/lib/gestao-bff"
+
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const __gestaoBff = await maybeProxyGestao(_req)
+  if (__gestaoBff) return __gestaoBff
+
   const { id } = await params
 
   const user = await sql`

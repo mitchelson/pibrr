@@ -2,8 +2,13 @@ import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/db"
 import { requireMinisterioAccess } from "@/lib/authorization"
 import { removeAccountRole, syncMinistryLeaderRole, getOrCreateMinistryContext } from "@/lib/account-roles"
+import { maybeProxyGestao } from "@/lib/gestao-bff"
+
 
 export async function POST(request: NextRequest) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   const body = await request.json()
   const { user_id, ministerio_id } = body
 
@@ -55,6 +60,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   const { user_id, ministerio_id } = await request.json()
 
   const check = await requireMinisterioAccess(ministerio_id, request)

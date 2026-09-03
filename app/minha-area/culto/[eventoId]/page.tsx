@@ -15,6 +15,11 @@ import {
 } from "@/components/app-v2/ds"
 import { EscalaActionsV2 } from "@/app/minha-area/escala-actions-v2"
 import { RepertoireV2 } from "@/app/minha-area/culto/repertoire-v2"
+import {
+  gestaoSessionFromAuth,
+  isGestaoBffEnabled,
+  ssrGestaoJson,
+} from "@/lib/gestao-ssr"
 
 export const dynamic = "force-dynamic"
 
@@ -38,38 +43,122 @@ export default async function CultoV2Page({
   const { eventoId } = await params
   const userId = session.user.id
 
-  const eventos = await sql`
-    SELECT id, titulo, data, horario, observacoes, tipo
-    FROM eventos WHERE id = ${eventoId} LIMIT 1
-  `
-  if (!eventos[0]) notFound()
-  const evento = eventos[0]
+  let evento: {
+    id: string
+    titulo: string
+    data: string
+    horario?: string | null
+    observacoes?: string | null
+    tipo?: string | null
+  } | null = null
+  let minhasEscalas: Array<{
+    id: string
+    funcao: string
+    status: string
+    observacao?: string | null
+    ministerio_id: string
+    ministerio?: string
+    icone?: string
+    cor?: string
+  }> = []
+  let equipe: Array<{
+    user_id: string
+    nome: string
+    foto_url?: string | null
+    funcao: string
+    status: string
+    ministerio_id: string
+    ministerio?: string
+    icone?: string
+    cor?: string
+  }> = []
 
-  const minhasEscalas = await sql`
-    SELECT es.id, es.funcao, es.status, es.observacao, es.ministerio_id,
-           m.nome as ministerio, m.icone, m.cor
-    FROM escalas es
-    JOIN ministerios m ON m.id = es.ministerio_id
-    WHERE es.evento_id = ${eventoId} AND es.user_id = ${userId}
-  `
+  if (isGestaoBffEnabled()) {
+    const gestaoSession = await gestaoSessionFromAuth()
+    const [eventos, escalas] = await Promise.all([
+      ssrGestaoJson<Array<Record<string, unknown>>>("/v1/eventos", { public: true }),
+      ssrGestaoJson<
+        Array<{
+          id: string
+          user_id: string
+          funcao: string
+          status: string
+          observacao?: string | null
+          ministerio_id: string
+          user_nome?: string
+          foto_url?: string | null
+          ministerio_nome?: string
+        }>
+      >(`/v1/escalas?evento_id=${encodeURIComponent(eventoId)}`, {
+        session: gestaoSession,
+      }),
+    ])
+    const found = (eventos || []).find((e) => String(e.id) === eventoId)
+    if (!found) notFound()
+    evento = {
+      id: String(found.id),
+      titulo: String(found.titulo),
+      data: String(found.data),
+      horario: (found.horario as string) || null,
+      observacoes: (found.observacoes as string) || null,
+      tipo: (found.tipo as string) || null,
+    }
+    const all = escalas || []
+    minhasEscalas = all
+      .filter((e) => e.user_id === userId)
+      .map((e) => ({
+        id: e.id,
+        funcao: e.funcao,
+        status: e.status,
+        observacao: e.observacao,
+        ministerio_id: e.ministerio_id,
+        ministerio: e.ministerio_nome,
+      }))
+    equipe = all.map((e) => ({
+      user_id: e.user_id,
+      nome: e.user_nome || "",
+      foto_url: e.foto_url,
+      funcao: e.funcao,
+      status: e.status,
+      ministerio_id: e.ministerio_id,
+      ministerio: e.ministerio_nome,
+    }))
+  } else {
+    const eventos = await sql`
+      SELECT id, titulo, data, horario, observacoes, tipo
+      FROM eventos WHERE id = ${eventoId} LIMIT 1
+    `
+    if (!eventos[0]) notFound()
+    evento = eventos[0] as typeof evento
+
+    minhasEscalas = (await sql`
+      SELECT es.id, es.funcao, es.status, es.observacao, es.ministerio_id,
+             m.nome as ministerio, m.icone, m.cor
+      FROM escalas es
+      JOIN ministerios m ON m.id = es.ministerio_id
+      WHERE es.evento_id = ${eventoId} AND es.user_id = ${userId}
+    `) as typeof minhasEscalas
+
+    equipe = (await sql`
+      SELECT u.id as user_id, u.nome, u.foto_url, e.funcao, e.status,
+             m.id as ministerio_id, m.nome as ministerio, m.icone, m.cor
+      FROM escalas e
+      JOIN users u ON u.id = e.user_id
+      JOIN ministerios m ON m.id = e.ministerio_id
+      WHERE e.evento_id = ${eventoId}
+      ORDER BY m.nome, u.nome
+    `) as typeof equipe
+  }
+
+  if (!evento) notFound()
 
   if (minhasEscalas.length === 0) {
     redirect("/minha-area")
   }
 
-  const equipe = await sql`
-    SELECT u.id as user_id, u.nome, u.foto_url, e.funcao, e.status,
-           m.id as ministerio_id, m.nome as ministerio, m.icone, m.cor
-    FROM escalas e
-    JOIN users u ON u.id = e.user_id
-    JOIN ministerios m ON m.id = e.ministerio_id
-    WHERE e.evento_id = ${eventoId}
-    ORDER BY m.nome, u.nome
-  `
-
-  const meusMinisterioIds = new Set(minhasEscalas.map((e: any) => e.ministerio_id as string))
-  const comigo = equipe.filter((p: any) => meusMinisterioIds.has(p.ministerio_id))
-  const outros = equipe.filter((p: any) => !meusMinisterioIds.has(p.ministerio_id))
+  const meusMinisterioIds = new Set(minhasEscalas.map((e) => e.ministerio_id))
+  const comigo = equipe.filter((p) => meusMinisterioIds.has(p.ministerio_id))
+  const outros = equipe.filter((p) => !meusMinisterioIds.has(p.ministerio_id))
 
   const data = new Date(evento.data)
   const dia = data.toLocaleDateString("pt-BR", { day: "2-digit", timeZone: "UTC" })
@@ -87,15 +176,15 @@ export default async function CultoV2Page({
   })
   const horario = formatHorario(evento.horario)
 
-  const temPendente = minhasEscalas.some((e: any) => e.status === "pendente")
-  const todasConfirmadas = minhasEscalas.every((e: any) => e.status === "confirmado")
-  const algumaRecusada = minhasEscalas.some((e: any) => e.status === "recusado")
+  const temPendente = minhasEscalas.some((e) => e.status === "pendente")
+  const todasConfirmadas = minhasEscalas.every((e) => e.status === "confirmado")
+  const algumaRecusada = minhasEscalas.some((e) => e.status === "recusado")
 
-  const okCount = comigo.filter((p: any) => p.status === "confirmado").length
-  const pendCount = comigo.filter((p: any) => p.status === "pendente").length
-  const noCount = comigo.filter((p: any) => p.status === "recusado").length
+  const okCount = comigo.filter((p) => p.status === "confirmado").length
+  const pendCount = comigo.filter((p) => p.status === "pendente").length
+  const noCount = comigo.filter((p) => p.status === "recusado").length
 
-  const teamPreview = comigo.filter((p: any) => p.user_id !== userId).slice(0, 5)
+  const teamPreview = comigo.filter((p) => p.user_id !== userId).slice(0, 5)
 
   return (
     <DsPage>

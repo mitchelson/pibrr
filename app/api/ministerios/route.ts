@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/db"
 import { requireAdminUniversal } from "@/lib/mobile-auth"
+import { maybeProxyGestao } from "@/lib/gestao-bff"
 
-export async function GET() {
+
+export async function GET(request: NextRequest) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
   const rows = await sql`
     SELECT m.*,
       (SELECT count(*)::int FROM ministerio_membros mm WHERE mm.ministerio_id = m.id) as total_membros
@@ -12,6 +16,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   try {
     const check = await requireAdminUniversal(request)
     if (!check.authorized) {

@@ -9,8 +9,13 @@ import {
   syncLegacyPrimaryRole,
 } from "@/lib/account-roles"
 import { isStaffRole } from "@/lib/authorization"
+import { maybeProxyGestao } from "@/lib/gestao-bff"
+
 
 export async function GET(request: NextRequest) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   const session = await getSession(request)
   if (!session) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
@@ -52,6 +57,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   const check = await requireAdminUniversal(request)
   if (!check.authorized) {
     return NextResponse.json({ error: check.error }, { status: check.status })
@@ -87,6 +95,9 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   const check = await requireAdminUniversal(request)
   if (!check.authorized) {
     return NextResponse.json({ error: check.error }, { status: check.status })

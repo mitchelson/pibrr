@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/db"
 import { getSession } from "@/lib/mobile-auth"
+import { maybeProxyGestao } from "@/lib/gestao-bff"
+
 
 export async function GET(request: NextRequest) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   const session = await getSession(request)
   if (!session?.userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   if (!["admin", "supervisor"].includes(session.role ?? "")) {

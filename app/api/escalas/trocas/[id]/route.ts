@@ -2,8 +2,13 @@ import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/db"
 import { getSession } from "@/lib/mobile-auth"
 import { sendPushToUser } from "@/lib/push"
+import { maybeProxyGestao } from "@/lib/gestao-bff"
+
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const __gestaoBff = await maybeProxyGestao(req)
+  if (__gestaoBff) return __gestaoBff
+
   const session = await getSession(req)
   if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
 

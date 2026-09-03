@@ -3,10 +3,15 @@ import { getSession } from "@/lib/mobile-auth"
 import { sql } from "@/lib/db"
 import { canAccessAcolhimento } from "@/lib/acolhimento"
 import { getAcolhimentoMinisterioId } from "@/lib/acolhimento-server"
+import { maybeProxyGestao } from "@/lib/gestao-bff"
+
 
 export const dynamic = "force-dynamic"
 
 export async function GET(request: NextRequest) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   const session = await getSession(request)
   if (!session?.userId) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 })

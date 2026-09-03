@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAccountPermissions, getAccountRoles } from '@/lib/permissions';
 import { getSession } from '@/lib/mobile-auth';
+import { maybeProxyGestao } from "@/lib/gestao-bff"
+
 
 /**
  * GET /api/auth/permissions
@@ -16,6 +18,9 @@ import { getSession } from '@/lib/mobile-auth';
  * }
  */
 export async function GET(req: NextRequest) {
+  const __gestaoBff = await maybeProxyGestao(req)
+  if (__gestaoBff) return __gestaoBff
+
   try {
     const session = await getSession(req)
     if (!session?.userId) {

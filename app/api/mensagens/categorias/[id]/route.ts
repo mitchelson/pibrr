@@ -1,10 +1,15 @@
 import { sql } from "@/lib/db"
 import { NextResponse } from "next/server"
+import { maybeProxyGestao } from "@/lib/gestao-bff"
+
 
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   try {
     const { id } = await params
     const body = await request.json()
@@ -75,6 +80,9 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const __gestaoBff = await maybeProxyGestao(_request)
+  if (__gestaoBff) return __gestaoBff
+
   try {
     const { id } = await params
     await sql`DELETE FROM mensagem_modelos WHERE categoria_id = ${id}`

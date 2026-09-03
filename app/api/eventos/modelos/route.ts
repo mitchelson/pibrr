@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/db"
+import { maybeProxyGestao } from "@/lib/gestao-bff"
 
-export async function GET() {
+
+export async function GET(request: NextRequest) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
   const rows = await sql`
     SELECT em.*, COALESCE(json_agg(json_build_object(
       'id', ep.id, 'ministerio_id', ep.ministerio_id, 'funcao', ep.funcao, 'quantidade', ep.quantidade,
@@ -16,6 +20,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const __gestaoBff = await maybeProxyGestao(req)
+  if (__gestaoBff) return __gestaoBff
+
   const { nome, tipo, horario, descricao, posicoes } = await req.json()
   if (!nome) return NextResponse.json({ error: "nome obrigatório" }, { status: 400 })
 

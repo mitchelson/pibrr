@@ -1,11 +1,15 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
+import { maybeProxyGestao } from "@/lib/gestao-bff"
+
 
 const CHANNEL_ID = "UCIbxja1EbdUKBsB9xizP4GA"
 const RSS_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`
 
 export const revalidate = 3600 // cache 1h
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
   try {
     const res = await fetch(RSS_URL, { next: { revalidate: 3600 } })
     const xml = await res.text()

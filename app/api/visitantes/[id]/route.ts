@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/db"
 import { requireStaff } from "@/lib/authorization"
+import { maybeProxyGestao } from "@/lib/gestao-bff"
+
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   const check = await requireStaff(request)
   if (!check.authorized) return check.response
 
@@ -41,6 +46,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   const check = await requireStaff(request)
   if (!check.authorized) return check.response
 
@@ -102,6 +110,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   const check = await requireStaff(request)
   if (!check.authorized) return check.response
 

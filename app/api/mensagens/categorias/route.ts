@@ -1,7 +1,11 @@
 import { sql } from "@/lib/db"
 import { NextResponse } from "next/server"
+import { maybeProxyGestao } from "@/lib/gestao-bff"
 
-export async function GET() {
+
+export async function GET(request: NextRequest) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
   try {
     const categorias = await sql`
       SELECT c.*,
@@ -29,6 +33,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   try {
     const { nome, descricao, ordem, dia } = await request.json()
     if (!nome || !dia) {

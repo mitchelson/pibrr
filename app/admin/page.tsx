@@ -6,6 +6,11 @@ import { MinistryIcon } from "@/components/ministry-icon"
 import { canAccessAcolhimento } from "@/lib/acolhimento"
 import { getAcolhimentoMinisterioId } from "@/lib/acolhimento-server"
 import {
+  gestaoSessionFromAuth,
+  isGestaoBffEnabled,
+  ssrGestaoJson,
+} from "@/lib/gestao-ssr"
+import {
   DsCount,
   DsEmpty,
   DsHero,
@@ -18,6 +23,13 @@ import {
 
 export const dynamic = "force-dynamic"
 
+type DashboardStats = {
+  pendenciasEscalas: number
+  escalasSemana: number
+  pedidosMinisterio: number
+  whatsappPendentes: number
+}
+
 export default async function AdminV2Dashboard() {
   const session = await auth()
   const role = session?.user?.role
@@ -26,47 +38,72 @@ export default async function AdminV2Dashboard() {
   const showAcolhimento = canAccessAcolhimento(role, ministerioIds, acolhimentoId)
   const firstName = session?.user?.name?.split(" ")[0] || "líder"
 
-  const escalasPendentes = await sql`
-    SELECT count(*)::int as total FROM escalas es
-    INNER JOIN eventos e ON e.id = es.evento_id
-    WHERE es.status = 'pendente' AND e.data >= CURRENT_DATE
-  `
-  const escalasSemana = await sql`
-    SELECT count(*)::int as total FROM escalas es
-    INNER JOIN eventos e ON e.id = es.evento_id
-    WHERE e.data >= CURRENT_DATE AND e.data < CURRENT_DATE + interval '7 days'
-  `
+  let pendenciasEscalas = 0
+  let escalasSemanaCount = 0
   let pedidosMinisterio = 0
-  try {
-    const ped = await sql`SELECT count(*)::int as total FROM ministerio_membros WHERE pendente = true`
-    pedidosMinisterio = ped[0]?.total ?? 0
-  } catch {
-    pedidosMinisterio = 0
-  }
-
   let whatsappPendentes = 0
-  if (showAcolhimento) {
+  let ministerios: Array<{ id: string; nome: string; icone?: string; cor?: string }> = []
+
+  if (isGestaoBffEnabled()) {
+    const gestaoSession = await gestaoSessionFromAuth()
+    const [dash, mins] = await Promise.all([
+      ssrGestaoJson<DashboardStats>("/v1/admin/dashboard", { session: gestaoSession }),
+      ssrGestaoJson<Array<{ id: string; nome: string; icone?: string; cor?: string; ativo?: boolean }>>(
+        "/v1/ministerios",
+        { public: true }
+      ),
+    ])
+    pendenciasEscalas = dash?.pendenciasEscalas ?? 0
+    escalasSemanaCount = dash?.escalasSemana ?? 0
+    pedidosMinisterio = dash?.pedidosMinisterio ?? 0
+    whatsappPendentes = showAcolhimento ? dash?.whatsappPendentes ?? 0 : 0
+    ministerios = (mins || []).filter((m) => m.ativo !== false)
+  } else {
+    const escalasPendentes = await sql`
+      SELECT count(*)::int as total FROM escalas es
+      INNER JOIN eventos e ON e.id = es.evento_id
+      WHERE es.status = 'pendente' AND e.data >= CURRENT_DATE
+    `
+    const escalasSemana = await sql`
+      SELECT count(*)::int as total FROM escalas es
+      INNER JOIN eventos e ON e.id = es.evento_id
+      WHERE e.data >= CURRENT_DATE AND e.data < CURRENT_DATE + interval '7 days'
+    `
+    pendenciasEscalas = escalasPendentes[0]?.total ?? 0
+    escalasSemanaCount = escalasSemana[0]?.total ?? 0
     try {
-      const pend = await sql`
-        SELECT count(*)::int as total FROM visitantes v
-        WHERE v.sem_whatsapp IS NOT TRUE
-          AND EXISTS (
-            SELECT 1 FROM mensagem_categorias c WHERE c.ativa = true
-            AND NOT EXISTS (
-              SELECT 1 FROM visitante_mensagens_enviadas me
-              WHERE me.visitante_id = v.id AND me.categoria_id = c.id
-            )
-          )
-      `
-      whatsappPendentes = pend[0]?.total ?? 0
+      const ped = await sql`SELECT count(*)::int as total FROM ministerio_membros WHERE pendente = true`
+      pedidosMinisterio = ped[0]?.total ?? 0
     } catch {
-      whatsappPendentes = 0
+      pedidosMinisterio = 0
     }
+
+    if (showAcolhimento) {
+      try {
+        const pend = await sql`
+          SELECT count(*)::int as total FROM visitantes v
+          WHERE v.sem_whatsapp IS NOT TRUE
+            AND EXISTS (
+              SELECT 1 FROM mensagem_categorias c WHERE c.ativa = true
+              AND NOT EXISTS (
+                SELECT 1 FROM visitante_mensagens_enviadas me
+                WHERE me.visitante_id = v.id AND me.categoria_id = c.id
+              )
+            )
+        `
+        whatsappPendentes = pend[0]?.total ?? 0
+      } catch {
+        whatsappPendentes = 0
+      }
+    }
+
+    ministerios = (await sql`
+      SELECT id, nome, icone, cor FROM ministerios WHERE ativo = true ORDER BY ordem ASC, nome ASC
+    `) as typeof ministerios
   }
 
-  const ministerios = await sql`SELECT id, nome, icone, cor FROM ministerios WHERE ativo = true ORDER BY ordem ASC, nome ASC`
   const visibleMinisterios =
-    role === "admin" ? ministerios : ministerios.filter((m: any) => ministerioIds.includes(m.id))
+    role === "admin" ? ministerios : ministerios.filter((m) => ministerioIds.includes(m.id))
 
   const queue = [
     showAcolhimento && whatsappPendentes > 0
@@ -78,7 +115,7 @@ export default async function AdminV2Dashboard() {
           value: whatsappPendentes,
         }
       : null,
-    (role === "admin" || role === "lider") && (escalasPendentes[0]?.total ?? 0) > 0
+    (role === "admin" || role === "lider") && pendenciasEscalas > 0
       ? {
           href: role === "admin" ? "/admin/escalas" : visibleMinisterios[0]
             ? `/admin/ministerios/${visibleMinisterios[0].id}`
@@ -86,7 +123,7 @@ export default async function AdminV2Dashboard() {
           title: "Confirmações atrasadas",
           meta: "Escalas ainda sem resposta",
           icon: ClipboardList,
-          value: escalasPendentes[0]?.total ?? 0,
+          value: pendenciasEscalas,
         }
       : null,
     pedidosMinisterio > 0
@@ -106,7 +143,7 @@ export default async function AdminV2Dashboard() {
           title: "Cultos desta semana",
           meta: "Escalas nos próximos 7 dias",
           icon: Calendar,
-          value: escalasSemana[0]?.total ?? 0,
+          value: escalasSemanaCount,
         }
       : null,
   ].filter(Boolean) as Array<{
@@ -117,8 +154,8 @@ export default async function AdminV2Dashboard() {
     value: number
   }>
 
-  const pendentesConfirm = escalasPendentes[0]?.total ?? 0
-  const semana = escalasSemana[0]?.total ?? 0
+  const pendentesConfirm = pendenciasEscalas
+  const semana = escalasSemanaCount
 
   return (
     <DsPage className="pib-page--admin">

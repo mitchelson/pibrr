@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/db"
 import { requireAdmin } from "@/lib/authorization"
+import { maybeProxyGestao } from "@/lib/gestao-bff"
 
-export async function GET() {
+
+export async function GET(request: NextRequest) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
   const rows = await sql`SELECT * FROM eventos ORDER BY data DESC`
   return NextResponse.json(rows)
 }
 
 export async function POST(request: NextRequest) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   const check = await requireAdmin(request)
   if (!check.authorized) return check.response
 

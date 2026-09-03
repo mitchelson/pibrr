@@ -9,11 +9,16 @@ import {
   getOrCreateMinistryContext,
 } from "@/lib/account-roles"
 import { sql } from "@/lib/db"
+import { maybeProxyGestao } from "@/lib/gestao-bff"
+
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   const { id } = await params
   const session = await getSession(request)
   if (!session) {
@@ -31,6 +36,9 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   const check = await requireAdminUniversal(request)
   if (!check.authorized) {
     return NextResponse.json({ error: check.error }, { status: check.status })
@@ -82,6 +90,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   const check = await requireAdminUniversal(request)
   if (!check.authorized) {
     return NextResponse.json({ error: check.error }, { status: check.status })

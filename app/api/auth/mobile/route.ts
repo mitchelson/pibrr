@@ -6,6 +6,8 @@ import { verifyFirebaseIdToken } from "@/lib/firebase-auth"
 import { verifyGoogleIdToken } from "@/lib/google-auth"
 import { resolveMobileAuthUser, type MobileAuthProfile } from "@/lib/mobile-auth-user"
 import { getMobileJwtSecret } from "@/lib/jwt-secret"
+import { maybeProxyGestao } from "@/lib/gestao-bff"
+
 
 const secret = getMobileJwtSecret()
 
@@ -67,6 +69,9 @@ async function profileFromBody(body: Record<string, unknown>): Promise<MobileAut
 }
 
 export async function POST(request: NextRequest) {
+  const __gestaoBff = await maybeProxyGestao(request)
+  if (__gestaoBff) return __gestaoBff
+
   try {
     const body = await request.json()
     const profile = await profileFromBody(body)

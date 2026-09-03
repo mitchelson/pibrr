@@ -1,14 +1,22 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/db"
 import { requireMinisterioAccess } from "@/lib/authorization"
+import { maybeProxyGestao } from "@/lib/gestao-bff"
+
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const __gestaoBff = await maybeProxyGestao(_req)
+  if (__gestaoBff) return __gestaoBff
+
   const { id } = await params
   const rows = await sql`SELECT * FROM ministerio_funcoes WHERE ministerio_id = ${id} ORDER BY nome ASC`
   return NextResponse.json(rows)
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const __gestaoBff = await maybeProxyGestao(req)
+  if (__gestaoBff) return __gestaoBff
+
   const { id } = await params
   const check = await requireMinisterioAccess(id, req)
   if (!check.authorized) return check.response
@@ -27,6 +35,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const __gestaoBff = await maybeProxyGestao(req)
+  if (__gestaoBff) return __gestaoBff
+
   const { id } = await params
   const check = await requireMinisterioAccess(id, req)
   if (!check.authorized) return check.response

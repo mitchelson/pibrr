@@ -9,6 +9,7 @@ import { SiteShell } from "@/components/site-shell";
 import { CHURCH_INFO } from "@/lib/constants";
 import { getFeijoadaCampanha } from "@/lib/feijoada-campanha";
 import { SITE_IMAGES } from "@/lib/site-images";
+import { isGestaoBffEnabled, ssrGestaoJson } from "@/lib/gestao-ssr";
 
 const RSS_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHURCH_INFO.YOUTUBE_CHANNEL_ID}`
 
@@ -29,12 +30,28 @@ async function getVideos() {
 export const revalidate = 60
 
 export default async function HomeLanding() {
-  const [videos, eventos, ministerios, feijoada] = await Promise.all([
-    getVideos(),
-    sql`SELECT titulo, data, horario, descricao, tipo FROM eventos WHERE data >= CURRENT_DATE ORDER BY data ASC LIMIT 6`,
-    sql`SELECT nome, descricao, icone FROM ministerios WHERE ativo = true ORDER BY ordem ASC, nome ASC`,
-    getFeijoadaCampanha(),
-  ])
+  let eventos: Array<{ titulo: string; data: string; horario?: string; descricao?: string; tipo?: string }> = []
+  let ministerios: Array<{ nome: string; descricao?: string; icone?: string; ativo?: boolean }> = []
+
+  if (isGestaoBffEnabled()) {
+    const [ev, mins] = await Promise.all([
+      ssrGestaoJson<typeof eventos>("/v1/eventos", { public: true }),
+      ssrGestaoJson<typeof ministerios>("/v1/ministerios", { public: true }),
+    ])
+    const today = new Date().toISOString().slice(0, 10)
+    eventos = (ev || [])
+      .filter((e) => String(e.data).slice(0, 10) >= today)
+      .sort((a, b) => String(a.data).localeCompare(String(b.data)))
+      .slice(0, 6)
+    ministerios = (mins || []).filter((m) => m.ativo !== false)
+  } else {
+    ;[eventos, ministerios] = (await Promise.all([
+      sql`SELECT titulo, data, horario, descricao, tipo FROM eventos WHERE data >= CURRENT_DATE ORDER BY data ASC LIMIT 6`,
+      sql`SELECT nome, descricao, icone FROM ministerios WHERE ativo = true ORDER BY ordem ASC, nome ASC`,
+    ])) as [typeof eventos, typeof ministerios]
+  }
+
+  const [videos, feijoada] = await Promise.all([getVideos(), getFeijoadaCampanha()])
   return (
     <SiteShell variant="dark">
       {/* ── Hero ── */}
