@@ -75,7 +75,7 @@ export default async function MinhaAreaV2Page() {
         <PushNotificationRegister />
         <InboxSection />
 
-        <DsSection title="Sua próxima escala">
+        <DsSection primary eyebrow="Seu culto" title="Próxima escala">
           {cultos.length === 0 ? (
             <DsEmpty
               title="Nada escalado ainda"
@@ -101,7 +101,7 @@ export default async function MinhaAreaV2Page() {
         </DsSection>
 
         {resto.length > 0 && (
-          <DsSection title="Depois">
+          <DsSection eyebrow="Agenda" title="Depois">
             <div className="space-y-3">
               {resto.map((e: any) => (
                 <EscalaRowV2
@@ -125,7 +125,7 @@ export default async function MinhaAreaV2Page() {
         )}
 
         {programacao.length > 0 && (
-          <DsSection title="Na igreja">
+          <DsSection eyebrow="Calendário" title="Na igreja">
             <DsList>
               {programacao.map((e: any) => (
                 <DsRow
@@ -138,7 +138,7 @@ export default async function MinhaAreaV2Page() {
                     month: "short",
                     timeZone: "UTC",
                   })}${e.horario ? ` · ${String(e.horario).slice(0, 5)}` : ""}`}
-                  trailing={<span className="text-xs">{e.tipo || ""}</span>}
+                  trailing={<span className="pib-mute text-xs">{e.tipo || ""}</span>}
                 />
               ))}
             </DsList>

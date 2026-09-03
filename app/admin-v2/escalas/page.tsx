@@ -17,7 +17,7 @@ import { toast } from "@/components/ui/use-toast";
 import { SearchableSelect } from "@/components/searchable-select";
 import { MinistryIcon } from "@/components/ministry-icon";
 import { AdminScreen } from "@/components/app-v2/admin-screen";
-import { DsBtn, DsChip, DsEmpty, DsList, DsRow, DsStatus, useDsConfirm } from "@/components/app-v2/ds";
+import { DsBtn, DsChip, DsEmpty, DsList, DsRow, DsStatus, DsWell, useDsConfirm } from "@/components/app-v2/ds";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -207,7 +207,7 @@ export default function EscalasAdminPage() {
     >
       {escalas && (
         <>
-          <div className="flex flex-wrap gap-2">
+          <DsWell className="gap-2">
             <DsChip active={ministerioFiltro === "todos"} onClick={() => setMinisterioFiltro("todos")}>
               Todos ({escalas.length})
             </DsChip>
@@ -217,7 +217,7 @@ export default function EscalasAdminPage() {
                 {m.nome} ({m.count})
               </DsChip>
             ))}
-          </div>
+          </DsWell>
 
           {escalasFiltradas?.length === 0 ? (
             <DsEmpty

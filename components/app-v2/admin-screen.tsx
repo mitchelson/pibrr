@@ -4,7 +4,7 @@ import { DsBtn, DsHero, DsPage } from "@/components/app-v2/ds"
 
 /**
  * Envelope padrão das telas de gestão v2.
- * Objetivo: mesmo kicker/título/ação em todas as rotas admin.
+ * Receita (TNP → mono): eyebrow → título → CTA → corpo (stats / well / lista).
  */
 export function AdminScreen({
   kicker,
@@ -20,7 +20,7 @@ export function AdminScreen({
   children: React.ReactNode
 }) {
   return (
-    <DsPage wide className="!px-4 md:!px-6">
+    <DsPage className="pib-page--admin">
       <DsHero kicker={kicker} title={title} subtitle={subtitle} action={action} />
       {children}
     </DsPage>
@@ -39,7 +39,5 @@ export function AdminPrimaryAction({
   if (href) {
     return <DsBtn href={href}>{children}</DsBtn>
   }
-  return (
-    <DsBtn onClick={onClick}>{children}</DsBtn>
-  )
+  return <DsBtn onClick={onClick}>{children}</DsBtn>
 }

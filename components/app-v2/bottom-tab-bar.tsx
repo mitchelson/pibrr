@@ -7,6 +7,7 @@ import { Sun, UsersRound, Briefcase } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { isAdminRole } from "@/lib/nav-config"
 import { useAppUi } from "@/hooks/use-app-ui"
+import { cn } from "@/lib/utils"
 
 export function BottomTabBarV2() {
   const pathname = usePathname()
@@ -28,11 +29,11 @@ export function BottomTabBarV2() {
     ...(showAdmin
       ? [{ href: paths.admin, label: "Gestão", icon: Briefcase, active: adminActive }]
       : []),
-    { href: paths.perfil, label: "Eu", icon: null, active: perfilActive },
+    { href: paths.perfil, label: "Eu", icon: null as null, active: perfilActive },
   ]
 
   return (
-    <nav className="pib-dock md:hidden" aria-label="Navegação principal">
+    <nav className="pib-dock" aria-label="Navegação principal">
       <div className="pib-dock__inner" style={{ gridTemplateColumns: `repeat(${items.length}, 1fr)` }}>
         {items.map((item) => {
           if (!item.icon) {
@@ -43,9 +44,11 @@ export function BottomTabBarV2() {
                 className="pib-dock__item"
                 data-active={item.active}
               >
-                <Avatar className="h-5 w-5">
+                <Avatar className={cn("pib-dock__avatar h-5 w-5")}>
                   <AvatarImage src={session?.user?.image ?? undefined} />
-                  <AvatarFallback className="text-[8px]">{session?.user?.name?.[0]}</AvatarFallback>
+                  <AvatarFallback className="pib-dock__avatar-fallback text-[8px]">
+                    {session?.user?.name?.[0]}
+                  </AvatarFallback>
                 </Avatar>
                 {item.label}
               </Link>

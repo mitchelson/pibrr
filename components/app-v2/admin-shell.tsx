@@ -9,7 +9,7 @@ import { UiCookieSync } from "@/components/app-v2/ui-cookie-sync"
 import { NotificationsButton } from "@/components/notifications-button"
 import { DsRoot } from "@/components/app-v2/ds"
 
-/** Gestão: drawer único — sem dock de membro */
+/** Gestão: rail + topbar frosted — sem dock de membro (padrão TNP adaptado) */
 export function AdminShellV2({ children }: { children: React.ReactNode }) {
   return (
     <DsRoot>
@@ -18,10 +18,13 @@ export function AdminShellV2({ children }: { children: React.ReactNode }) {
       <SidebarProvider>
         <AdminSidebarV2 />
         <SidebarInset className="bg-[var(--pib-paper)]">
-          <header className="pib-topbar">
-            <div className="flex items-center gap-2">
+          <header className="pib-topbar pib-topbar--bar">
+            <div className="flex items-center gap-3">
               <SidebarTrigger className="-ml-1" />
-              <p className="pib-kicker hidden sm:block">Gestão</p>
+              <div className="hidden sm:block">
+                <p className="pib-kicker">PIB Roraima</p>
+                <p className="text-sm font-semibold leading-none tracking-tight">Gestão</p>
+              </div>
             </div>
             <div className="flex items-center gap-1">
               <NotificationsButton />
@@ -35,7 +38,7 @@ export function AdminShellV2({ children }: { children: React.ReactNode }) {
               </button>
             </div>
           </header>
-          <div>{children}</div>
+          <div className="min-w-0">{children}</div>
         </SidebarInset>
       </SidebarProvider>
     </DsRoot>

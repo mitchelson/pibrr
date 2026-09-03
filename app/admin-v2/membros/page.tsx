@@ -15,7 +15,7 @@ import { Search, Plus, X, Crown, Trash2 } from "lucide-react"
 import { toast } from "@/components/ui/use-toast"
 import type { RoleBadgeItem } from "@/components/role-badges"
 import { AdminScreen, AdminPrimaryAction } from "@/components/app-v2/admin-screen"
-import { DsEmpty, DsList, DsRow, DsStatus, RoleBadgesV2 } from "@/components/app-v2/ds"
+import { DsEmpty, DsList, DsRow, DsStatus, DsWell, RoleBadgesV2 } from "@/components/app-v2/ds"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -239,18 +239,18 @@ export default function MembrosAdminPage() {
           : "Carregando…"
       }
     >
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <DsWell className="!items-stretch sm:!items-center">
+        <div className="relative min-w-0 flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--pib-mute)]" />
           <Input
             placeholder="Buscar por nome ou email"
-            className="pl-9"
+            className="border-0 bg-[var(--pib-paper-raised)] pl-9 shadow-none"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         <Select value={filterMin} onValueChange={setFilterMin}>
-          <SelectTrigger className="w-full sm:w-52">
+          <SelectTrigger className="w-full border-0 bg-[var(--pib-paper-raised)] shadow-none sm:w-52">
             <SelectValue placeholder="Ministério" />
           </SelectTrigger>
           <SelectContent>
@@ -263,7 +263,7 @@ export default function MembrosAdminPage() {
             ))}
           </SelectContent>
         </Select>
-      </div>
+      </DsWell>
 
       {!filtered ? (
         <p className="pib-mute py-8 text-center text-sm">Carregando membros…</p>

@@ -19,9 +19,11 @@ import {
   DsBtn,
   DsChip,
   DsEmpty,
+  DsIconBadge,
   DsList,
   DsRow,
   DsSection,
+  DsStatStrip,
   DsStatus,
   RoleBadgesV2,
   useDsConfirm,
@@ -185,23 +187,45 @@ export default function MinisterioDetailPage() {
     )
   }
 
+  const timeCount = lider.length + membros.filter((m: any) => !m.is_lider).length
+  const nextEvento = futureEventos?.[0]
+  const nextLabel = nextEvento
+    ? new Date(nextEvento.data).toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "short",
+        timeZone: "UTC",
+      })
+    : "—"
+
   return (
     <AdminScreen
       kicker="Ministério"
       title={ministerio.nome}
-      subtitle={ministerio.descricao || "Pedidos, time e escala do culto"}
+      subtitle={ministerio.descricao || "Escale o culto, aceite pedidos e cuide do time."}
       action={
-        <MinistryIcon
-          name={ministerio.icone}
-          ministryName={ministerio.nome}
-          mono
-          size={36}
-        />
+        <DsIconBadge>
+          <MinistryIcon name={ministerio.icone} ministryName={ministerio.nome} mono size={28} />
+        </DsIconBadge>
       }
     >
-      {/* 1. Pedidos pendentes */}
+      <DsStatStrip
+        items={[
+          { value: timeCount, label: "No time" },
+          {
+            value: pendentes.length,
+            label: pendentes.length === 1 ? "Pedido" : "Pedidos",
+          },
+          { value: nextLabel, label: "Próximo culto" },
+        ]}
+      />
+
+      {/* 1. Pedidos — atenção */}
       {pendentes.length > 0 && (
-        <DsSection title={`Pedidos pendentes (${pendentes.length})`}>
+        <DsSection
+          priority
+          eyebrow="Atenção"
+          title={`${pendentes.length} pedido${pendentes.length !== 1 ? "s" : ""} para entrar`}
+        >
           <DsList>
             {pendentes.map((m: any) => (
               <DsRow
@@ -217,8 +241,8 @@ export default function MinisterioDetailPage() {
                 meta="Quer servir neste ministério"
                 trailing={
                   <div className="flex items-center gap-1.5">
-                    <DsBtn variant="ghost" size="icon" onClick={() => handleAceitarMembro(m.user_id)} aria-label="Aceitar">
-                      <Check className="h-4 w-4" />
+                    <DsBtn variant="primary" size="sm" onClick={() => handleAceitarMembro(m.user_id)}>
+                      <Check className="h-3.5 w-3.5" /> Aceitar
                     </DsBtn>
                     <DsBtn variant="ghost" size="icon" onClick={() => handleRecusarMembro(m.user_id)} aria-label="Recusar">
                       <X className="h-4 w-4" />
@@ -231,56 +255,91 @@ export default function MinisterioDetailPage() {
         </DsSection>
       )}
 
-      {/* 2. Escala do culto */}
-      <DsSection title="Escala do culto">
+      {/* 2. Escala — job principal */}
+      <DsSection
+        primary
+        eyebrow="Trabalho do líder"
+        title="Escala do culto"
+        action={
+          eventoId ? (
+            <DsBtn size="sm" onClick={() => { setAddOpen(true); setAddUser(""); setAddFuncao("") }}>
+              <Plus className="h-4 w-4" /> Escalar
+            </DsBtn>
+          ) : null
+        }
+      >
         {!eventoId ? (
           !futureEventos || futureEventos.length === 0 ? (
-            <DsEmpty title="Nenhum evento futuro" description="Crie um evento na agenda para escalar o time." />
+            <DsEmpty title="Nenhum evento futuro" description="Crie um culto no calendário para montar a escala." />
           ) : (
-            <DsList>
-              {futureEventos.map((ev: any) => {
-                const d = new Date(ev.data)
-                const data = d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", timeZone: "UTC" }).replace(".", "")
-                const evEscalas = allMinEscalas?.filter((e: any) => e.evento_id === ev.id) || []
-                return (
-                  <DsRow
-                    key={ev.id}
-                    onClick={() => setEventoId(ev.id)}
-                    title={ev.titulo}
-                    meta={
-                      evEscalas.length > 0
-                        ? `${data}${ev.horario ? ` · ${ev.horario}` : ""} — ${evEscalas.map((e: any) => e.user_nome).join(", ")}`
-                        : `${data}${ev.horario ? ` · ${ev.horario}` : ""}`
-                    }
-                  />
-                )
-              })}
-            </DsList>
+            <>
+              <p className="pib-mute text-sm">Escolha o culto para ver vagas e quem já está escalado.</p>
+              <DsList>
+                {futureEventos.map((ev: any) => {
+                  const d = new Date(ev.data)
+                  const dia = d.toLocaleDateString("pt-BR", { day: "2-digit", timeZone: "UTC" })
+                  const mes = d.toLocaleDateString("pt-BR", { month: "short", timeZone: "UTC" }).replace(".", "")
+                  const evEscalas = allMinEscalas?.filter((e: any) => e.evento_id === ev.id) || []
+                  return (
+                    <DsRow
+                      key={ev.id}
+                      onClick={() => setEventoId(ev.id)}
+                      leading={
+                        <div className="pib-hero-date !min-w-[3.25rem] !py-2">
+                          <span className="pib-hero-date__day !text-lg">{dia}</span>
+                          <span className="pib-hero-date__meta">{mes}</span>
+                        </div>
+                      }
+                      title={ev.titulo}
+                      meta={
+                        evEscalas.length > 0
+                          ? `${ev.horario ? `${ev.horario} · ` : ""}${evEscalas.length} escalado${evEscalas.length !== 1 ? "s" : ""}`
+                          : `${ev.horario || "Sem horário"} · ainda vazia`
+                      }
+                    />
+                  )
+                })}
+              </DsList>
+            </>
           )
         ) : (
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <DsBtn variant="ghost" size="sm" onClick={() => setEventoId("")}>
-                ← Eventos
-              </DsBtn>
-              <DsBtn size="sm" onClick={() => { setAddOpen(true); setAddUser(""); setAddFuncao("") }}>
-                <Plus className="h-4 w-4" /> Escalar
-              </DsBtn>
-            </div>
-
-            {selectedEvento && (
-              <div className="pib-panel p-4">
-                <p className="text-sm font-semibold">{selectedEvento.titulo}</p>
-                <p className="pib-mute text-xs">
-                  {new Date(selectedEvento.data).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", timeZone: "UTC" })}
-                  {selectedEvento.horario ? ` · ${selectedEvento.horario}` : ""}
-                </p>
+          <div className="space-y-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <DsBtn variant="ghost" size="sm" onClick={() => setEventoId("")}>
+                  ← Trocar culto
+                </DsBtn>
+                {selectedEvento && (
+                  <div className="mt-2">
+                    <p className="pib-title text-xl">{selectedEvento.titulo}</p>
+                    <p className="pib-mute mt-1 text-sm">
+                      {new Date(selectedEvento.data).toLocaleDateString("pt-BR", {
+                        weekday: "long",
+                        day: "2-digit",
+                        month: "long",
+                        timeZone: "UTC",
+                      })}
+                      {selectedEvento.horario ? ` · ${selectedEvento.horario}` : ""}
+                    </p>
+                  </div>
+                )}
               </div>
-            )}
+              {minEscalas.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  <DsBtn variant="soft" size="sm" onClick={handleShareWhatsApp}>
+                    <Share2 className="h-4 w-4" /> Compartilhar
+                  </DsBtn>
+                  <DsBtn variant="soft" size="sm" onClick={handleNotifyEscalados} disabled={notifying}>
+                    {notifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bell className="h-4 w-4" />}
+                    Notificar
+                  </DsBtn>
+                </div>
+              )}
+            </div>
 
             {eventoPosicoes?.filter((p: any) => p.ministerio_id === id).length > 0 && (
               <div className="space-y-2">
-                <p className="pib-mute text-sm">Posições necessárias:</p>
+                <p className="pib-step-label">Vagas</p>
                 <DsList>
                   {eventoPosicoes.filter((p: any) => p.ministerio_id === id).map((p: any) => {
                     const assigned = minEscalas.filter((e: any) => e.funcao === p.funcao)
@@ -292,7 +351,7 @@ export default function MinisterioDetailPage() {
                         as={isFull ? "div" : "button"}
                         onClick={isFull ? undefined : () => { setAddOpen(true); setAddUser(""); setAddFuncao(p.funcao) }}
                         title={p.funcao}
-                        meta={assigned.map((e: any) => e.user_nome).join(", ") || (isFull ? undefined : "Toque para escalar")}
+                        meta={assigned.map((e: any) => e.user_nome).join(", ") || (isFull ? undefined : "Toque para preencher")}
                         trailing={<DsStatus tone={isFull ? "ok" : "pending"}>{filled}/{p.quantidade}</DsStatus>}
                       />
                     )
@@ -301,62 +360,55 @@ export default function MinisterioDetailPage() {
               </div>
             )}
 
-            {minEscalas.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                <DsBtn variant="ghost" size="sm" onClick={handleShareWhatsApp}>
-                  <Share2 className="h-4 w-4" /> Compartilhar
-                </DsBtn>
-                <DsBtn variant="ghost" size="sm" onClick={handleNotifyEscalados} disabled={notifying}>
-                  {notifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bell className="h-4 w-4" />}
-                  Notificar
-                </DsBtn>
-              </div>
-            )}
-
-            {minEscalas.length === 0 ? (
-              <DsEmpty title="Nenhum membro escalado" description="Escale alguém para este culto." />
-            ) : (
-              <DsList>
-                {minEscalas.map((e: any) => (
-                  <DsRow
-                    key={e.id}
-                    as="div"
-                    leading={
-                      <Avatar className="h-9 w-9">
-                        <AvatarImage src={e.foto_url} />
-                        <AvatarFallback>{e.user_nome?.[0]}</AvatarFallback>
-                      </Avatar>
-                    }
-                    title={e.user_nome}
-                    meta={e.funcao}
-                    trailing={
-                      <div className="flex items-center gap-1.5">
-                        <DsStatus tone={STATUS_TONE[e.status] || "neutral"}>{e.status}</DsStatus>
-                        {e.status === "pendente" && (
-                          <>
-                            <DsBtn variant="ghost" size="icon" onClick={() => handleStatus(e.id, "confirmado")} aria-label="Confirmar">
-                              <Check className="h-4 w-4" />
-                            </DsBtn>
-                            <DsBtn variant="ghost" size="icon" onClick={() => handleStatus(e.id, "recusado")} aria-label="Recusar">
-                              <X className="h-4 w-4" />
-                            </DsBtn>
-                          </>
-                        )}
-                        <DsBtn variant="ghost" size="icon" onClick={() => handleRemoveEscala(e.id)} aria-label="Remover">
-                          <Trash2 className="h-4 w-4" />
-                        </DsBtn>
-                      </div>
-                    }
-                  />
-                ))}
-              </DsList>
-            )}
+            <div className="space-y-2">
+              <p className="pib-step-label">Escalados</p>
+              {minEscalas.length === 0 ? (
+                <DsEmpty title="Ninguém escalado ainda" description="Use Escalar ou toque numa vaga acima." />
+              ) : (
+                <DsList>
+                  {minEscalas.map((e: any) => (
+                    <DsRow
+                      key={e.id}
+                      as="div"
+                      leading={
+                        <Avatar className="h-9 w-9">
+                          <AvatarImage src={e.foto_url} />
+                          <AvatarFallback>{e.user_nome?.[0]}</AvatarFallback>
+                        </Avatar>
+                      }
+                      title={e.user_nome}
+                      meta={e.funcao || "Sem função"}
+                      trailing={
+                        <div className="flex items-center gap-1.5">
+                          <DsStatus tone={STATUS_TONE[e.status] || "neutral"}>
+                            {e.status === "pendente" ? "Pendente" : e.status === "confirmado" ? "Ok" : e.status === "recusado" ? "Não" : e.status}
+                          </DsStatus>
+                          {e.status === "pendente" && (
+                            <>
+                              <DsBtn variant="ghost" size="icon" onClick={() => handleStatus(e.id, "confirmado")} aria-label="Confirmar">
+                                <Check className="h-4 w-4" />
+                              </DsBtn>
+                              <DsBtn variant="ghost" size="icon" onClick={() => handleStatus(e.id, "recusado")} aria-label="Recusar">
+                                <X className="h-4 w-4" />
+                              </DsBtn>
+                            </>
+                          )}
+                          <DsBtn variant="ghost" size="icon" onClick={() => handleRemoveEscala(e.id)} aria-label="Remover">
+                            <Trash2 className="h-4 w-4" />
+                          </DsBtn>
+                        </div>
+                      }
+                    />
+                  ))}
+                </DsList>
+              )}
+            </div>
           </div>
         )}
       </DsSection>
 
       {/* 3. Time */}
-      <DsSection title="Time">
+      <DsSection eyebrow="Pessoas" title="Time">
         {lider.length === 0 && membros.filter((m: any) => !m.is_lider).length === 0 ? (
           <DsEmpty title="Nenhum membro neste ministério" />
         ) : (
@@ -404,10 +456,13 @@ export default function MinisterioDetailPage() {
         )}
       </DsSection>
 
-      {/* 4. Funções — accordion */}
+      {/* 4. Funções */}
       <details className="pib-panel group">
-        <summary className="flex cursor-pointer list-none items-center justify-between p-4 text-sm font-semibold">
-          Funções
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4">
+          <div>
+            <p className="pib-step-label">Configuração</p>
+            <p className="pib-section-title mt-1">Funções</p>
+          </div>
           <ChevronDown className="h-4 w-4 shrink-0 text-[var(--pib-mute)] transition-transform group-open:rotate-180" />
         </summary>
         <div className="space-y-3 border-t border-[var(--pib-line)] p-4">
@@ -440,10 +495,9 @@ export default function MinisterioDetailPage() {
         </div>
       </details>
 
-      {/* Dialog escalar membro */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Escalar Membro</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Escalar membro</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div>
               <Label>Membro</Label>
@@ -479,16 +533,14 @@ export default function MinisterioDetailPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog conflito */}
       <Dialog open={!!conflictDialog} onOpenChange={() => setConflictDialog(null)}>
         <DialogContent>
-          <DialogHeader><DialogTitle className="flex items-center gap-2 text-destructive"><AlertCircle className="h-5 w-5" />Conflito de Escala</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><AlertCircle className="h-5 w-5" />Conflito de escala</DialogTitle></DialogHeader>
           <p className="text-sm">{conflictDialog?.message}</p>
           <DsBtn variant="ghost" onClick={() => setConflictDialog(null)}>Entendi</DsBtn>
         </DialogContent>
       </Dialog>
 
-      {/* Dialog editar membro */}
       {isAdmin && (
         <Dialog open={!!editMembro} onOpenChange={(v) => { if (!v) setEditMembro(null) }}>
           <DialogContent>

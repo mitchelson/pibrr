@@ -44,7 +44,7 @@ export function InboxSection() {
   if (!hasInbox) return null
 
   return (
-    <DsSection title="Para fazer agora">
+    <DsSection priority eyebrow="Atenção" title="Para fazer agora">
       {escalas.length > 0 && (
         <DsPanel className="p-4">
           <div className="flex items-start justify-between gap-3">

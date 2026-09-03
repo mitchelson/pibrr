@@ -11,9 +11,9 @@ import {
   DsHero,
   DsList,
   DsPage,
-  DsPanel,
   DsRow,
   DsSection,
+  DsStatStrip,
 } from "@/components/app-v2/ds"
 
 export const dynamic = "force-dynamic"
@@ -117,21 +117,39 @@ export default async function AdminV2Dashboard() {
     value: number
   }>
 
+  const pendentesConfirm = escalasPendentes[0]?.total ?? 0
+  const semana = escalasSemana[0]?.total ?? 0
+
   return (
-    <DsPage wide>
+    <DsPage className="pib-page--admin">
       <DsHero
         kicker="Gestão"
         title={`Fila de ${firstName}`}
         subtitle="Só o que precisa de ação. Ministério, cultos e pessoas ficam no menu."
       />
 
-      <DsSection title="Atenção">
+      <DsStatStrip
+        items={[
+          { value: pendentesConfirm, label: "Sem resposta" },
+          { value: pedidosMinisterio, label: "Pedidos" },
+          {
+            value: showAcolhimento ? whatsappPendentes : semana,
+            label: showAcolhimento ? "WhatsApp" : "Esta semana",
+          },
+        ]}
+      />
+
+      <DsSection priority eyebrow="Urgente" title="Atenção">
         {queue.length === 0 ? (
           <DsEmpty title="Fila limpa" description="Nada urgente no momento." />
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
             {queue.map((item) => (
-              <Link key={item.href + item.title} href={item.href} className="pib-panel block p-5 transition-colors hover:bg-black/[0.02]">
+              <Link
+                key={item.href + item.title}
+                href={item.href}
+                className="block rounded-[var(--pib-radius-sm)] border border-[var(--pib-line)] bg-[var(--pib-paper)] p-5 transition-colors hover:bg-black/[0.02]"
+              >
                 <div className="mb-4 flex items-center justify-between">
                   <item.icon className="h-4 w-4 text-[var(--pib-mute)]" />
                   <DsCount>{item.value}</DsCount>
@@ -144,7 +162,7 @@ export default async function AdminV2Dashboard() {
         )}
       </DsSection>
 
-      <DsSection title="Seu ministério">
+      <DsSection primary eyebrow="Trabalho" title="Seu ministério">
         {visibleMinisterios.length === 0 ? (
           <DsEmpty title="Nenhum ministério" description="Peça a um administrador para vincular você." />
         ) : (
@@ -171,18 +189,12 @@ export default async function AdminV2Dashboard() {
       </DsSection>
 
       {role === "admin" && (
-        <DsSection title="Atalhos da igreja">
-          <div className="grid gap-3 sm:grid-cols-3">
-            <DsPanel className="p-0">
-              <DsRow href="/admin-v2/escalas" title="Cultos" meta="Escala por culto" />
-            </DsPanel>
-            <DsPanel className="p-0">
-              <DsRow href="/admin-v2/membros" title="Pessoas" meta="Papéis e ficha" />
-            </DsPanel>
-            <DsPanel className="p-0">
-              <DsRow href="/admin-v2/eventos" title="Calendário" meta="Eventos e modelos" />
-            </DsPanel>
-          </div>
+        <DsSection eyebrow="Igreja" title="Atalhos">
+          <DsList>
+            <DsRow href="/admin-v2/escalas" title="Cultos" meta="Escala por culto" />
+            <DsRow href="/admin-v2/membros" title="Pessoas" meta="Papéis e ficha" />
+            <DsRow href="/admin-v2/eventos" title="Calendário" meta="Eventos e modelos" />
+          </DsList>
         </DsSection>
       )}
     </DsPage>

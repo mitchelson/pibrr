@@ -30,11 +30,25 @@ Arquivo: `styles/app-v2-ds.css` · escopo `.pib-ds`
 
 ## Primitivos
 
-`DsRoot` · `DsPage` · `DsHero` · `DsSection` · `DsPanel` · `DsList` · `DsRow` · `DsBtn` · `DsStatus` · `DsEmpty` · `DsCount` · `AdminScreen`
+`DsRoot` · `DsPage` · `DsHero` · `DsSection` · `DsPanel` · `DsList` · `DsRow` · `DsBtn` · `DsStatus` · `DsEmpty` · `DsCount` · `DsStatStrip` · `DsWell` · `DsAlertStrip` · `AdminScreen`
+
+## Receita de página (admin)
+
+Inspirada no painel Tá na Promo, adaptada ao mono:
+
+1. **Eyebrow** (`pib-kicker`) → título pesado → subtítulo curto → **uma** CTA
+2. **Stats** opcionais (`DsStatStrip`)
+3. **Atenção** (`priority` / `DsAlertStrip`) antes do trabalho
+4. **Trabalho** (`primary`) — lista ou formulário
+5. **Contexto** quieto; config em accordion/details
+
+Chrome: rail rebaixado (`--pib-paper-recessed`) + topbar frosted + conteúdo em `pib-page--admin`.
+
+**Não copiar do TNP:** azul/gradiente, sombra ambient, Figtree, CTA glow, metáforas de loja/promo.
 
 ## Princípios
 
 1. Trabalho primeiro — nav por job, não por pasta CRUD.
 2. Uma tela = um job.
 3. Lista resume; detalhe decide.
-4. Mobile: dock + drawer sempre.
+4. Mobile membro: dock; admin: drawer (sem dock).

@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { ChevronDown, ChevronUp, Search } from "lucide-react"
 import { AdminScreen } from "@/components/app-v2/admin-screen"
-import { DsChip, DsEmpty, DsList, DsRow } from "@/components/app-v2/ds"
+import { DsChip, DsEmpty, DsList, DsRow, DsWell } from "@/components/app-v2/ds"
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
@@ -60,25 +60,25 @@ export default function AdminDonsEspirituaisPage() {
       )}
 
       {/* Lista de respostas */}
-      <div>
-        <div className="flex items-center gap-2 mb-4">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className="space-y-4">
+        <DsWell>
+          <div className="relative min-w-0 flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--pib-mute)]" />
             <Input
               placeholder="Buscar por nome..."
               value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="pl-9"
+              onChange={(e) => setSearch(e.target.value)}
+              className="border-0 bg-[var(--pib-paper-raised)] pl-9 shadow-none"
             />
           </div>
-        </div>
+        </DsWell>
 
         {filtered.length === 0 ? (
           <DsEmpty title="Nenhuma resposta encontrada" />
         ) : (
           <DsList>
             {filtered.map((r) => {
-              const top3 = (r.results ?? []).filter(g => g.rank <= 3).sort((a, b) => a.rank - b.rank)
+              const top3 = (r.results ?? []).filter((g) => g.rank <= 3).sort((a, b) => a.rank - b.rank)
               const isExpanded = expandedId === r.user_id
               return (
                 <div key={r.user_id}>

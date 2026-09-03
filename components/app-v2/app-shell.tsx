@@ -22,14 +22,18 @@ type AppShellV2Props = {
   showTabs?: boolean
 }
 
-/** Membro: desktop = topbar ink; mobile = só dock (sem segundo sticky) */
+/**
+ * Um menu por viewport:
+ * - Desktop (md+): só topbar ink com tabs
+ * - Mobile: topbar mínima (logo + sino) + dock inferior com as mesmas tabs
+ */
 export function AppShellV2({ children, showTabs = true }: AppShellV2Props) {
   const pathname = usePathname()
   const { data: session } = useSession()
   const { paths } = useAppUi()
   const showAdmin = isAdminRole(session?.user?.role)
 
-  const desktopTabs = [
+  const tabs = [
     { href: paths.escalas, label: "Hoje", icon: Sun },
     { href: paths.feed, label: "Comunidade", icon: UsersRound },
     ...(showAdmin ? [{ href: paths.admin, label: "Gestão", icon: Briefcase }] : []),
@@ -37,13 +41,24 @@ export function AppShellV2({ children, showTabs = true }: AppShellV2Props) {
 
   const perfilActive = pathname.startsWith(paths.perfil)
 
+  const tabIsActive = (href: string) => {
+    if (href === paths.escalas) {
+      return (
+        pathname === paths.escalas ||
+        pathname.startsWith("/minha-area-v2/culto") ||
+        (pathname.startsWith("/minha-area-v2") && !pathname.startsWith(paths.perfil))
+      )
+    }
+    return pathname === href || pathname.startsWith(`${href}/`)
+  }
+
   return (
     <DsRoot className={cn(showTabs && "pb-0")}>
       <UiCookieSync version="v2" />
       <VersionBanner />
 
-      <header className="pib-topbar--ink pib-topbar hidden md:flex">
-        <Link href={paths.escalas} className="shrink-0">
+      <header className="pib-topbar pib-topbar--ink pib-topbar--member-desktop">
+        <Link href={paths.escalas} className="justify-self-start">
           <Image
             src="/pib-logo-black.png"
             alt={CHURCH_INFO.SHORT_NAME}
@@ -52,25 +67,15 @@ export function AppShellV2({ children, showTabs = true }: AppShellV2Props) {
             className="h-7 w-auto invert"
           />
         </Link>
-        <nav className="flex items-center gap-1">
-          {desktopTabs.map((tab) => {
-            const active =
-              tab.href === paths.escalas
-                ? pathname === paths.escalas ||
-                  pathname.startsWith("/minha-area-v2/culto") ||
-                  (pathname.startsWith("/minha-area-v2") && !pathname.startsWith(paths.perfil))
-                : pathname === tab.href || pathname.startsWith(`${tab.href}/`)
+        <nav className="flex items-center gap-1 justify-self-center" aria-label="Navegação principal">
+          {tabs.map((tab) => {
             const Icon = tab.icon
             return (
               <Link
                 key={tab.href}
                 href={tab.href}
-                className={cn(
-                  "flex items-center gap-2 rounded-[var(--pib-radius-sm)] px-3.5 py-2 text-sm transition-colors",
-                  active
-                    ? "bg-white font-semibold text-black"
-                    : "text-white/70 hover:bg-white/10 hover:text-white"
-                )}
+                className="pib-nav-pill"
+                data-active={tabIsActive(tab.href)}
               >
                 <Icon className="h-4 w-4" />
                 {tab.label}
@@ -79,21 +84,19 @@ export function AppShellV2({ children, showTabs = true }: AppShellV2Props) {
           })}
           <Link
             href={paths.perfil}
-            className={cn(
-              "ml-1 flex items-center gap-2 rounded-[var(--pib-radius-sm)] px-3 py-1.5 text-sm transition-colors",
-              perfilActive ? "bg-white font-semibold text-black" : "text-white/70 hover:bg-white/10"
-            )}
+            className="pib-nav-pill pib-nav-pill--profile"
+            data-active={perfilActive}
           >
             <Avatar className="h-6 w-6">
               <AvatarImage src={session?.user?.image ?? undefined} />
-              <AvatarFallback className="bg-white/20 text-[10px] text-white">
+              <AvatarFallback className="pib-nav-pill__fallback bg-white/20 text-[10px] text-white">
                 {session?.user?.name?.[0] ?? "U"}
               </AvatarFallback>
             </Avatar>
             Eu
           </Link>
         </nav>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 justify-self-end">
           {session && (
             <div className="[&_button]:text-white [&_button]:hover:bg-white/10">
               <NotificationsButton />
@@ -110,12 +113,18 @@ export function AppShellV2({ children, showTabs = true }: AppShellV2Props) {
         </div>
       </header>
 
-      {/* Mobile: thin notifications row only — brand lives in dock */}
-      {session && (
-        <div className="flex h-10 items-center justify-end px-3 md:hidden">
-          <NotificationsButton />
-        </div>
-      )}
+      <header className="pib-topbar pib-topbar--member-mobile">
+        <Link href={paths.escalas} className="flex items-center gap-2">
+          <Image
+            src="/pib-logo-black.png"
+            alt={CHURCH_INFO.SHORT_NAME}
+            width={88}
+            height={28}
+            className="h-6 w-auto"
+          />
+        </Link>
+        {session ? <NotificationsButton /> : null}
+      </header>
 
       {children}
 

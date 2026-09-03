@@ -121,7 +121,7 @@ export function AdminSidebarV2() {
             <RoleBadgesV2 legacyRole={role} size="xs" className="mt-0.5" />
           </div>
         </Link>
-        <Link href={paths.escalas} onClick={closeMobile} className="pib-rail__link mt-1 text-sm font-semibold">
+        <Link href={paths.escalas} onClick={closeMobile} className="pib-rail__cta">
           ← Voltar para Hoje
         </Link>
       </SidebarFooter>

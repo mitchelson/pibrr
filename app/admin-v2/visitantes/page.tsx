@@ -18,7 +18,7 @@ import NovoVisitanteDialog from "@/components/novo-visitante-dialog"
 import RelatorioMensalDialog from "@/components/relatorio-mensal-dialog"
 import type { Visitante, VisitanteComResponsavel } from "@/types/supabase"
 import { AdminScreen, AdminPrimaryAction } from "@/components/app-v2/admin-screen"
-import { DsBtn, DsEmpty, DsList, DsRow } from "@/components/app-v2/ds"
+import { DsBtn, DsEmpty, DsList, DsRow, DsWell } from "@/components/app-v2/ds"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -100,15 +100,31 @@ export default function VisitantesV2Page() {
         </div>
       }
     >
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--pib-mute)]" />
-        <Input
-          placeholder="Buscar por nome, telefone ou responsável"
-          className="pl-9"
-          value={termoBusca}
-          onChange={(e) => setTermoBusca(e.target.value)}
-        />
-      </div>
+      <DsWell className="!items-stretch sm:!items-center">
+        <div className="relative min-w-0 flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--pib-mute)]" />
+          <Input
+            placeholder="Buscar por nome, telefone ou responsável"
+            className="border-0 bg-[var(--pib-paper-raised)] pl-9 shadow-none"
+            value={termoBusca}
+            onChange={(e) => setTermoBusca(e.target.value)}
+          />
+        </div>
+        {datasAgrupadas.length > 1 && (
+          <Select value={dataSelecionada} onValueChange={setDataSelecionada}>
+            <SelectTrigger className="w-full border-0 bg-[var(--pib-paper-raised)] shadow-none sm:w-44">
+              <SelectValue placeholder="Data" />
+            </SelectTrigger>
+            <SelectContent>
+              {datasAgrupadas.map((data) => (
+                <SelectItem key={data} value={data}>
+                  {data}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </DsWell>
 
       {isLoading ? (
         <p className="pib-mute py-8 text-center text-sm">Carregando…</p>
@@ -119,20 +135,6 @@ export default function VisitantesV2Page() {
         />
       ) : (
         <div className="space-y-4">
-          {datasAgrupadas.length > 1 && (
-            <Select value={dataSelecionada} onValueChange={setDataSelecionada}>
-              <SelectTrigger className="w-full sm:w-44">
-                <SelectValue placeholder="Data" />
-              </SelectTrigger>
-              <SelectContent>
-                {datasAgrupadas.map((data) => (
-                  <SelectItem key={data} value={data}>
-                    {data}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
           <DsList>
             {lista.map((visitante) => {
               const enviadas = mensagensEnviadas[visitante.id] || new Set()

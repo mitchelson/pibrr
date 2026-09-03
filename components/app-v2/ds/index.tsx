@@ -45,6 +45,33 @@ export function DsPage({
   )
 }
 
+/** Poço rebaixado para filtros / ferramentas */
+export function DsWell({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return <div className={cn("pib-well", className)}>{children}</div>
+}
+
+/** Faixa de atenção (ex.: N pedidos pendentes) */
+export function DsAlertStrip({
+  children,
+  action,
+}: {
+  children: React.ReactNode
+  action?: React.ReactNode
+}) {
+  return (
+    <div className="pib-alert-strip">
+      <div>{children}</div>
+      {action}
+    </div>
+  )
+}
+
 export function DsHero({
   kicker,
   title,
@@ -60,7 +87,7 @@ export function DsHero({
     <header className="pib-rise flex items-end justify-between gap-4">
       <div className="min-w-0 space-y-2">
         {kicker ? <p className="pib-kicker">{kicker}</p> : null}
-        <h1 className="pib-title text-3xl sm:text-[2.125rem]">{title}</h1>
+        <h1 className="pib-title text-3xl tracking-[-0.02em] sm:text-[2.125rem]">{title}</h1>
         {subtitle ? <p className="pib-mute max-w-prose text-sm leading-relaxed">{subtitle}</p> : null}
       </div>
       {action ? <div className="shrink-0">{action}</div> : null}
@@ -70,26 +97,67 @@ export function DsHero({
 
 export function DsSection({
   title,
+  eyebrow,
   action,
   children,
   className,
+  priority,
+  primary,
 }: {
   title?: string
+  eyebrow?: string
   action?: React.ReactNode
   children: React.ReactNode
   className?: string
+  /** Destaque de atenção (pedidos, alertas) */
+  priority?: boolean
+  /** Bloco de trabalho principal da tela */
+  primary?: boolean
 }) {
   return (
-    <section className={cn("pib-section pib-rise pib-rise-delay-1", className)}>
-      {(title || action) && (
+    <section
+      className={cn(
+        "pib-section pib-rise pib-rise-delay-1",
+        priority && "pib-section--priority",
+        primary && "pib-section--primary",
+        className
+      )}
+    >
+      {(title || action || eyebrow) && (
         <div className="pib-section-head">
-          {title ? <h2 className="pib-section-title">{title}</h2> : <span />}
+          <div className="min-w-0 space-y-1">
+            {eyebrow ? <p className="pib-step-label">{eyebrow}</p> : null}
+            {title ? (
+              <h2 className={cn("pib-section-title", primary && "pib-section-title--lg")}>{title}</h2>
+            ) : null}
+          </div>
           {action}
         </div>
       )}
       {children}
     </section>
   )
+}
+
+export function DsStatStrip({
+  items,
+}: {
+  items: Array<{ value: React.ReactNode; label: string }>
+}) {
+  return (
+    <div className="pib-stat-strip pib-rise pib-rise-delay-1">
+      {items.map((item) => (
+        <div key={item.label} className="pib-stat">
+          <span className="pib-stat__value">{item.value}</span>
+          <span className="pib-stat__label">{item.label}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export function DsIconBadge({ children }: { children: React.ReactNode }) {
+  return <div className="pib-icon-badge">{children}</div>
 }
 
 export function DsPanel({
