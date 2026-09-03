@@ -61,7 +61,7 @@ export default async function HomeLanding() {
             Uma comunidade apaixonada por Jesus, onde vidas são transformadas e famílias restauradas.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/eventos" className="site-btn-primary uppercase tracking-wider">
+            <Link href="/eventos" className="site-btn-tertiary uppercase tracking-wider">
               Horários dos Cultos
             </Link>
             <Link href="/sermoes" className="site-btn-outline-light uppercase tracking-wider">
@@ -209,7 +209,7 @@ export default async function HomeLanding() {
                 return (
                   <div key={i} className="site-card-dark p-6 group">
                     <div className="flex items-center gap-3 mb-4">
-                      <span className="bg-white text-[var(--site-ink)] text-xs font-bold px-3 py-1 rounded-lg">{dia}</span>
+                      <span className="site-pill-tertiary">{dia}</span>
                       {ev.horario && (
                         <span className="flex items-center gap-1 text-sm text-[var(--site-muted)]">
                           <Clock className="h-3.5 w-3.5" /> {ev.horario}
@@ -228,7 +228,7 @@ export default async function HomeLanding() {
               {CHURCH_INFO.SCHEDULE.map((ev) => (
                 <div key={`${ev.day}-${ev.label}`} className="site-card-dark p-6 group">
                   <div className="flex items-center gap-3 mb-4">
-                    <span className="bg-white text-[var(--site-ink)] text-xs font-bold px-3 py-1 rounded-lg">
+                    <span className="site-pill-tertiary">
                       {ev.day.slice(0, 3).toUpperCase()}
                     </span>
                     <span className="flex items-center gap-1 text-sm text-[var(--site-muted)]">
@@ -242,7 +242,7 @@ export default async function HomeLanding() {
             </div>
           )}
           <div className="text-center mt-10">
-            <Link href="/eventos" className="site-btn-primary uppercase tracking-wider inline-flex">
+            <Link href="/eventos" className="site-btn-tertiary uppercase tracking-wider inline-flex">
               Confira a Programação Completa
             </Link>
           </div>

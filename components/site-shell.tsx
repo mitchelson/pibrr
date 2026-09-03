@@ -71,10 +71,10 @@ export function SiteShell({
                     "text-sm transition-colors",
                     dark
                       ? active
-                        ? "text-white font-medium"
+                        ? "font-medium text-[var(--site-tertiary)]"
                         : "text-[var(--site-muted)] hover:text-white"
                       : active
-                        ? "text-foreground font-semibold"
+                        ? "font-semibold text-[var(--site-tertiary)]"
                         : "text-muted-foreground hover:text-foreground"
                   )}
                 >
@@ -99,7 +99,7 @@ export function SiteShell({
                 "inline-flex h-10 items-center rounded-xl px-5 text-sm font-semibold transition-colors",
                 dark
                   ? "bg-white text-[var(--site-ink)] hover:bg-[var(--site-accent-soft)]"
-                  : "bg-primary text-primary-foreground hover:opacity-90"
+                  : "bg-[var(--site-tertiary)] text-[var(--site-tertiary-fg)] hover:opacity-90"
               )}
             >
               {PUBLIC_CTA.label}
@@ -113,7 +113,7 @@ export function SiteShell({
                 "inline-flex h-8 items-center rounded-xl px-3 text-xs font-semibold transition-colors",
                 dark
                   ? "bg-white text-[var(--site-ink)]"
-                  : "bg-primary text-primary-foreground"
+                  : "bg-[var(--site-tertiary)] text-[var(--site-tertiary-fg)]"
               )}
             >
               {PUBLIC_CTA.label}
@@ -148,7 +148,10 @@ export function SiteShell({
                   >
                     {PUBLIC_SECONDARY.label}
                   </Link>
-                  <Button asChild className="mt-4 rounded-xl font-semibold">
+                  <Button
+                    asChild
+                    className="mt-4 rounded-xl font-semibold bg-[var(--site-tertiary)] text-[var(--site-tertiary-fg)] hover:bg-[color-mix(in_srgb,var(--site-tertiary)_88%,#000)]"
+                  >
                     <Link href={PUBLIC_CTA.href} onClick={() => setOpen(false)}>
                       {PUBLIC_CTA.label}
                     </Link>

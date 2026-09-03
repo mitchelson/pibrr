@@ -45,6 +45,10 @@
     --site-accent: #ffffff;
     --site-accent-soft: #e5e5e5;
     --site-ink: #0a0a0a;
+    /* Tertiary — mesmo vermelho do App v2 (uso escasso) */
+    --site-tertiary: #c62828;
+    --site-tertiary-soft: #fde8e8;
+    --site-tertiary-fg: #ffffff;
   }
 
   .dark {
@@ -101,10 +105,12 @@
 @layer components {
   .site-label {
     @apply text-xs font-semibold uppercase tracking-[0.2em];
+    color: var(--site-tertiary);
   }
 
   .site-label-dark {
-    @apply site-label text-[var(--site-accent)];
+    @apply site-label;
+    color: var(--site-tertiary);
   }
 
   .font-display {
@@ -117,6 +123,15 @@
 
   .site-btn-primary {
     @apply site-btn bg-white text-[var(--site-ink)] hover:bg-[var(--site-accent-soft)];
+  }
+
+  .site-btn-tertiary {
+    @apply site-btn text-[var(--site-tertiary-fg)];
+    background: var(--site-tertiary);
+  }
+
+  .site-btn-tertiary:hover {
+    background: color-mix(in srgb, var(--site-tertiary) 88%, #000);
   }
 
   .site-btn-secondary {
@@ -133,6 +148,12 @@
 
   .site-link-dark {
     @apply inline-flex items-center gap-2 font-semibold text-white transition-all hover:gap-3;
+  }
+
+  .site-pill-tertiary {
+    @apply inline-flex items-center rounded-lg px-3 py-1 text-xs font-bold;
+    background: var(--site-tertiary);
+    color: var(--site-tertiary-fg);
   }
 
   .site-section-band {
