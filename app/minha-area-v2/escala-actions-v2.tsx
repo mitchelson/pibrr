@@ -105,6 +105,7 @@ export function EscalaActionsV2({
   return (
     <div className={layout === "stack" ? "flex flex-col gap-2" : "flex flex-wrap gap-2"}>
       <DsBtn
+        variant="tertiary"
         className={layout === "stack" ? "w-full" : undefined}
         disabled={loading !== null}
         onClick={() => update("confirmado")}

@@ -264,7 +264,7 @@ export function DsBtn({
   href,
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "ghost" | "soft" | "danger"
+  variant?: "primary" | "ghost" | "soft" | "danger" | "tertiary"
   size?: "sm" | "icon"
   href?: string
 }) {
@@ -274,6 +274,7 @@ export function DsBtn({
     variant === "ghost" && "pib-btn--ghost",
     variant === "soft" && "pib-btn--soft",
     variant === "danger" && "pib-btn--danger",
+    variant === "tertiary" && "pib-btn--tertiary",
     size === "sm" && "pib-btn--sm",
     size === "icon" && "pib-btn--icon",
     className

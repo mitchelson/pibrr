@@ -5,7 +5,11 @@ Mapa de fluxos: [`FLOWS.md`](./FLOWS.md).
 
 ## Tema
 
-Monocromático da marca (mesmo da feijoada / site): **preto `#0a0a0a`**, **branco**, **cinzas**. Sem ouro, azul ou roxo. Cor só em estado (pendente / ok / recusado).
+Base monocromática da marca: **preto `#0a0a0a`**, **branco**, **cinzas**.
+
+**Tertiary (acento):** vermelho `#c62828` — forte, legível em branco (~WCAG AA). Uso **escasso**: atenção, CTA de confirmação de escala, contagens da fila, faixa do banner de preview.
+
+Estados semânticos continuam separados: pendente (âmbar) / ok (verde) / recusado (vermelho de status `#991b1b` ≠ tertiary de marca).
 
 ## Tipografia
 
@@ -23,10 +27,21 @@ Arquivo: `styles/app-v2-ds.css` · escopo `.pib-ds`
 | Grupo | Tokens |
 |-------|--------|
 | Cor | `--pib-ink`, `--pib-paper`, `--pib-paper-raised`, `--pib-mute`, `--pib-chrome` |
+| Tertiary | `--pib-tertiary` `#c62828`, `--pib-tertiary-soft`, `--pib-tertiary-fg` |
 | Borda | `--pib-border-width: 1px`, `--pib-line` `#e5e5e5`, `--pib-line-strong` |
 | Radius | `xs 6` · `sm 8` · `md 12` · `lg 16` · `pill` |
 | Espaço | `--pib-space-1` … `--pib-space-7` |
 | Sombra | **nenhuma** — hierarquia por borda/fundo |
+
+### Onde usar tertiary
+
+1. Seção `priority` (borda esquerda)
+2. `DsAlertStrip` / faixa de atenção
+3. Botão `variant="tertiary"` — só decisões críticas (ex.: confirmar escala)
+4. `DsCount` na fila de gestão
+5. Detalhe no banner “versão nova”
+
+**Não** usar em nav, dock, botões primários genéricos, nem substituir estados ok/pendente.
 
 ## Primitivos
 

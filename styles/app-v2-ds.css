@@ -1,10 +1,10 @@
 /* PIB App v2 — design system
- * Tema: monocromático da marca (docs/13 + feijoada/site).
+ * Tema: mono (preto/branco/cinza) + tertiary vermelho em poucos pontos.
  * Tipografia: Sora (sans) em tudo — operacional, sem serifa.
  */
 
 .pib-ds {
-  /* —— Cor (só preto / branco / cinza; estado à parte) —— */
+  /* —— Cor —— */
   --pib-ink: #0a0a0a;
   --pib-ink-soft: #171717;
   --pib-paper: #f5f5f5;
@@ -16,7 +16,13 @@
   --pib-mute-soft: #a3a3a3;
   --pib-focus: #0a0a0a;
 
-  /* Estado — única cor além do mono */
+  /* Tertiary — acento de marca (uso escasso) */
+  --pib-tertiary: #c62828;
+  --pib-tertiary-soft: #fde8e8;
+  --pib-tertiary-fg: #ffffff;
+  --pib-tertiary-line: color-mix(in srgb, var(--pib-tertiary) 35%, var(--pib-line));
+
+  /* Estado — semântico (não confundir com tertiary) */
   --pib-pending: #854d0e;
   --pib-pending-bg: #fef9c3;
   --pib-ok: #166534;
@@ -184,9 +190,15 @@
 
 .pib-section--priority {
   padding: var(--pib-space-4);
+  padding-left: calc(var(--pib-space-4) - 2px);
   border-radius: var(--pib-radius);
-  border: var(--pib-border-width) solid var(--pib-line-ink);
+  border: var(--pib-border-width) solid var(--pib-tertiary-line);
+  border-left: 3px solid var(--pib-tertiary);
   background: var(--pib-paper-raised);
+}
+
+.pib-section--priority .pib-step-label {
+  color: var(--pib-tertiary);
 }
 
 .pib-section--primary {
@@ -278,9 +290,9 @@
   gap: var(--pib-space-3);
   padding: 0.75rem 1rem;
   border-radius: var(--pib-radius);
-  border: var(--pib-border-width) solid color-mix(in srgb, var(--pib-pending) 28%, var(--pib-line));
-  background: var(--pib-pending-bg);
-  color: var(--pib-pending);
+  border: var(--pib-border-width) solid var(--pib-tertiary-line);
+  background: var(--pib-tertiary-soft);
+  color: var(--pib-tertiary);
   font-size: 0.875rem;
   font-weight: var(--pib-font-weight-semibold);
 }
@@ -436,6 +448,13 @@
 .pib-btn--soft {
   background: #e5e5e5;
   color: var(--pib-ink);
+}
+.pib-btn--tertiary {
+  background: var(--pib-tertiary);
+  color: var(--pib-tertiary-fg);
+}
+.pib-btn--tertiary:hover {
+  background: color-mix(in srgb, var(--pib-tertiary) 88%, #000);
 }
 .pib-btn--danger {
   background: var(--pib-no-bg);
@@ -677,6 +696,7 @@
   background: var(--pib-ink);
   color: var(--pib-chrome-fg);
   font-size: 0.8125rem;
+  border-bottom: 2px solid var(--pib-tertiary);
 }
 
 .pib-empty {
@@ -733,6 +753,11 @@
   letter-spacing: var(--pib-tracking-tight);
   line-height: 1;
   font-variant-numeric: tabular-nums;
+  color: var(--pib-tertiary);
+}
+
+.pib-kicker--tertiary {
+  color: var(--pib-tertiary);
 }
 
 .pib-chip {
