@@ -4,7 +4,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { useSession, signOut } from "next-auth/react"
-import { LogOut, Sun, UsersRound, Briefcase } from "lucide-react"
+import { Loader2, LogOut, Sun, UsersRound, Briefcase } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { isAdminRole } from "@/lib/nav-config"
 import { CHURCH_INFO } from "@/lib/constants"
@@ -15,6 +15,7 @@ import { BottomTabBarV2 } from "@/components/app-v2/bottom-tab-bar"
 import { UiCookieSync } from "@/components/app-v2/ui-cookie-sync"
 import { useAppUi } from "@/hooks/use-app-ui"
 import { DsRoot } from "@/components/app-v2/ds"
+import { isNavTargetPending, useNavPending } from "@/components/app-v2/nav-pending"
 
 type AppShellV2Props = {
   children: React.ReactNode
@@ -30,6 +31,7 @@ export function AppShellV2({ children, showTabs = true }: AppShellV2Props) {
   const pathname = usePathname()
   const { data: session } = useSession()
   const { paths } = useAppUi()
+  const { pendingHref } = useNavPending()
   const showAdmin = isAdminRole(session?.user?.role)
 
   const tabs = [
@@ -68,14 +70,21 @@ export function AppShellV2({ children, showTabs = true }: AppShellV2Props) {
         <nav className="flex items-center gap-1 justify-self-center" aria-label="Navegação principal">
           {tabs.map((tab) => {
             const Icon = tab.icon
+            const pending = isNavTargetPending(pendingHref, tab.href)
             return (
               <Link
                 key={tab.href}
                 href={tab.href}
                 className="pib-nav-pill"
                 data-active={tabIsActive(tab.href)}
+                data-pending={pending}
+                aria-busy={pending}
               >
-                <Icon className="h-4 w-4" />
+                {pending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                ) : (
+                  <Icon className="h-4 w-4" />
+                )}
                 {tab.label}
               </Link>
             )
@@ -84,13 +93,19 @@ export function AppShellV2({ children, showTabs = true }: AppShellV2Props) {
             href={paths.perfil}
             className="pib-nav-pill pib-nav-pill--profile"
             data-active={perfilActive}
+            data-pending={isNavTargetPending(pendingHref, paths.perfil)}
+            aria-busy={isNavTargetPending(pendingHref, paths.perfil)}
           >
-            <Avatar className="h-6 w-6">
-              <AvatarImage src={session?.user?.image ?? undefined} />
-              <AvatarFallback className="pib-nav-pill__fallback bg-white/20 text-[10px] text-white">
-                {session?.user?.name?.[0] ?? "U"}
-              </AvatarFallback>
-            </Avatar>
+            {isNavTargetPending(pendingHref, paths.perfil) ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+            ) : (
+              <Avatar className="h-6 w-6">
+                <AvatarImage src={session?.user?.image ?? undefined} />
+                <AvatarFallback className="pib-nav-pill__fallback bg-white/20 text-[10px] text-white">
+                  {session?.user?.name?.[0] ?? "U"}
+                </AvatarFallback>
+              </Avatar>
+            )}
             Eu
           </Link>
         </nav>

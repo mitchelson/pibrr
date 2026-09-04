@@ -1,10 +1,11 @@
 "use client"
 
 import Link from "next/link"
-import { Clock, Users } from "lucide-react"
+import { Clock, Loader2, Users } from "lucide-react"
 import { MinistryIcon } from "@/components/ministry-icon"
 import { cn } from "@/lib/utils"
 import { DsStatus } from "@/components/app-v2/ds"
+import { isNavTargetPending, useNavPending } from "@/components/app-v2/nav-pending"
 
 export type EventoEscalaResumo = {
   id: string
@@ -39,6 +40,10 @@ export function EscalaRowV2({
   /** mine = você serve; browse = ver equipe / trocas potenciais */
   variant?: "mine" | "browse"
 }) {
+  const { pendingHref } = useNavPending()
+  const href = `/minha-area/culto/${evento.id}`
+  const pending = isNavTargetPending(pendingHref, href)
+
   const data = new Date(evento.data)
   const dia = data.toLocaleDateString("pt-BR", { day: "2-digit", timeZone: "UTC" })
   const mes = data.toLocaleDateString("pt-BR", { month: "short", timeZone: "UTC" }).replace(".", "")
@@ -53,10 +58,12 @@ export function EscalaRowV2({
 
   return (
     <Link
-      href={`/minha-area/culto/${evento.id}`}
+      href={href}
+      aria-busy={pending}
       className={cn(
         "pib-panel flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-black/[0.02]",
-        highlight && "ring-1 ring-[var(--pib-ink)]"
+        highlight && "ring-1 ring-[var(--pib-ink)]",
+        pending && "pointer-events-none opacity-70"
       )}
     >
       <div className="pib-hero-date shrink-0">
@@ -68,11 +75,20 @@ export function EscalaRowV2({
       <div className="min-w-0 flex-1 space-y-1">
         <div className="flex items-start justify-between gap-2">
           <p className="text-[0.95rem] font-semibold leading-tight">{evento.titulo}</p>
-          {isPendente && <DsStatus tone="pending">Responder</DsStatus>}
-          {isConfirmado && <DsStatus tone="ok">Ok</DsStatus>}
-          {isRecusado && <DsStatus tone="no">Não</DsStatus>}
-          {variant === "browse" && (
-            <span className="shrink-0 text-xs font-medium text-[var(--pib-mute)]">Ver equipe</span>
+          {pending ? (
+            <span className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-[var(--pib-mute)]">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Abrindo
+            </span>
+          ) : (
+            <>
+              {isPendente && <DsStatus tone="pending">Responder</DsStatus>}
+              {isConfirmado && <DsStatus tone="ok">Ok</DsStatus>}
+              {isRecusado && <DsStatus tone="no">Não</DsStatus>}
+              {variant === "browse" && (
+                <span className="shrink-0 text-xs font-medium text-[var(--pib-mute)]">Ver equipe</span>
+              )}
+            </>
           )}
         </div>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--pib-mute)]">
@@ -98,10 +114,10 @@ export function EscalaRowV2({
             </span>
           )}
         </div>
-        {isPendente && (
+        {isPendente && !pending && (
           <p className="text-xs font-medium text-[var(--pib-pending)]">Toque para confirmar ou recusar</p>
         )}
-        {variant === "browse" && (
+        {variant === "browse" && !pending && (
           <p className="text-xs text-[var(--pib-mute)]">Útil para achar alguém e pedir troca</p>
         )}
       </div>

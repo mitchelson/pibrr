@@ -1,8 +1,8 @@
 import { redirect, notFound } from "next/navigation"
-import Link from "next/link"
+import { CultoBackLink } from "@/app/minha-area/culto/back-link"
 import { auth } from "@/lib/auth"
 import { sql } from "@/lib/db"
-import { ArrowLeft, Clock } from "lucide-react"
+import { Clock } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { MinistryIcon } from "@/components/ministry-icon"
 import { UserProfileDialog } from "@/components/user-profile-dialog"
@@ -259,12 +259,7 @@ export default async function CultoV2Page({
 
   return (
     <DsPage>
-      <Link
-        href="/minha-area"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--pib-mute)] transition-colors hover:text-[var(--pib-ink)]"
-      >
-        <ArrowLeft className="h-4 w-4" /> Hoje
-      </Link>
+      <CultoBackLink />
 
       <header className="pib-rise flex items-start gap-4">
         <div className="pib-hero-date shrink-0 !min-w-[4.25rem] !py-3">

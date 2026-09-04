@@ -878,3 +878,43 @@ button.pib-chip {
     display: none;
   }
 }
+
+/* Feedback imediato de navegação (clique → rota) */
+.pib-nav-pending {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  height: 2px;
+  overflow: hidden;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--pib-ink) 8%, transparent);
+}
+
+.pib-nav-pending__bar {
+  height: 100%;
+  width: 35%;
+  background: var(--pib-ink);
+  animation: pib-nav-pending-slide 0.85s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes pib-nav-pending-slide {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(380%);
+  }
+}
+
+.pib-dock__item[data-pending="true"],
+.pib-ds a.pib-dock__item[data-pending="true"] {
+  color: var(--pib-ink);
+  opacity: 0.85;
+}
+
+.pib-nav-pill[data-pending="true"],
+.pib-ds a.pib-nav-pill[data-pending="true"] {
+  opacity: 0.75;
+}

@@ -3,16 +3,18 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useSession } from "next-auth/react"
-import { Sun, UsersRound, Briefcase } from "lucide-react"
+import { Loader2, Sun, UsersRound, Briefcase } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { isAdminRole } from "@/lib/nav-config"
 import { useAppUi } from "@/hooks/use-app-ui"
 import { cn } from "@/lib/utils"
+import { isNavTargetPending, useNavPending } from "@/components/app-v2/nav-pending"
 
 export function BottomTabBarV2() {
   const pathname = usePathname()
   const { data: session } = useSession()
   const { paths } = useAppUi()
+  const { pendingHref } = useNavPending()
   const showAdmin = isAdminRole(session?.user?.role)
 
   const hojeActive =
@@ -36,6 +38,8 @@ export function BottomTabBarV2() {
     <nav className="pib-dock" aria-label="Navegação principal">
       <div className="pib-dock__inner" style={{ gridTemplateColumns: `repeat(${items.length}, 1fr)` }}>
         {items.map((item) => {
+          const pending = isNavTargetPending(pendingHref, item.href)
+
           if (!item.icon) {
             return (
               <Link
@@ -43,17 +47,24 @@ export function BottomTabBarV2() {
                 href={item.href}
                 className="pib-dock__item"
                 data-active={item.active}
+                data-pending={pending}
+                aria-busy={pending}
               >
-                <Avatar className={cn("pib-dock__avatar h-5 w-5")}>
-                  <AvatarImage src={session?.user?.image ?? undefined} />
-                  <AvatarFallback className="pib-dock__avatar-fallback text-[8px]">
-                    {session?.user?.name?.[0]}
-                  </AvatarFallback>
-                </Avatar>
+                {pending ? (
+                  <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+                ) : (
+                  <Avatar className={cn("pib-dock__avatar h-5 w-5")}>
+                    <AvatarImage src={session?.user?.image ?? undefined} />
+                    <AvatarFallback className="pib-dock__avatar-fallback text-[8px]">
+                      {session?.user?.name?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
                 {item.label}
               </Link>
             )
           }
+
           const Icon = item.icon
           return (
             <Link
@@ -61,8 +72,14 @@ export function BottomTabBarV2() {
               href={item.href}
               className="pib-dock__item"
               data-active={item.active}
+              data-pending={pending}
+              aria-busy={pending}
             >
-              <Icon className="h-5 w-5" strokeWidth={item.active ? 2.25 : 1.75} />
+              {pending ? (
+                <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+              ) : (
+                <Icon className="h-5 w-5" strokeWidth={item.active ? 2.25 : 1.75} />
+              )}
               {item.label}
             </Link>
           )

@@ -6,6 +6,7 @@ import "@/styles/app-v2-ds.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import AuthSessionProvider from "@/components/session-provider";
+import { NavPendingProvider } from "@/components/app-v2/nav-pending";
 
 const sora = Sora({
   subsets: ["latin"],
@@ -57,7 +58,9 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <main>{children}</main>
+            <NavPendingProvider>
+              <main>{children}</main>
+            </NavPendingProvider>
             <Toaster />
           </ThemeProvider>
         </AuthSessionProvider>
