@@ -31,7 +31,7 @@ export async function ssrGestaoJson<T>(
   opts?: { session?: GestaoSession | null; public?: boolean }
 ): Promise<T | null> {
   if (!isGestaoBffEnabled()) return null
-  const { ok, data } = await gestaoFetchJson<T>(path, {
+  const { ok, status, data, text } = await gestaoFetchJson<T>(path, {
     session: opts?.session,
     public: opts?.public,
   })

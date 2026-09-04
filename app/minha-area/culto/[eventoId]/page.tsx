@@ -72,6 +72,10 @@ export default async function CultoV2Page({
     icone?: string
     cor?: string
   }> = []
+  let repertorioInitial: { items: Array<Record<string, unknown>>; canEdit: boolean } = {
+    items: [],
+    canEdit: false,
+  }
 
   if (isGestaoBffEnabled()) {
     const gestaoSession = session.user?.id
@@ -81,7 +85,7 @@ export default async function CultoV2Page({
           ministerioIds: session.user.ministerioIds || [],
         }
       : await gestaoSessionFromAuth()
-    const [eventos, escalas] = await Promise.all([
+    const [eventos, escalas, repertorio] = await Promise.all([
       ssrGestaoJson<Array<Record<string, unknown>>>("/v1/eventos", { public: true }),
       ssrGestaoJson<
         Array<{
@@ -99,9 +103,21 @@ export default async function CultoV2Page({
           cor?: string
         }>
       >(`/v1/escalas?evento_id=${encodeURIComponent(eventoId)}`, {
+        // GET escalas is public on API; still send session when available
         session: gestaoSession,
+        public: !gestaoSession?.userId,
       }),
+      ssrGestaoJson<{ items?: Array<Record<string, unknown>>; canEdit?: boolean }>(
+        `/v1/repertorio?evento_id=${encodeURIComponent(eventoId)}`,
+        { session: gestaoSession, public: !gestaoSession?.userId }
+      ),
     ])
+    if (repertorio) {
+      repertorioInitial = {
+        items: Array.isArray(repertorio.items) ? repertorio.items : [],
+        canEdit: Boolean(repertorio.canEdit),
+      }
+    }
     const found = (Array.isArray(eventos) ? eventos : []).find(
       (e) => String(e.id) === eventoId
     )
@@ -159,6 +175,13 @@ export default async function CultoV2Page({
         ORDER BY m.nome, u.nome
       `) as typeof equipe
     }
+
+    if (repertorioInitial.items.length === 0) {
+      const items = await sql`
+        SELECT * FROM repertorio_items WHERE evento_id = ${eventoId} ORDER BY ordem, criado_em
+      `
+      repertorioInitial = { items: items as Array<Record<string, unknown>>, canEdit: false }
+    }
   } else {
     const eventos = await sql`
       SELECT id, titulo, data, horario, observacoes, tipo
@@ -184,6 +207,11 @@ export default async function CultoV2Page({
       WHERE e.evento_id = ${eventoId}
       ORDER BY m.nome, u.nome
     `) as typeof equipe
+
+    const items = await sql`
+      SELECT * FROM repertorio_items WHERE evento_id = ${eventoId} ORDER BY ordem, criado_em
+    `
+    repertorioInitial = { items: items as Array<Record<string, unknown>>, canEdit: false }
   }
 
   if (!evento) notFound()
@@ -406,7 +434,7 @@ export default async function CultoV2Page({
         </details>
       )}
 
-      <RepertoireV2 eventoId={eventoId} />
+      <RepertoireV2 eventoId={eventoId} initialData={repertorioInitial} />
     </DsPage>
   )
 }

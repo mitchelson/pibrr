@@ -20,16 +20,35 @@ const fetcher = async (url: string) => {
   return data
 }
 
+type RepertorioPayload = {
+  items: Array<{
+    id?: string
+    nome: string
+    tonalidade?: string
+    link?: string
+    observacoes?: string
+  }>
+  canEdit: boolean
+}
+
 /**
  * Repertório no culto.
- * Por quê separado: só importa se existir música ou se o usuário pode editar.
- * Como: esconde a seção inteira se não há itens e não pode editar.
+ * SSR passa initialData para não depender só do client/SWR (PWA cache / BFF).
  */
-export function RepertoireV2({ eventoId }: { eventoId: string }) {
-  const { data, error, mutate } = useSWR(`/api/repertorio?evento_id=${eventoId}`, fetcher)
+export function RepertoireV2({
+  eventoId,
+  initialData,
+}: {
+  eventoId: string
+  initialData?: RepertorioPayload
+}) {
+  const { data, error, mutate } = useSWR(`/api/repertorio?evento_id=${eventoId}`, fetcher, {
+    fallbackData: initialData,
+    revalidateOnMount: true,
+  })
   const [editing, setEditing] = useState(false)
 
-  if (error) {
+  if (error && !data) {
     return (
       <DsSection eyebrow="Preparação" title="Repertório">
         <DsEmpty title="Não foi possível carregar" description="Tente atualizar a página." />

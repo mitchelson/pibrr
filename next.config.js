@@ -7,13 +7,10 @@ const withPWA = require("next-pwa")({
   fallbacks: { document: "/offline" },
   runtimeCaching: [
     {
+      // Never cache API/BFF — stale 401/empty payloads hid repertório/escalas after cutover
       urlPattern: /^https?.*\/api\/.*/,
-      handler: "NetworkFirst",
-      options: {
-        cacheName: "api-cache",
-        expiration: { maxEntries: 64, maxAgeSeconds: 60 * 5 },
-        networkTimeoutSeconds: 10,
-      },
+      handler: "NetworkOnly",
+      options: { cacheName: "api-cache" },
     },
     {
       urlPattern: /^https?.*\.(js|css|woff2?|png|jpg|svg|ico)$/,
