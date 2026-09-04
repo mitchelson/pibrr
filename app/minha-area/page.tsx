@@ -51,21 +51,27 @@ export default async function MinhaAreaV2Page() {
   let programacao: EventoRow[] = []
 
   if (isGestaoBffEnabled()) {
-    const gestaoSession = await gestaoSessionFromAuth()
+    const gestaoSession = session.user?.id
+      ? {
+          userId: session.user.id,
+          role: session.user.role || "membro",
+          ministerioIds: session.user.ministerioIds || [],
+        }
+      : await gestaoSessionFromAuth()
     const [minhasRaw, eventosRaw] = await Promise.all([
       ssrGestaoJson<MinhaEscalaRow[]>("/v1/escalas/minhas?only=mine", {
         session: gestaoSession,
       }),
       ssrGestaoJson<EventoRow[]>("/v1/eventos", { public: true }),
     ])
-    minhas = (minhasRaw || []).map((row) => ({
+    minhas = (Array.isArray(minhasRaw) ? minhasRaw : []).map((row) => ({
       ...row,
       // API uses ministerio_id; page historically used meu_ministerio_id
       ministerio_id: row.ministerio_id,
     }))
     const escaladoIds = new Set(minhas.map((m) => m.id))
     const today = new Date().toISOString().slice(0, 10)
-    programacao = (eventosRaw || [])
+    programacao = (Array.isArray(eventosRaw) ? eventosRaw : [])
       .filter((e) => String(e.data).slice(0, 10) >= today && !escaladoIds.has(e.id))
       .sort((a, b) => String(a.data).localeCompare(String(b.data)))
       .slice(0, 8)

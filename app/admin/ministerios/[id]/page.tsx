@@ -29,7 +29,18 @@ import {
   useDsConfirm,
 } from "@/components/app-v2/ds"
 
-const fetcher = (url: string) => fetch(url).then(r => r.json())
+const fetcher = async (url: string) => {
+  const r = await fetch(url)
+  const data = await r.json()
+  if (!r.ok) {
+    const err = new Error(data?.message || data?.error || "Erro na API") as Error & {
+      status?: number
+    }
+    err.status = r.status
+    throw err
+  }
+  return data
+}
 
 const STATUS_TONE: Record<string, "pending" | "ok" | "no"> = {
   pendente: "pending",
@@ -42,19 +53,24 @@ export default function MinisterioDetailPage() {
   const { data: session } = useSession()
   const [eventoId, setEventoId] = useState("")
   const { data: eventos } = useSWR("/api/eventos", fetcher)
-  const selectedEventoDate = eventos?.find((e: any) => e.id === eventoId)?.data?.split("T")[0] as string | undefined
+  const eventosList = Array.isArray(eventos) ? eventos : []
+  const selectedEventoDate = eventosList.find((e: any) => e.id === eventoId)?.data?.split("T")[0] as string | undefined
   const { data: ministerio, mutate: mutateMin } = useSWR(
     `/api/ministerios/${id}${selectedEventoDate ? `?data=${selectedEventoDate}` : ""}`,
     fetcher
   )
   const { data: funcoes, mutate: mutateFuncoes } = useSWR(`/api/ministerios/${id}/funcoes`, fetcher)
   const { data: allMinEscalas } = useSWR(`/api/escalas?ministerio_id=${id}`, fetcher)
+  const allMinEscalasList = Array.isArray(allMinEscalas) ? allMinEscalas : []
   const { data: lastEscalas } = useSWR(`/api/escalas?ministerio_id=${id}&future=false`, fetcher)
+  const lastEscalasList = Array.isArray(lastEscalas) ? lastEscalas : []
   const [novaFuncao, setNovaFuncao] = useState("")
   const { ask, node: confirmNode } = useDsConfirm()
 
   const { data: escalas, mutate: mutateEscalas } = useSWR(eventoId ? `/api/escalas?evento_id=${eventoId}` : null, fetcher)
+  const escalasList = Array.isArray(escalas) ? escalas : []
   const { data: eventoPosicoes } = useSWR(eventoId ? `/api/eventos/${eventoId}/posicoes` : null, fetcher)
+  const eventoPosicoesList = Array.isArray(eventoPosicoes) ? eventoPosicoes : []
   const [addOpen, setAddOpen] = useState(false)
   const [addUser, setAddUser] = useState("")
   const [addFuncao, setAddFuncao] = useState("")
@@ -65,7 +81,7 @@ export default function MinisterioDetailPage() {
   const pendentes = ministerio?.membros?.filter((m: any) => m.pendente) || []
   const lider = ministerio?.membros?.filter((m: any) => m.is_lider && !m.pendente) || []
   const membros = ministerio?.membros?.filter((m: any) => !m.pendente) || []
-  const minEscalas = escalas?.filter((e: any) => e.ministerio_id === id) || []
+  const minEscalas = escalasList.filter((e: any) => e.ministerio_id === id)
   const [editMembro, setEditMembro] = useState<any>(null)
 
   const handleUpdateRole = async (userId: string, role: string) => {
@@ -87,7 +103,7 @@ export default function MinisterioDetailPage() {
 
   const now = new Date()
   const todayUTC = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))
-  const futureEventos = eventos?.filter((e: any) => new Date(e.data) >= todayUTC)
+  const futureEventos = eventosList.filter((e: any) => new Date(e.data) >= todayUTC)
     .sort((a: any, b: any) => new Date(a.data).getTime() - new Date(b.data).getTime())
 
   const handleAddFuncao = async () => {
@@ -279,7 +295,7 @@ export default function MinisterioDetailPage() {
                   const d = new Date(ev.data)
                   const dia = d.toLocaleDateString("pt-BR", { day: "2-digit", timeZone: "UTC" })
                   const mes = d.toLocaleDateString("pt-BR", { month: "short", timeZone: "UTC" }).replace(".", "")
-                  const evEscalas = allMinEscalas?.filter((e: any) => e.evento_id === ev.id) || []
+                  const evEscalas = allMinEscalasList.filter((e: any) => e.evento_id === ev.id)
                   return (
                     <DsRow
                       key={ev.id}
@@ -337,11 +353,11 @@ export default function MinisterioDetailPage() {
               )}
             </div>
 
-            {eventoPosicoes?.filter((p: any) => p.ministerio_id === id).length > 0 && (
+            {eventoPosicoesList.filter((p: any) => p.ministerio_id === id).length > 0 && (
               <div className="space-y-2">
                 <p className="pib-step-label">Vagas</p>
                 <DsList>
-                  {eventoPosicoes.filter((p: any) => p.ministerio_id === id).map((p: any) => {
+                  {eventoPosicoesList.filter((p: any) => p.ministerio_id === id).map((p: any) => {
                     const assigned = minEscalas.filter((e: any) => e.funcao === p.funcao)
                     const filled = assigned.length
                     const isFull = filled >= p.quantidade
@@ -506,7 +522,7 @@ export default function MinisterioDetailPage() {
                 onValueChange={setAddUser}
                 placeholder="Buscar membro..."
                 options={membros.map((m: any) => {
-                  const last = lastEscalas?.find((l: any) => l.user_id === m.user_id)
+                  const last = lastEscalasList.find((l: any) => l.user_id === m.user_id)
                   const lastDate = last ? new Date(last.data).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "UTC" }) : null
                   const subParts = [
                     m.is_lider ? "Líder" : null,

@@ -36,7 +36,7 @@ export async function ssrGestaoJson<T>(
     public: opts?.public,
   })
   if (!ok) {
-    console.error("[gestao-ssr]", path, "status not ok")
+    console.error("[gestao-ssr]", path, "status not ok", status, text.slice(0, 200))
     return null
   }
   return data

@@ -19,7 +19,18 @@ import { MinistryIcon } from "@/components/ministry-icon";
 import { AdminScreen } from "@/components/app-v2/admin-screen";
 import { DsBtn, DsChip, DsEmpty, DsList, DsRow, DsStatus, DsWell, useDsConfirm } from "@/components/app-v2/ds";
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
+const fetcher = async (url: string) => {
+  const r = await fetch(url);
+  const data = await r.json();
+  if (!r.ok) {
+    const err = new Error(data?.message || data?.error || "Erro na API") as Error & {
+      status?: number;
+    };
+    err.status = r.status;
+    throw err;
+  }
+  return data;
+};
 
 const STATUS_TONE: Record<string, "pending" | "ok" | "no"> = {
   pendente: "pending",
@@ -29,13 +40,16 @@ const STATUS_TONE: Record<string, "pending" | "ok" | "no"> = {
 
 export default function EscalasAdminPage() {
   const { data: eventos } = useSWR("/api/eventos", fetcher);
+  const eventosList = Array.isArray(eventos) ? eventos : [];
   const { data: ministerios } = useSWR("/api/ministerios", fetcher);
+  const ministeriosList = Array.isArray(ministerios) ? ministerios : [];
   const [eventoId, setEventoId] = useState("");
   const [ministerioFiltro, setMinisterioFiltro] = useState("todos");
   const { data: escalas, mutate } = useSWR(
     eventoId ? `/api/escalas?evento_id=${eventoId}` : null,
     fetcher,
   );
+  const escalasList = Array.isArray(escalas) ? escalas : [];
   const [addOpen, setAddOpen] = useState(false);
   const [addMin, setAddMin] = useState("");
   const [addUser, setAddUser] = useState("");
@@ -44,7 +58,7 @@ export default function EscalasAdminPage() {
   const { ask, node: confirmNode } = useDsConfirm();
 
   // Busca membros e funções do ministério selecionado
-  const selectedEventoDate = eventos?.find((e: any) => e.id === eventoId)?.data?.split("T")[0]
+  const selectedEventoDate = eventosList.find((e: any) => e.id === eventoId)?.data?.split("T")[0]
   const { data: minDetail } = useSWR(
     addMin
       ? `/api/ministerios/${addMin}${selectedEventoDate ? `?data=${selectedEventoDate}` : ""}`
@@ -57,8 +71,8 @@ export default function EscalasAdminPage() {
   );
 
   const todayUTC = new Date(Date.UTC(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()))
-  const futureEventos = eventos
-    ?.filter(
+  const futureEventos = eventosList
+    .filter(
       (e: any) => new Date(e.data) >= todayUTC,
     )
     .sort(
@@ -67,19 +81,19 @@ export default function EscalasAdminPage() {
     );
 
   const selectedEvento =
-    eventos?.find((e: any) => e.id === eventoId) || null;
+    eventosList.find((e: any) => e.id === eventoId) || null;
 
-  const ministeriosComEscala = (ministerios || [])
+  const ministeriosComEscala = ministeriosList
     .map((m: any) => ({
       ...m,
-      count: escalas?.filter((e: any) => e.ministerio_id === m.id).length || 0,
+      count: escalasList.filter((e: any) => e.ministerio_id === m.id).length || 0,
     }))
     .filter((m: any) => m.count > 0);
 
   const escalasFiltradas =
     ministerioFiltro === "todos"
-      ? escalas
-      : escalas?.filter((e: any) => e.ministerio_id === ministerioFiltro);
+      ? escalasList
+      : escalasList.filter((e: any) => e.ministerio_id === ministerioFiltro);
 
   const handleAdd = async () => {
     if (!eventoId || !addMin || !addUser) return;
