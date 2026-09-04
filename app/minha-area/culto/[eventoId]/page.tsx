@@ -74,7 +74,13 @@ export default async function CultoV2Page({
   }> = []
 
   if (isGestaoBffEnabled()) {
-    const gestaoSession = await gestaoSessionFromAuth()
+    const gestaoSession = session.user?.id
+      ? {
+          userId: session.user.id,
+          role: session.user.role || "membro",
+          ministerioIds: session.user.ministerioIds || [],
+        }
+      : await gestaoSessionFromAuth()
     const [eventos, escalas] = await Promise.all([
       ssrGestaoJson<Array<Record<string, unknown>>>("/v1/eventos", { public: true }),
       ssrGestaoJson<
@@ -88,12 +94,17 @@ export default async function CultoV2Page({
           user_nome?: string
           foto_url?: string | null
           ministerio_nome?: string
+          ministerio?: string
+          icone?: string
+          cor?: string
         }>
       >(`/v1/escalas?evento_id=${encodeURIComponent(eventoId)}`, {
         session: gestaoSession,
       }),
     ])
-    const found = (eventos || []).find((e) => String(e.id) === eventoId)
+    const found = (Array.isArray(eventos) ? eventos : []).find(
+      (e) => String(e.id) === eventoId
+    )
     if (!found) notFound()
     evento = {
       id: String(found.id),
@@ -103,7 +114,7 @@ export default async function CultoV2Page({
       observacoes: (found.observacoes as string) || null,
       tipo: (found.tipo as string) || null,
     }
-    const all = escalas || []
+    const all = Array.isArray(escalas) ? escalas : []
     minhasEscalas = all
       .filter((e) => e.user_id === userId)
       .map((e) => ({
@@ -112,7 +123,9 @@ export default async function CultoV2Page({
         status: e.status,
         observacao: e.observacao,
         ministerio_id: e.ministerio_id,
-        ministerio: e.ministerio_nome,
+        ministerio: e.ministerio_nome || e.ministerio,
+        icone: e.icone,
+        cor: e.cor,
       }))
     equipe = all.map((e) => ({
       user_id: e.user_id,
@@ -121,8 +134,31 @@ export default async function CultoV2Page({
       funcao: e.funcao,
       status: e.status,
       ministerio_id: e.ministerio_id,
-      ministerio: e.ministerio_nome,
+      ministerio: e.ministerio_nome || e.ministerio,
+      icone: e.icone,
+      cor: e.cor,
     }))
+
+    // Fallback SQL if BFF authz/JWT failed — keeps culto + repertório reachable
+    if (minhasEscalas.length === 0) {
+      minhasEscalas = (await sql`
+        SELECT es.id, es.funcao, es.status, es.observacao, es.ministerio_id,
+               m.nome as ministerio, m.icone, m.cor
+        FROM escalas es
+        JOIN ministerios m ON m.id = es.ministerio_id
+        WHERE es.evento_id = ${eventoId} AND es.user_id = ${userId}
+      `) as typeof minhasEscalas
+
+      equipe = (await sql`
+        SELECT u.id as user_id, u.nome, u.foto_url, e.funcao, e.status,
+               m.id as ministerio_id, m.nome as ministerio, m.icone, m.cor
+        FROM escalas e
+        JOIN users u ON u.id = e.user_id
+        JOIN ministerios m ON m.id = e.ministerio_id
+        WHERE e.evento_id = ${eventoId}
+        ORDER BY m.nome, u.nome
+      `) as typeof equipe
+    }
   } else {
     const eventos = await sql`
       SELECT id, titulo, data, horario, observacoes, tipo

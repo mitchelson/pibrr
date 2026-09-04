@@ -7,7 +7,18 @@ import { RepertoireForm } from "@/app/minha-area/repertoire-form"
 import { RepertoireList } from "@/app/minha-area/repertoire-list"
 import { DsBtn, DsEmpty, DsSection } from "@/components/app-v2/ds"
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json())
+const fetcher = async (url: string) => {
+  const r = await fetch(url)
+  const data = await r.json()
+  if (!r.ok) {
+    const err = new Error(data?.message || data?.error || "Erro na API") as Error & {
+      status?: number
+    }
+    err.status = r.status
+    throw err
+  }
+  return data
+}
 
 /**
  * Repertório no culto.
@@ -15,13 +26,22 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json())
  * Como: esconde a seção inteira se não há itens e não pode editar.
  */
 export function RepertoireV2({ eventoId }: { eventoId: string }) {
-  const { data, mutate } = useSWR(`/api/repertorio?evento_id=${eventoId}`, fetcher)
+  const { data, error, mutate } = useSWR(`/api/repertorio?evento_id=${eventoId}`, fetcher)
   const [editing, setEditing] = useState(false)
+
+  if (error) {
+    return (
+      <DsSection eyebrow="Preparação" title="Repertório">
+        <DsEmpty title="Não foi possível carregar" description="Tente atualizar a página." />
+      </DsSection>
+    )
+  }
 
   if (!data) return null
 
-  const { items, canEdit } = data
-  const hasItems = items?.length > 0
+  const items = Array.isArray(data.items) ? data.items : []
+  const canEdit = Boolean(data.canEdit)
+  const hasItems = items.length > 0
 
   if (!hasItems && !canEdit) return null
 
