@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Clock } from "lucide-react"
+import { Clock, Users } from "lucide-react"
 import { MinistryIcon } from "@/components/ministry-icon"
 import { cn } from "@/lib/utils"
 import { DsStatus } from "@/components/app-v2/ds"
@@ -17,6 +17,8 @@ export type EventoEscalaResumo = {
   ministerio?: string
   ministerio_id?: string
   icone?: string
+  is_escalado?: boolean
+  total_escalados?: number
 }
 
 function formatHorario(h: string) {
@@ -30,9 +32,12 @@ function formatHorario(h: string) {
 export function EscalaRowV2({
   evento,
   highlight,
+  variant = "mine",
 }: {
   evento: EventoEscalaResumo
   highlight?: boolean
+  /** mine = você serve; browse = ver equipe / trocas potenciais */
+  variant?: "mine" | "browse"
 }) {
   const data = new Date(evento.data)
   const dia = data.toLocaleDateString("pt-BR", { day: "2-digit", timeZone: "UTC" })
@@ -41,9 +46,10 @@ export function EscalaRowV2({
     .toLocaleDateString("pt-BR", { weekday: "short", timeZone: "UTC" })
     .replace(".", "")
   const horario = evento.horario ? formatHorario(evento.horario) : null
-  const isPendente = evento.meu_status === "pendente"
-  const isConfirmado = evento.meu_status === "confirmado"
-  const isRecusado = evento.meu_status === "recusado"
+  const isPendente = variant === "mine" && evento.meu_status === "pendente"
+  const isConfirmado = variant === "mine" && evento.meu_status === "confirmado"
+  const isRecusado = variant === "mine" && evento.meu_status === "recusado"
+  const total = Number(evento.total_escalados) || 0
 
   return (
     <Link
@@ -65,6 +71,9 @@ export function EscalaRowV2({
           {isPendente && <DsStatus tone="pending">Responder</DsStatus>}
           {isConfirmado && <DsStatus tone="ok">Ok</DsStatus>}
           {isRecusado && <DsStatus tone="no">Não</DsStatus>}
+          {variant === "browse" && (
+            <span className="shrink-0 text-xs font-medium text-[var(--pib-mute)]">Ver equipe</span>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--pib-mute)]">
           {horario && (
@@ -73,16 +82,27 @@ export function EscalaRowV2({
               {horario}
             </span>
           )}
-          {evento.ministerio && (
+          {variant === "mine" && evento.ministerio && (
             <span className="flex items-center gap-1">
               <MinistryIcon name={evento.icone} ministryName={evento.ministerio} size={14} />
               {evento.ministerio}
               {evento.minha_funcao ? ` · ${evento.minha_funcao}` : ""}
             </span>
           )}
+          {variant === "browse" && (
+            <span className="flex items-center gap-1">
+              <Users className="h-3.5 w-3.5" />
+              {total > 0
+                ? `${total} pessoa${total !== 1 ? "s" : ""} escalada${total !== 1 ? "s" : ""}`
+                : "Abrir para ver quem serve"}
+            </span>
+          )}
         </div>
         {isPendente && (
           <p className="text-xs font-medium text-[var(--pib-pending)]">Toque para confirmar ou recusar</p>
+        )}
+        {variant === "browse" && (
+          <p className="text-xs text-[var(--pib-mute)]">Útil para achar alguém e pedir troca</p>
         )}
       </div>
     </Link>

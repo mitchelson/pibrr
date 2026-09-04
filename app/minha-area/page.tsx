@@ -5,7 +5,7 @@ import { PullToRefresh } from "@/components/pull-to-refresh"
 import { PushNotificationRegister } from "@/components/push-notification-register"
 import { EscalaRowV2 } from "./escala-row"
 import { InboxSection } from "./inbox-section"
-import { DsEmpty, DsHero, DsList, DsPage, DsRow, DsSection } from "@/components/app-v2/ds"
+import { DsEmpty, DsHero, DsPage, DsSection } from "@/components/app-v2/ds"
 import {
   gestaoSessionFromAuth,
   isGestaoBffEnabled,
@@ -25,21 +25,23 @@ type MinhaEscalaRow = {
   ministerio_id?: string
   ministerio?: string
   icone?: string
-  is_escalado?: boolean
+  is_escalado?: boolean | string
+  total_escalados?: number
 }
 
-type EventoRow = {
-  id: string
-  titulo: string
-  data: string
-  horario?: string
-  tipo?: string
+function toBool(value: unknown) {
+  return value === true || value === "true"
+}
+
+function isFuture(dateStr: string) {
+  const today = new Date().toISOString().slice(0, 10)
+  return String(dateStr).slice(0, 10) >= today
 }
 
 /**
  * Hoje — home do membro.
- * Objetivo: o que eu preciso decidir/fazer, e onde eu sirvo em seguida.
- * Lista só resume; detalhe do culto é /culto/[id].
+ * 1) Suas escalas (decidir/preparar)
+ * 2) Outros cultos (ver quem serve / achar troca)
  */
 export default async function MinhaAreaV2Page() {
   const session = await auth()
@@ -47,8 +49,7 @@ export default async function MinhaAreaV2Page() {
 
   const userId = session.user.id
 
-  let minhas: MinhaEscalaRow[] = []
-  let programacao: EventoRow[] = []
+  let rows: MinhaEscalaRow[] = []
 
   if (isGestaoBffEnabled()) {
     const gestaoSession = session.user?.id
@@ -58,63 +59,85 @@ export default async function MinhaAreaV2Page() {
           ministerioIds: session.user.ministerioIds || [],
         }
       : await gestaoSessionFromAuth()
-    const [minhasRaw, eventosRaw] = await Promise.all([
-      ssrGestaoJson<MinhaEscalaRow[]>("/v1/escalas/minhas?only=mine", {
-        session: gestaoSession,
-      }),
-      ssrGestaoJson<EventoRow[]>("/v1/eventos", { public: true }),
-    ])
-    minhas = (Array.isArray(minhasRaw) ? minhasRaw : []).map((row) => ({
-      ...row,
-      // API uses ministerio_id; page historically used meu_ministerio_id
-      ministerio_id: row.ministerio_id,
-    }))
-    const escaladoIds = new Set(minhas.map((m) => m.id))
-    const today = new Date().toISOString().slice(0, 10)
-    programacao = (Array.isArray(eventosRaw) ? eventosRaw : [])
-      .filter((e) => String(e.data).slice(0, 10) >= today && !escaladoIds.has(e.id))
-      .sort((a, b) => String(a.data).localeCompare(String(b.data)))
-      .slice(0, 8)
+    // Sem only=mine → todos os cultos futuros + flag is_escalado (paridade app)
+    const minhasRaw = await ssrGestaoJson<MinhaEscalaRow[]>("/v1/escalas/minhas", {
+      session: gestaoSession,
+    })
+    rows = Array.isArray(minhasRaw) ? minhasRaw : []
+
+    // Fallback: montar lista a partir de eventos + só-minhas
+    if (rows.length === 0) {
+      const [somenteMinhas, eventosRaw] = await Promise.all([
+        ssrGestaoJson<MinhaEscalaRow[]>("/v1/escalas/minhas?only=mine", {
+          session: gestaoSession,
+        }),
+        ssrGestaoJson<Array<{ id: string; titulo: string; data: string; horario?: string }>>(
+          "/v1/eventos",
+          { public: true }
+        ),
+      ])
+      const mineMap = new Map(
+        (Array.isArray(somenteMinhas) ? somenteMinhas : []).map((m) => [String(m.id), m])
+      )
+      rows = (Array.isArray(eventosRaw) ? eventosRaw : [])
+        .filter((e) => isFuture(String(e.data)))
+        .sort((a, b) => String(a.data).localeCompare(String(b.data)))
+        .slice(0, 20)
+        .map((e) => {
+          const mine = mineMap.get(String(e.id))
+          if (mine) return { ...e, ...mine, is_escalado: true }
+          return { ...e, is_escalado: false }
+        })
+    }
   } else {
-    minhas = (await sql`
+    const eventos = (await sql`
       SELECT e.id, e.titulo, e.data, e.horario,
              es.id as escala_id, es.funcao as minha_funcao, es.status as meu_status,
              es.ministerio_id as ministerio_id,
-             m.nome as ministerio, m.icone
+             m.nome as ministerio, m.icone,
+             CASE WHEN es.user_id IS NOT NULL THEN true ELSE false END as is_escalado,
+             (SELECT count(*)::int FROM escalas WHERE evento_id = e.id) as total_escalados
       FROM eventos e
-      INNER JOIN escalas es ON es.evento_id = e.id AND es.user_id = ${userId}
-      INNER JOIN ministerios m ON m.id = es.ministerio_id
+      LEFT JOIN escalas es ON es.evento_id = e.id AND es.user_id = ${userId}
+      LEFT JOIN ministerios m ON m.id = es.ministerio_id
       WHERE e.data >= CURRENT_DATE
       ORDER BY e.data ASC
       LIMIT 20
     `) as MinhaEscalaRow[]
-
-    programacao = (await sql`
-      SELECT e.id, e.titulo, e.data, e.horario, e.tipo
-      FROM eventos e
-      WHERE e.data >= CURRENT_DATE
-        AND NOT EXISTS (
-          SELECT 1 FROM escalas es WHERE es.evento_id = e.id AND es.user_id = ${userId}
-        )
-      ORDER BY e.data ASC
-      LIMIT 8
-    `) as EventoRow[]
+    rows = eventos
   }
 
-  // Um card por culto (se o membro tem 2 ministérios no mesmo dia, prioriza pendente)
-  const porEvento = new Map<string, MinhaEscalaRow>()
-  for (const row of minhas) {
-    const existing = porEvento.get(row.id)
+  const future = rows.filter((r) => isFuture(String(r.data)))
+
+  // Um card por culto nas minhas (2 ministérios no mesmo dia → prioriza pendente)
+  const minhasPorEvento = new Map<string, MinhaEscalaRow>()
+  for (const row of future) {
+    const escalado = toBool(row.is_escalado) || !!row.escala_id
+    if (!escalado) continue
+    const existing = minhasPorEvento.get(row.id)
     if (!existing) {
-      porEvento.set(row.id, row)
+      minhasPorEvento.set(row.id, { ...row, is_escalado: true })
       continue
     }
     const rank = (s?: string) => (s === "pendente" ? 0 : s === "confirmado" ? 1 : 2)
     if (rank(row.meu_status) < rank(existing.meu_status)) {
-      porEvento.set(row.id, row)
+      minhasPorEvento.set(row.id, { ...row, is_escalado: true })
     }
   }
-  const cultos = Array.from(porEvento.values())
+  const cultos = Array.from(minhasPorEvento.values()).sort((a, b) =>
+    String(a.data).localeCompare(String(b.data))
+  )
+
+  const outrosMap = new Map<string, MinhaEscalaRow>()
+  for (const row of future) {
+    const escalado = toBool(row.is_escalado) || !!row.escala_id
+    if (escalado) continue
+    if (minhasPorEvento.has(row.id)) continue
+    if (!outrosMap.has(row.id)) outrosMap.set(row.id, { ...row, is_escalado: false })
+  }
+  const outros = Array.from(outrosMap.values())
+    .sort((a, b) => String(a.data).localeCompare(String(b.data)))
+    .slice(0, 12)
 
   const proxima = cultos[0]
   const resto = cultos.slice(1)
@@ -126,7 +149,7 @@ export default async function MinhaAreaV2Page() {
         <DsHero
           kicker="PIB Roraima"
           title={`Olá, ${firstName}`}
-          subtitle="Confirme suas escalas e prepare o próximo culto."
+          subtitle="Confirme suas escalas e veja quem serve nos próximos cultos."
         />
 
         <PushNotificationRegister />
@@ -136,21 +159,23 @@ export default async function MinhaAreaV2Page() {
           {cultos.length === 0 ? (
             <DsEmpty
               title="Nada escalado ainda"
-              description="Quando você for escalado, a confirmação aparece aqui primeiro."
+              description="Quando você for escalado, a confirmação aparece aqui primeiro. Enquanto isso, veja os outros cultos abaixo."
             />
           ) : (
             <EscalaRowV2
               evento={{
-                id: proxima.id as string,
-                titulo: proxima.titulo as string,
-                data: proxima.data as string,
-                horario: proxima.horario as string | undefined,
-                escala_id: proxima.escala_id as string,
-                minha_funcao: proxima.minha_funcao as string | undefined,
-                meu_status: proxima.meu_status as string | undefined,
-                ministerio: proxima.ministerio as string | undefined,
-                ministerio_id: proxima.ministerio_id as string | undefined,
-                icone: proxima.icone as string | undefined,
+                id: proxima.id,
+                titulo: proxima.titulo,
+                data: proxima.data,
+                horario: proxima.horario,
+                escala_id: proxima.escala_id,
+                minha_funcao: proxima.minha_funcao,
+                meu_status: proxima.meu_status,
+                ministerio: proxima.ministerio,
+                ministerio_id: proxima.ministerio_id,
+                icone: proxima.icone,
+                is_escalado: true,
+                total_escalados: proxima.total_escalados,
               }}
               highlight
             />
@@ -160,7 +185,7 @@ export default async function MinhaAreaV2Page() {
         {resto.length > 0 && (
           <DsSection eyebrow="Agenda" title="Depois">
             <div className="space-y-3">
-              {resto.map((e: any) => (
+              {resto.map((e) => (
                 <EscalaRowV2
                   key={e.id}
                   evento={{
@@ -174,6 +199,8 @@ export default async function MinhaAreaV2Page() {
                     ministerio: e.ministerio,
                     ministerio_id: e.ministerio_id,
                     icone: e.icone,
+                    is_escalado: true,
+                    total_escalados: e.total_escalados,
                   }}
                 />
               ))}
@@ -181,26 +208,34 @@ export default async function MinhaAreaV2Page() {
           </DsSection>
         )}
 
-        {programacao.length > 0 && (
-          <DsSection eyebrow="Calendário" title="Na igreja">
-            <DsList>
-              {programacao.map((e: any) => (
-                <DsRow
+        <DsSection
+          eyebrow="Trocas e equipe"
+          title="Outros cultos"
+        >
+          {outros.length === 0 ? (
+            <DsEmpty
+              title="Nenhum outro culto no radar"
+              description="Quando houver cultos em que você não está escalado, eles aparecem aqui para você ver a equipe."
+            />
+          ) : (
+            <div className="space-y-3">
+              {outros.map((e) => (
+                <EscalaRowV2
                   key={e.id}
-                  as="div"
-                  title={e.titulo}
-                  meta={`${new Date(e.data).toLocaleDateString("pt-BR", {
-                    weekday: "short",
-                    day: "2-digit",
-                    month: "short",
-                    timeZone: "UTC",
-                  })}${e.horario ? ` · ${String(e.horario).slice(0, 5)}` : ""}`}
-                  trailing={<span className="pib-mute text-xs">{e.tipo || ""}</span>}
+                  variant="browse"
+                  evento={{
+                    id: e.id,
+                    titulo: e.titulo,
+                    data: e.data,
+                    horario: e.horario,
+                    is_escalado: false,
+                    total_escalados: e.total_escalados,
+                  }}
                 />
               ))}
-            </DsList>
-          </DsSection>
-        )}
+            </div>
+          )}
+        </DsSection>
       </DsPage>
     </PullToRefresh>
   )

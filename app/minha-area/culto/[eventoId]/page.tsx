@@ -29,8 +29,9 @@ function formatHorario(h?: string | null) {
 }
 
 /**
- * Página do culto — preparar o membro para servir.
- * Ordem: (1) decidir (2) time (3) repertório.
+ * Página do culto.
+ * Escalado: (1) decidir (2) time (3) repertório.
+ * Visitante: ver equipe completa + repertório (útil para trocas).
  */
 export default async function CultoV2Page({
   params,
@@ -156,7 +157,8 @@ export default async function CultoV2Page({
     }))
 
     // Fallback SQL if BFF authz/JWT failed — keeps culto + repertório reachable
-    if (minhasEscalas.length === 0) {
+    // (visitante sem escala própria: equipe já veio da API → não reconsulta)
+    if (equipe.length === 0) {
       minhasEscalas = (await sql`
         SELECT es.id, es.funcao, es.status, es.observacao, es.ministerio_id,
                m.nome as ministerio, m.icone, m.cor
@@ -216,13 +218,14 @@ export default async function CultoV2Page({
 
   if (!evento) notFound()
 
-  if (minhasEscalas.length === 0) {
-    redirect("/minha-area")
-  }
-
+  const estouEscalado = minhasEscalas.length > 0
   const meusMinisterioIds = new Set(minhasEscalas.map((e) => e.ministerio_id))
-  const comigo = equipe.filter((p) => meusMinisterioIds.has(p.ministerio_id))
-  const outros = equipe.filter((p) => !meusMinisterioIds.has(p.ministerio_id))
+  const comigo = estouEscalado
+    ? equipe.filter((p) => meusMinisterioIds.has(p.ministerio_id))
+    : []
+  const outros = estouEscalado
+    ? equipe.filter((p) => !meusMinisterioIds.has(p.ministerio_id))
+    : equipe
 
   const data = new Date(evento.data)
   const dia = data.toLocaleDateString("pt-BR", { day: "2-digit", timeZone: "UTC" })
@@ -241,14 +244,18 @@ export default async function CultoV2Page({
   const horario = formatHorario(evento.horario)
 
   const temPendente = minhasEscalas.some((e) => e.status === "pendente")
-  const todasConfirmadas = minhasEscalas.every((e) => e.status === "confirmado")
+  const todasConfirmadas =
+    estouEscalado && minhasEscalas.every((e) => e.status === "confirmado")
   const algumaRecusada = minhasEscalas.some((e) => e.status === "recusado")
 
-  const okCount = comigo.filter((p) => p.status === "confirmado").length
-  const pendCount = comigo.filter((p) => p.status === "pendente").length
-  const noCount = comigo.filter((p) => p.status === "recusado").length
+  const teamForStats = estouEscalado ? comigo : equipe
+  const okCount = teamForStats.filter((p) => p.status === "confirmado").length
+  const pendCount = teamForStats.filter((p) => p.status === "pendente").length
+  const noCount = teamForStats.filter((p) => p.status === "recusado").length
 
-  const teamPreview = comigo.filter((p) => p.user_id !== userId).slice(0, 5)
+  const teamPreview = (estouEscalado ? comigo : equipe)
+    .filter((p) => p.user_id !== userId)
+    .slice(0, 5)
 
   return (
     <DsPage>
@@ -280,18 +287,24 @@ export default async function CultoV2Page({
               </span>
             ) : null}
           </p>
-          <div className="flex flex-wrap gap-2 pt-1">
-            {minhasEscalas.map((esc: any) => (
-              <span
-                key={esc.id}
-                className="inline-flex items-center gap-1.5 rounded-[var(--pib-radius-sm)] border border-[var(--pib-line)] bg-[var(--pib-paper-raised)] px-2.5 py-1 text-xs font-medium"
-              >
-                <MinistryIcon name={esc.icone} ministryName={esc.ministerio} mono size={14} />
-                {esc.ministerio}
-                {esc.funcao ? ` · ${esc.funcao}` : ""}
-              </span>
-            ))}
-          </div>
+          {estouEscalado ? (
+            <div className="flex flex-wrap gap-2 pt-1">
+              {minhasEscalas.map((esc) => (
+                <span
+                  key={esc.id}
+                  className="inline-flex items-center gap-1.5 rounded-[var(--pib-radius-sm)] border border-[var(--pib-line)] bg-[var(--pib-paper-raised)] px-2.5 py-1 text-xs font-medium"
+                >
+                  <MinistryIcon name={esc.icone} ministryName={esc.ministerio} mono size={14} />
+                  {esc.ministerio}
+                  {esc.funcao ? ` · ${esc.funcao}` : ""}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="pt-1 text-xs font-medium text-[var(--pib-mute)]">
+              Você não está escalado neste culto — veja a equipe abaixo
+            </p>
+          )}
         </div>
       </header>
 
@@ -302,117 +315,178 @@ export default async function CultoV2Page({
         </DsPanel>
       ) : null}
 
-      <DsSection
-        priority={temPendente}
-        primary={!temPendente}
-        eyebrow={temPendente ? "Ação necessária" : "Sua escala"}
-        title={
-          temPendente
-            ? minhasEscalas.length > 1
-              ? "Confirme suas escalas"
-              : "Você vai servir?"
-            : todasConfirmadas
-              ? "Você confirmou"
-              : algumaRecusada
-                ? "Sua resposta"
-                : "Sua parte"
-        }
-      >
-        <div className="space-y-3">
-          {minhasEscalas.map((esc: any) => (
-            <div
-              key={esc.id}
-              className={
-                temPendente
-                  ? "rounded-[var(--pib-radius-sm)] border border-[var(--pib-line)] bg-[var(--pib-paper)] p-4 space-y-4"
-                  : "pib-panel space-y-4 p-4"
-              }
-            >
-              <div className="flex items-start gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--pib-radius)] border border-[var(--pib-line)] bg-[var(--pib-paper-raised)]">
-                  <MinistryIcon name={esc.icone} ministryName={esc.ministerio} mono size={22} />
+      {estouEscalado && (
+        <DsSection
+          priority={temPendente}
+          primary={!temPendente}
+          eyebrow={temPendente ? "Ação necessária" : "Sua escala"}
+          title={
+            temPendente
+              ? minhasEscalas.length > 1
+                ? "Confirme suas escalas"
+                : "Você vai servir?"
+              : todasConfirmadas
+                ? "Você confirmou"
+                : algumaRecusada
+                  ? "Sua resposta"
+                  : "Sua parte"
+          }
+        >
+          <div className="space-y-3">
+            {minhasEscalas.map((esc) => (
+              <div
+                key={esc.id}
+                className={
+                  temPendente
+                    ? "rounded-[var(--pib-radius-sm)] border border-[var(--pib-line)] bg-[var(--pib-paper)] p-4 space-y-4"
+                    : "pib-panel space-y-4 p-4"
+                }
+              >
+                <div className="flex items-start gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--pib-radius)] border border-[var(--pib-line)] bg-[var(--pib-paper-raised)]">
+                    <MinistryIcon name={esc.icone} ministryName={esc.ministerio} mono size={22} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold leading-tight">{esc.ministerio}</p>
+                    <p className="pib-mute mt-1 text-sm">
+                      {esc.funcao || "Sem função definida"}
+                      {esc.observacao ? ` · ${esc.observacao}` : ""}
+                    </p>
+                  </div>
+                  {esc.status === "pendente" && <DsStatus tone="pending">Responder</DsStatus>}
+                  {esc.status === "confirmado" && <DsStatus tone="ok">Ok</DsStatus>}
+                  {esc.status === "recusado" && <DsStatus tone="no">Não</DsStatus>}
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="font-semibold leading-tight">{esc.ministerio}</p>
-                  <p className="pib-mute mt-1 text-sm">
-                    {esc.funcao || "Sem função definida"}
-                    {esc.observacao ? ` · ${esc.observacao}` : ""}
+                <EscalaActionsV2
+                  id={esc.id}
+                  status={esc.status}
+                  ministerioId={esc.ministerio_id}
+                  layout="stack"
+                  compactStatus
+                />
+              </div>
+            ))}
+          </div>
+        </DsSection>
+      )}
+
+      {estouEscalado ? (
+        <DsSection
+          eyebrow="Equipe"
+          title="Com você"
+          action={
+            comigo.length > 0 ? (
+              <span className="pib-mute text-xs tabular-nums">
+                {okCount} ok
+                {pendCount > 0 ? ` · ${pendCount} pend.` : ""}
+                {noCount > 0 ? ` · ${noCount} não` : ""}
+              </span>
+            ) : null
+          }
+        >
+          {comigo.length === 0 ? (
+            <DsEmpty
+              title="Só você neste ministério"
+              description="Quando outras pessoas forem escaladas, elas aparecem aqui."
+            />
+          ) : (
+            <DsPanel>
+              {teamPreview.length > 0 && (
+                <div className="flex items-center gap-3 border-b border-[var(--pib-line)] px-4 py-3">
+                  <div className="flex -space-x-2">
+                    {teamPreview.map((p) => (
+                      <Avatar
+                        key={p.user_id}
+                        className="h-8 w-8 border-2 border-[var(--pib-paper-raised)]"
+                      >
+                        <AvatarImage src={p.foto_url || undefined} alt={p.nome} />
+                        <AvatarFallback className="text-[10px]">{p.nome?.[0]}</AvatarFallback>
+                      </Avatar>
+                    ))}
+                  </div>
+                  <p className="pib-mute text-sm">
+                    {comigo.length === 1
+                      ? "Só você na escala deste ministério"
+                      : `${comigo.length} pessoa${comigo.length !== 1 ? "s" : ""} no seu time`}
                   </p>
                 </div>
-                {esc.status === "pendente" && <DsStatus tone="pending">Responder</DsStatus>}
-                {esc.status === "confirmado" && <DsStatus tone="ok">Ok</DsStatus>}
-                {esc.status === "recusado" && <DsStatus tone="no">Não</DsStatus>}
+              )}
+              <div className="pib-list">
+                {groupByMinisterio(comigo).map(([ministerio, pessoas]) => (
+                  <div key={ministerio}>
+                    {groupByMinisterio(comigo).length > 1 || minhasEscalas.length > 1 ? (
+                      <p className="pib-step-label px-4 pt-3 pb-1">{ministerio}</p>
+                    ) : null}
+                    {pessoas.map((p) => (
+                      <PessoaRow
+                        key={`${p.user_id}-${p.ministerio_id}`}
+                        pessoa={p}
+                        highlightMe={p.user_id === userId}
+                      />
+                    ))}
+                  </div>
+                ))}
               </div>
-              <EscalaActionsV2
-                id={esc.id}
-                status={esc.status}
-                ministerioId={esc.ministerio_id}
-                layout="stack"
-                compactStatus
-              />
-            </div>
-          ))}
-        </div>
-      </DsSection>
-
-      <DsSection
-        eyebrow="Equipe"
-        title="Com você"
-        action={
-          comigo.length > 0 ? (
-            <span className="pib-mute text-xs tabular-nums">
-              {okCount} ok
-              {pendCount > 0 ? ` · ${pendCount} pend.` : ""}
-              {noCount > 0 ? ` · ${noCount} não` : ""}
-            </span>
-          ) : null
-        }
-      >
-        {comigo.length === 0 ? (
-          <DsEmpty title="Só você neste ministério" description="Quando outras pessoas forem escaladas, elas aparecem aqui." />
-        ) : (
-          <DsPanel>
-            {teamPreview.length > 0 && (
-              <div className="flex items-center gap-3 border-b border-[var(--pib-line)] px-4 py-3">
-                <div className="flex -space-x-2">
-                  {teamPreview.map((p: any) => (
-                    <Avatar
-                      key={p.user_id}
-                      className="h-8 w-8 border-2 border-[var(--pib-paper-raised)]"
-                    >
-                      <AvatarImage src={p.foto_url} alt={p.nome} />
-                      <AvatarFallback className="text-[10px]">{p.nome?.[0]}</AvatarFallback>
-                    </Avatar>
-                  ))}
+            </DsPanel>
+          )}
+        </DsSection>
+      ) : (
+        <DsSection
+          primary
+          eyebrow="Trocas"
+          title="Quem serve neste culto"
+          action={
+            equipe.length > 0 ? (
+              <span className="pib-mute text-xs tabular-nums">
+                {okCount} ok
+                {pendCount > 0 ? ` · ${pendCount} pend.` : ""}
+                {noCount > 0 ? ` · ${noCount} não` : ""}
+              </span>
+            ) : null
+          }
+        >
+          {equipe.length === 0 ? (
+            <DsEmpty
+              title="Ninguém escalado ainda"
+              description="Quando a escala for montada, a equipe aparece aqui."
+            />
+          ) : (
+            <DsPanel>
+              {teamPreview.length > 0 && (
+                <div className="flex items-center gap-3 border-b border-[var(--pib-line)] px-4 py-3">
+                  <div className="flex -space-x-2">
+                    {teamPreview.map((p) => (
+                      <Avatar
+                        key={p.user_id}
+                        className="h-8 w-8 border-2 border-[var(--pib-paper-raised)]"
+                      >
+                        <AvatarImage src={p.foto_url || undefined} alt={p.nome} />
+                        <AvatarFallback className="text-[10px]">{p.nome?.[0]}</AvatarFallback>
+                      </Avatar>
+                    ))}
+                  </div>
+                  <p className="pib-mute text-sm">
+                    {equipe.length} pessoa{equipe.length !== 1 ? "s" : ""} escalada
+                    {equipe.length !== 1 ? "s" : ""} — toque no nome para ver contato
+                  </p>
                 </div>
-                <p className="pib-mute text-sm">
-                  {comigo.length === 1
-                    ? "Só você na escala deste ministério"
-                    : `${comigo.length} pessoa${comigo.length !== 1 ? "s" : ""} no seu time`}
-                </p>
-              </div>
-            )}
-            <div className="pib-list">
-              {groupByMinisterio(comigo).map(([ministerio, pessoas]) => (
-                <div key={ministerio}>
-                  {groupByMinisterio(comigo).length > 1 || minhasEscalas.length > 1 ? (
+              )}
+              <div className="pib-list">
+                {groupByMinisterio(equipe).map(([ministerio, pessoas]) => (
+                  <div key={ministerio}>
                     <p className="pib-step-label px-4 pt-3 pb-1">{ministerio}</p>
-                  ) : null}
-                  {pessoas.map((p: any) => (
-                    <PessoaRow
-                      key={`${p.user_id}-${p.ministerio_id}`}
-                      pessoa={p}
-                      highlightMe={p.user_id === userId}
-                    />
-                  ))}
-                </div>
-              ))}
-            </div>
-          </DsPanel>
-        )}
-      </DsSection>
+                    {pessoas.map((p) => (
+                      <PessoaRow key={`${p.user_id}-${p.ministerio_id}`} pessoa={p} />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </DsPanel>
+          )}
+        </DsSection>
+      )}
 
-      {outros.length > 0 && (
+      {estouEscalado && outros.length > 0 && (
         <details className="pib-panel group">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4">
             <div>
@@ -425,7 +499,7 @@ export default async function CultoV2Page({
             {groupByMinisterio(outros).map(([ministerio, pessoas]) => (
               <div key={ministerio}>
                 <p className="pib-step-label px-4 pt-3 pb-1">{ministerio}</p>
-                {pessoas.map((p: any) => (
+                {pessoas.map((p) => (
                   <PessoaRow key={`${p.user_id}-${p.ministerio_id}`} pessoa={p} />
                 ))}
               </div>
