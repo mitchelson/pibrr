@@ -14,7 +14,10 @@ export interface Visitante {
   quer_visita: boolean
   data_cadastro: string
   sem_whatsapp: boolean
+  /** @deprecated use user_id — legado da tabela responsaveis */
   responsavel_id: string | null
+  /** Responsável atual (users.id) */
+  user_id?: string | null
 }
 
 export interface VisitanteInsert {

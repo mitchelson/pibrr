@@ -80,16 +80,46 @@ export async function GET(request: NextRequest) {
       const cats = await sql`SELECT count(*)::int as total FROM mensagem_categorias WHERE ativa = true`
       const totalCategorias = cats[0]?.total ?? 0
       if (totalCategorias > 0) {
+        // Só pessoas atribuídas ao usuário — a obrigação de enviar é por responsável.
         whatsappPendentes = await sql`
-          SELECT v.id, v.nome, v.celular, v.data_cadastro,
-            count(vme.id)::int as enviadas,
-            ${totalCategorias}::int as total_categorias,
-            (${totalCategorias}::int - count(vme.id)::int) as pendentes
+          SELECT
+            v.id,
+            v.nome,
+            v.celular,
+            v.data_cadastro,
+            v.sexo,
+            (
+              SELECT count(*)::int
+              FROM mensagem_categorias c
+              WHERE c.ativa = true
+                AND EXISTS (
+                  SELECT 1 FROM visitante_mensagens_enviadas me
+                  WHERE me.visitante_id = v.id AND me.categoria_id = c.id
+                )
+            ) AS enviadas,
+            ${totalCategorias}::int AS total_categorias,
+            (
+              ${totalCategorias}::int - (
+                SELECT count(*)::int
+                FROM mensagem_categorias c
+                WHERE c.ativa = true
+                  AND EXISTS (
+                    SELECT 1 FROM visitante_mensagens_enviadas me
+                    WHERE me.visitante_id = v.id AND me.categoria_id = c.id
+                  )
+              )
+            ) AS pendentes
           FROM visitantes v
-          LEFT JOIN visitante_mensagens_enviadas vme ON vme.visitante_id = v.id
-          WHERE v.sem_whatsapp = false
-          GROUP BY v.id
-          HAVING count(vme.id) < ${totalCategorias}
+          WHERE v.user_id = ${userId}
+            AND v.sem_whatsapp IS NOT TRUE
+            AND EXISTS (
+              SELECT 1 FROM mensagem_categorias c
+              WHERE c.ativa = true
+                AND NOT EXISTS (
+                  SELECT 1 FROM visitante_mensagens_enviadas me
+                  WHERE me.visitante_id = v.id AND me.categoria_id = c.id
+                )
+            )
           ORDER BY v.data_cadastro DESC
           LIMIT 20
         `

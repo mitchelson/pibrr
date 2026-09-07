@@ -58,11 +58,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // responsavel_id no body mapeia para visitantes.user_id (coluna atual).
+    // A coluna legada responsavel_id aponta para a tabela responsaveis e não deve
+    // receber UUID de users — isso quebrava a atribuição e as pendências.
     const rows = await sql`
       INSERT INTO visitantes (
         nome, celular, sexo, cidade, cidade_outra, bairro,
         faixa_etaria, civil_status, membro_igreja,
-        quer_visita, sem_whatsapp, responsavel_id
+        quer_visita, sem_whatsapp, user_id
       ) VALUES (
         ${nome}, ${celular}, ${sexo || null}, ${cidade || null},
         ${cidade_outra || null}, ${bairro || null}, ${faixa_etaria || null},

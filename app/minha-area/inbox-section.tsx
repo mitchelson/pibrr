@@ -3,10 +3,11 @@
 import useSWR from "swr"
 import { useSession } from "next-auth/react"
 import Link from "next/link"
-import { ArrowLeftRight, Check, ClipboardList, Loader2, MessageSquare, Users, X } from "lucide-react"
+import { ArrowLeftRight, Check, ClipboardList, Loader2, Users, X } from "lucide-react"
 import { useState } from "react"
 import { toast } from "@/components/ui/use-toast"
 import { DsBtn, DsList, DsPanel, DsRow, DsSection, DsStatus } from "@/components/app-v2/ds"
+import { WhatsappPendencias, type WhatsappPendencia } from "./whatsapp-pendencias"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -21,7 +22,7 @@ export function InboxSection() {
   const escalas = data.escalasPendentes || []
   const trocas = data.trocas || []
   const pedidos = data.pedidosMinisterio || []
-  const whatsapp = data.whatsappPendentes || []
+  const whatsapp: WhatsappPendencia[] = data.whatsappPendentes || []
 
   const handleTroca = async (id: string, status: "aceita" | "recusada") => {
     setLoading(id)
@@ -134,12 +135,16 @@ export function InboxSection() {
       )}
 
       {whatsapp.length > 0 && (
-        <DsRow
-          href="/admin/visitantes"
-          leading={<MessageSquare className="h-4 w-4" />}
-          title="WhatsApp pendente"
-          meta={`${whatsapp.length} pessoa${whatsapp.length !== 1 ? "s" : ""} novas com mensagem em aberto`}
-        />
+        <div className="space-y-2">
+          <p className="px-1 text-sm font-semibold">
+            WhatsApp pendente
+            <span className="pib-mute ml-2 font-normal">
+              {whatsapp.length} pessoa{whatsapp.length !== 1 ? "s" : ""} atribuída
+              {whatsapp.length !== 1 ? "s" : ""}
+            </span>
+          </p>
+          <WhatsappPendencias pendencias={whatsapp} onChanged={() => mutate()} />
+        </div>
       )}
     </DsSection>
   )
