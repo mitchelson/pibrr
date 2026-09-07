@@ -1,5 +1,5 @@
 import { sql } from "@/lib/db"
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { maybeProxyGestao } from "@/lib/gestao-bff"
 
 
@@ -37,16 +37,18 @@ export async function POST(request: Request) {
   if (__gestaoBff) return __gestaoBff
 
   try {
-    const { nome, descricao, ordem, dia } = await request.json()
+    const { nome, descricao, ordem, dia, ativa } = await request.json()
     if (!nome || !dia) {
       return NextResponse.json({ error: "Nome e dia obrigatorios" }, { status: 400 })
     }
 
     const maxOrdem = ordem ?? (await sql`SELECT COALESCE(MAX(ordem), 0) + 1 as next FROM mensagem_categorias`)[0].next
+    // Novas categorias entram ativas no fluxo dos responsáveis por padrão.
+    const ativaInicial = ativa === false ? false : true
 
     const result = await sql`
-      INSERT INTO mensagem_categorias (nome, dia, descricao, ordem)
-      VALUES (${nome}, ${dia}, ${descricao || null}, ${maxOrdem})
+      INSERT INTO mensagem_categorias (nome, dia, descricao, ordem, ativa)
+      VALUES (${nome}, ${dia}, ${descricao || null}, ${maxOrdem}, ${ativaInicial})
       RETURNING *
     `
     return NextResponse.json(result[0], { status: 201 })

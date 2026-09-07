@@ -41,12 +41,18 @@ import {
 import type { MensagemCategoria, MensagemModelo } from "@/types/supabase"
 import { AdminScreen } from "@/components/app-v2/admin-screen"
 import { DsBtn, DsChip, DsEmpty, DsPanel } from "@/components/app-v2/ds"
+import { toast } from "@/components/ui/use-toast"
+
+function isCategoriaAtiva(cat: MensagemCategoria) {
+  return cat.ativa === true || (cat.ativa as unknown) === "t" || (cat.ativa as unknown) === 1
+}
 
 export default function MensagensPage() {
   const router = useRouter()
 
   const [categorias, setCategorias] = useState<MensagemCategoria[]>([])
   const [loading, setLoading] = useState(true)
+  const [togglingId, setTogglingId] = useState<string | null>(null)
 
   // Category dialogs
   const [catDialogOpen, setCatDialogOpen] = useState(false)
@@ -54,6 +60,7 @@ export default function MensagensPage() {
   const [catNome, setCatNome] = useState("")
   const [catDescricao, setCatDescricao] = useState("")
   const [catDia, setCatDia] = useState("")
+  const [catAtiva, setCatAtiva] = useState(true)
   const [catSaving, setCatSaving] = useState(false)
 
   // Model dialogs
@@ -87,21 +94,51 @@ export default function MensagensPage() {
     fetchCategorias()
   }, [fetchCategorias])
 
-  // Toggle category active
+  // Toggle category active — disponibiliza a categoria no fluxo dos responsáveis
   const toggleCategoriaAtiva = async (cat: MensagemCategoria) => {
+    const next = !isCategoriaAtiva(cat)
+    setTogglingId(cat.id)
+    // Optimistic UI
+    setCategorias((prev) =>
+      prev.map((c) => (c.id === cat.id ? { ...c, ativa: next } : c)),
+    )
     try {
       const res = await fetch(`/api/mensagens/categorias/${cat.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ativa: !cat.ativa }),
+        body: JSON.stringify({ ativa: next }),
       })
-      if (res.ok) {
+      if (!res.ok) {
+        // Revert
         setCategorias((prev) =>
-          prev.map((c) => (c.id === cat.id ? { ...c, ativa: !c.ativa } : c)),
+          prev.map((c) => (c.id === cat.id ? { ...c, ativa: !next } : c)),
         )
+        const err = await res.json().catch(() => ({}))
+        toast({
+          variant: "destructive",
+          title: "Não foi possível alterar",
+          description: err.error || "Tente novamente.",
+        })
+        return
       }
+      toast({
+        title: next ? "Categoria ativada" : "Categoria desativada",
+        description: next
+          ? "Disponível para os responsáveis enviarem no acompanhamento."
+          : "Removida do fluxo obrigatório dos responsáveis.",
+      })
     } catch (err) {
+      setCategorias((prev) =>
+        prev.map((c) => (c.id === cat.id ? { ...c, ativa: !next } : c)),
+      )
       console.error("Erro ao alterar status:", err)
+      toast({
+        variant: "destructive",
+        title: "Erro ao alterar status",
+        description: "Não foi possível salvar a alteração.",
+      })
+    } finally {
+      setTogglingId(null)
     }
   }
 
@@ -116,10 +153,21 @@ export default function MensagensPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             nome: catNome.trim(),
+            dia: catDia.trim(),
             descricao: catDescricao.trim() || null,
+            ativa: catAtiva,
           }),
         })
         if (res.ok) await fetchCategorias()
+        else {
+          const err = await res.json().catch(() => ({}))
+          toast({
+            variant: "destructive",
+            title: "Erro ao salvar",
+            description: err.error || "Tente novamente.",
+          })
+          return
+        }
       } else {
         const res = await fetch("/api/mensagens/categorias", {
           method: "POST",
@@ -128,17 +176,32 @@ export default function MensagensPage() {
             nome: catNome.trim(),
             dia: catDia.trim(),
             descricao: catDescricao.trim() || null,
+            ativa: catAtiva,
           }),
         })
         if (res.ok) await fetchCategorias()
+        else {
+          const err = await res.json().catch(() => ({}))
+          toast({
+            variant: "destructive",
+            title: "Erro ao criar",
+            description: err.error || "Tente novamente.",
+          })
+          return
+        }
       }
       setCatDialogOpen(false)
       setEditingCat(null)
       setCatNome("")
       setCatDia("")
       setCatDescricao("")
+      setCatAtiva(true)
     } catch (err) {
       console.error("Erro ao salvar categoria:", err)
+      toast({
+        variant: "destructive",
+        title: "Erro ao salvar categoria",
+      })
     } finally {
       setCatSaving(false)
     }
@@ -215,8 +278,9 @@ export default function MensagensPage() {
   const openEditCat = (cat: MensagemCategoria) => {
     setEditingCat(cat)
     setCatNome(cat.nome)
-    setCatDia(cat.dia)
+    setCatDia(cat.dia || "")
     setCatDescricao(cat.descricao ?? "")
+    setCatAtiva(isCategoriaAtiva(cat))
     setCatDialogOpen(true)
   }
 
@@ -226,6 +290,7 @@ export default function MensagensPage() {
     setCatNome("")
     setCatDia("")
     setCatDescricao("")
+    setCatAtiva(true)
     setCatDialogOpen(true)
   }
 
@@ -261,6 +326,11 @@ export default function MensagensPage() {
     >
         {/* Info about placeholders */}
         <DsPanel className="mb-2 p-4">
+          <p className="mb-1 text-sm font-medium">Fluxo dos responsáveis</p>
+          <p className="pib-mute mb-3 text-sm">
+            Categorias <strong className="font-medium text-[var(--pib-ink)]">ativas</strong> entram
+            na obrigação de WhatsApp da home para quem está atribuído à pessoa nova.
+          </p>
           <p className="pib-mute mb-2 text-sm">Variáveis nos modelos:</p>
           <div className="flex flex-wrap gap-2">
             {["[Nome]", "[Seu Nome]", "[Nome da Igreja]", "[horario]", "[data]", "[bem-vindo]", "[abracado]", "[convidado]"].map((v) => (
@@ -285,7 +355,9 @@ export default function MensagensPage() {
           <DsEmpty title="Nenhuma categoria cadastrada" />
         ) : (
           <Accordion type="multiple" className="space-y-3">
-            {categorias.map((cat) => (
+            {categorias.map((cat) => {
+              const ativa = isCategoriaAtiva(cat)
+              return (
               <AccordionItem
                 key={cat.id}
                 value={cat.id}
@@ -306,13 +378,23 @@ export default function MensagensPage() {
                     </AccordionTrigger>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <div className="flex items-center gap-1.5">
+                    <div
+                      className="flex items-center gap-1.5"
+                      onClick={(e) => e.stopPropagation()}
+                      onPointerDown={(e) => e.stopPropagation()}
+                    >
                       <span className="text-xs text-muted-foreground hidden sm:inline">
-                        {cat.ativa ? "Ativa" : "Inativa"}
+                        {ativa ? "No fluxo" : "Fora do fluxo"}
                       </span>
                       <Switch
-                        checked={cat.ativa}
+                        checked={ativa}
+                        disabled={togglingId === cat.id}
                         onCheckedChange={() => toggleCategoriaAtiva(cat)}
+                        aria-label={
+                          ativa
+                            ? "Desativar categoria para responsáveis"
+                            : "Ativar categoria para responsáveis"
+                        }
                       />
                     </div>
                     <Button
@@ -395,7 +477,8 @@ export default function MensagensPage() {
                   </div>
                 </AccordionContent>
               </AccordionItem>
-            ))}
+              )
+            })}
           </Accordion>
         )}
 
@@ -433,6 +516,19 @@ export default function MensagensPage() {
                 placeholder="Ex: Enviada na segunda apos o culto"
                 value={catDescricao}
                 onChange={(e) => setCatDescricao(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center justify-between rounded-[var(--pib-radius)] border border-[var(--pib-line)] px-3 py-2.5">
+              <div className="pr-3">
+                <Label htmlFor="cat-ativa">Disponível para responsáveis</Label>
+                <p className="pib-mute text-xs">
+                  Entra na obrigação de WhatsApp da home
+                </p>
+              </div>
+              <Switch
+                id="cat-ativa"
+                checked={catAtiva}
+                onCheckedChange={setCatAtiva}
               />
             </div>
           </div>

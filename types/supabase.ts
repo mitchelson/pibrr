@@ -65,11 +65,15 @@ export type VisitanteComResponsavel = Visitante & {
 export interface MensagemCategoria {
   id: string
   nome: string
+  /** Dia/evento do acompanhamento (ex: Segunda-feira) */
+  dia?: string
   descricao: string | null
   ordem: number
+  /** Quando true, entra no fluxo obrigatório dos responsáveis */
   ativa: boolean
-  created_at: string
-  updated_at: string
+  created_at?: string
+  updated_at?: string
+  criado_em?: string
   modelos: MensagemModelo[]
 }
 
