@@ -29,6 +29,10 @@ export async function PUT(
       sets.push("ordem")
       vals.push(body.ordem)
     }
+    if (body.dia !== undefined) {
+      sets.push("dia")
+      vals.push(body.dia)
+    }
     if (body.ativa !== undefined) {
       sets.push("ativa")
       vals.push(body.ativa)
@@ -48,6 +52,8 @@ export async function PUT(
       result = await sql`UPDATE mensagem_categorias SET descricao = ${body.descricao} WHERE id = ${id} RETURNING *`
     } else if (sets.length === 1 && sets[0] === "ordem") {
       result = await sql`UPDATE mensagem_categorias SET ordem = ${body.ordem} WHERE id = ${id} RETURNING *`
+    } else if (sets.length === 1 && sets[0] === "dia") {
+      result = await sql`UPDATE mensagem_categorias SET dia = ${body.dia} WHERE id = ${id} RETURNING *`
     } else {
       // Multiple fields - handle each explicitly to avoid COALESCE issues with booleans
       result = await sql`
@@ -55,6 +61,7 @@ export async function PUT(
         SET nome = CASE WHEN ${body.nome !== undefined} THEN ${body.nome} ELSE nome END,
             descricao = CASE WHEN ${body.descricao !== undefined} THEN ${body.descricao} ELSE descricao END,
             ordem = CASE WHEN ${body.ordem !== undefined} THEN ${body.ordem} ELSE ordem END,
+            dia = CASE WHEN ${body.dia !== undefined} THEN ${body.dia} ELSE dia END,
             ativa = CASE WHEN ${body.ativa !== undefined} THEN ${body.ativa} ELSE ativa END
         WHERE id = ${id}
         RETURNING *
