@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { Suspense, useEffect, useState, useCallback } from "react"
+import { useSearchParams } from "next/navigation"
 import { useVisitantes } from "@/hooks/use-visitantes"
 import { Input } from "@/components/ui/input"
 import {
@@ -22,9 +23,10 @@ import { DsBtn, DsEmpty, DsList, DsRow, DsWell } from "@/components/app-v2/ds"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
-export default function VisitantesV2Page() {
+function VisitantesV2Content() {
   const { visitantes, isLoading, mutate } = useVisitantes()
   const { data: categorias } = useSWR("/api/mensagens/categorias", fetcher)
+  const searchParams = useSearchParams()
   const [termoBusca, setTermoBusca] = useState("")
   const [visitanteSelecionado, setVisitanteSelecionado] = useState<VisitanteComResponsavel | null>(null)
   const [novoAberto, setNovoAberto] = useState(false)
@@ -33,6 +35,7 @@ export default function VisitantesV2Page() {
   const [visitantesPorData, setVisitantesPorData] = useState<Record<string, VisitanteComResponsavel[]>>({})
   const [datasAgrupadas, setDatasAgrupadas] = useState<string[]>([])
   const [mensagensEnviadas, setMensagensEnviadas] = useState<Record<string, Set<string>>>({})
+  const [deepLinkHandled, setDeepLinkHandled] = useState(false)
 
   const categoriasAtivas = (categorias || []).filter((c: any) => c.ativa)
 
@@ -78,6 +81,20 @@ export default function VisitantesV2Page() {
       })
       .catch(() => {})
   }, [visitantes])
+
+  // Deep-link: /admin/visitantes?id=<uuid> abre o fluxo padrão (VisitanteDialog).
+  useEffect(() => {
+    if (deepLinkHandled || isLoading || !Array.isArray(visitantes)) return
+    const id = searchParams.get("id")
+    if (!id) return
+    const found = visitantes.find((v) => v.id === id)
+    if (found) {
+      setVisitanteSelecionado(found)
+      const dataFormatada = formatarData(found.data_cadastro)
+      setDataSelecionada(dataFormatada)
+      setDeepLinkHandled(true)
+    }
+  }, [deepLinkHandled, isLoading, visitantes, searchParams])
 
   const lista = dataSelecionada ? visitantesPorData[dataSelecionada] || [] : []
 
@@ -204,5 +221,13 @@ export default function VisitantesV2Page() {
         visitantes={visitantes}
       />
     </AdminScreen>
+  )
+}
+
+export default function VisitantesV2Page() {
+  return (
+    <Suspense fallback={<p className="pib-mute p-8 text-center text-sm">Carregando…</p>}>
+      <VisitantesV2Content />
+    </Suspense>
   )
 }

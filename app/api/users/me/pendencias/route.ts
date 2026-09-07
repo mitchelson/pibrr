@@ -19,15 +19,35 @@ export async function GET(request: NextRequest) {
   const totalCategorias = cats[0].total
   if (totalCategorias === 0) return NextResponse.json([])
 
+  // Pendência = categorias ativas ainda sem registro em visitante_mensagens_enviadas.
+  // Filtra pelas pessoas atribuídas ao usuário logado (user_id).
   const pendencias = await sql`
-    SELECT v.id, v.nome, v.celular, v.data_cadastro, v.sexo,
-      count(vme.id)::int as enviadas
+    SELECT
+      v.id,
+      v.nome,
+      v.celular,
+      v.data_cadastro,
+      v.sexo,
+      (
+        SELECT count(*)::int
+        FROM mensagem_categorias c
+        WHERE c.ativa = true
+          AND EXISTS (
+            SELECT 1 FROM visitante_mensagens_enviadas me
+            WHERE me.visitante_id = v.id AND me.categoria_id = c.id
+          )
+      ) AS enviadas
     FROM visitantes v
-    LEFT JOIN visitante_mensagens_enviadas vme ON vme.visitante_id = v.id
     WHERE v.user_id = ${userId}
-      AND v.sem_whatsapp = false
-    GROUP BY v.id
-    HAVING count(vme.id) < ${totalCategorias}
+      AND v.sem_whatsapp IS NOT TRUE
+      AND EXISTS (
+        SELECT 1 FROM mensagem_categorias c
+        WHERE c.ativa = true
+          AND NOT EXISTS (
+            SELECT 1 FROM visitante_mensagens_enviadas me
+            WHERE me.visitante_id = v.id AND me.categoria_id = c.id
+          )
+      )
     ORDER BY v.data_cadastro DESC
   `
 

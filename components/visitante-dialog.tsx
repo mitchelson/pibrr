@@ -78,7 +78,7 @@ export default function VisitanteDialog({
   const [responsaveis, setResponsaveis] = useState<Responsavel[]>([])
   const [responsavelSelecionado, setResponsavelSelecionado] = useState<
     string | null
-  >(visitante.user_id || null)
+  >(visitante.user_id || visitante.responsavel_id || null)
   const [nomeResponsavel, setNomeResponsavel] = useState<string>(
     visitante.responsavel_nome || "",
   )
@@ -198,6 +198,7 @@ export default function VisitanteDialog({
 
       const visitanteAtualizado: Visitante = {
         ...visitante,
+        user_id: responsavelSelecionado,
         responsavel_id: responsavelSelecionado,
         sem_whatsapp: semWhatsapp,
       }
