@@ -475,9 +475,9 @@ export default function VisitanteDialog({
                         />
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium">{cat.nome}</p>
-                          {cat.descricao && (
+                          {(cat.dia || cat.descricao) && (
                             <p className="text-xs text-muted-foreground line-clamp-1">
-                              {cat.descricao}
+                              {[cat.dia, cat.descricao].filter(Boolean).join(" · ")}
                             </p>
                           )}
                         </div>

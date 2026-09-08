@@ -4,6 +4,7 @@ import { getSession } from "@/lib/mobile-auth"
 import { canAccessAcolhimento } from "@/lib/acolhimento"
 import { getAcolhimentoMinisterioId } from "@/lib/acolhimento-server"
 import { maybeProxyGestao } from "@/lib/gestao-bff"
+import { janelaSemanaCultoAtual } from "@/lib/domingo-culto"
 
 
 export const dynamic = "force-dynamic"
@@ -54,9 +55,12 @@ export async function GET(request: NextRequest) {
     let whatsappPendentes = 0
     if (showWhatsapp) {
       try {
+        const { inicio, fim } = janelaSemanaCultoAtual()
         const pend = await sql`
           SELECT count(*)::int as total FROM visitantes v
           WHERE v.sem_whatsapp IS NOT TRUE
+            AND v.data_cadastro >= ${inicio.toISOString()}
+            AND v.data_cadastro < ${fim.toISOString()}
             AND EXISTS (
               SELECT 1 FROM mensagem_categorias c WHERE c.ativa = true
               AND NOT EXISTS (

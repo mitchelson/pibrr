@@ -139,8 +139,8 @@ export function InboxSection() {
           <p className="px-1 text-sm font-semibold">
             WhatsApp pendente
             <span className="pib-mute ml-2 font-normal">
-              {whatsapp.length} pessoa{whatsapp.length !== 1 ? "s" : ""} atribuída
-              {whatsapp.length !== 1 ? "s" : ""}
+              {whatsapp.length} pessoa{whatsapp.length !== 1 ? "s" : ""} da semana
+              {data?.domingoCultoLabel ? ` · culto ${data.domingoCultoLabel}` : ""}
             </span>
           </p>
           <WhatsappPendencias pendencias={whatsapp} onChanged={() => mutate()} />
