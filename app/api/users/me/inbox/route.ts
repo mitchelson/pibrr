@@ -4,14 +4,38 @@ import { sql } from "@/lib/db"
 import { canAccessAcolhimento } from "@/lib/acolhimento"
 import { getAcolhimentoMinisterioId } from "@/lib/acolhimento-server"
 import { maybeProxyGestao } from "@/lib/gestao-bff"
-import { formatarDomingoCulto, janelaSemanaCultoAtual } from "@/lib/domingo-culto"
+import {
+  filtrarPendenciasSemanaCulto,
+  formatarDomingoCulto,
+  janelaSemanaCultoAtual,
+} from "@/lib/domingo-culto"
 
 
 export const dynamic = "force-dynamic"
 
+function applySemanaCultoAoInbox(data: Record<string, unknown>) {
+  const raw = Array.isArray(data.whatsappPendentes) ? data.whatsappPendentes : []
+  const { items, domingoYmd, domingoLabel } = filtrarPendenciasSemanaCulto(
+    raw as Array<{ data_cadastro?: string | Date | null }>
+  )
+  return {
+    ...data,
+    whatsappPendentes: items,
+    domingoCulto: domingoYmd,
+    domingoCultoLabel: domingoLabel,
+  }
+}
+
 export async function GET(request: NextRequest) {
   const __gestaoBff = await maybeProxyGestao(request)
-  if (__gestaoBff) return __gestaoBff
+  if (__gestaoBff?.ok) {
+    try {
+      const data = (await __gestaoBff.clone().json()) as Record<string, unknown>
+      return NextResponse.json(applySemanaCultoAoInbox(data))
+    } catch {
+      // fall through to local SQL
+    }
+  }
 
   const session = await getSession(request)
   if (!session?.userId) {

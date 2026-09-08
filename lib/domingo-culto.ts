@@ -82,3 +82,27 @@ export function formatarDomingoCulto(ymd: string): string {
   const [y, m, d] = ymd.split("-")
   return `${d}/${m}/${y}`
 }
+
+/** Visitante pertence à janela da semana do culto? */
+export function cadastroNaSemanaCulto(
+  dataCadastro: string | Date | null | undefined,
+  janela: JanelaSemanaCulto = janelaSemanaCultoAtual()
+): boolean {
+  if (!dataCadastro) return false
+  const t = new Date(dataCadastro).getTime()
+  if (Number.isNaN(t)) return false
+  return t >= janela.inicio.getTime() && t < janela.fim.getTime()
+}
+
+/** Filtra lista de pendências WhatsApp pela semana do culto atual. */
+export function filtrarPendenciasSemanaCulto<T extends { data_cadastro?: string | Date | null }>(
+  lista: T[],
+  agora: Date = new Date()
+): { items: T[]; domingoYmd: string; domingoLabel: string } {
+  const janela = janelaSemanaCultoAtual(agora)
+  return {
+    items: lista.filter((v) => cadastroNaSemanaCulto(v.data_cadastro, janela)),
+    domingoYmd: janela.domingoYmd,
+    domingoLabel: formatarDomingoCulto(janela.domingoYmd),
+  }
+}

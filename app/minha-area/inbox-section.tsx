@@ -8,6 +8,7 @@ import { useState } from "react"
 import { toast } from "@/components/ui/use-toast"
 import { DsBtn, DsList, DsPanel, DsRow, DsSection, DsStatus } from "@/components/app-v2/ds"
 import { WhatsappPendencias, type WhatsappPendencia } from "./whatsapp-pendencias"
+import { filtrarPendenciasSemanaCulto } from "@/lib/domingo-culto"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -22,7 +23,9 @@ export function InboxSection() {
   const escalas = data.escalasPendentes || []
   const trocas = data.trocas || []
   const pedidos = data.pedidosMinisterio || []
-  const whatsapp: WhatsappPendencia[] = data.whatsappPendentes || []
+  const whatsappAll: WhatsappPendencia[] = data.whatsappPendentes || []
+  const { items: whatsapp, domingoLabel } = filtrarPendenciasSemanaCulto(whatsappAll)
+  const cultoLabel = data.domingoCultoLabel || domingoLabel
 
   const handleTroca = async (id: string, status: "aceita" | "recusada") => {
     setLoading(id)
@@ -140,7 +143,7 @@ export function InboxSection() {
             WhatsApp pendente
             <span className="pib-mute ml-2 font-normal">
               {whatsapp.length} pessoa{whatsapp.length !== 1 ? "s" : ""} da semana
-              {data?.domingoCultoLabel ? ` · culto ${data.domingoCultoLabel}` : ""}
+              {cultoLabel ? ` · culto ${cultoLabel}` : ""}
             </span>
           </p>
           <WhatsappPendencias pendencias={whatsapp} onChanged={() => mutate()} />
