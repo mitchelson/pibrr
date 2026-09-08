@@ -1,51 +1,15 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/db"
 import { getSession } from "@/lib/mobile-auth"
-import { maybeProxyGestao } from "@/lib/gestao-bff"
+import { canEditRepertorio } from "@/lib/repertorio-auth"
 
-
-async function canEdit(userId: string, eventoId: string): Promise<boolean> {
-  const user = await sql`SELECT role FROM users WHERE id = ${userId}`
-  if (user[0]?.role === "admin") return true
-
-  try {
-    const adminRole = await sql`
-      SELECT 1
-      FROM account_roles ar
-      JOIN roles r ON r.id = ar.role_id
-      WHERE ar.account_id = ${userId}
-        AND r.name = 'admin'
-        AND (ar.is_active IS NULL OR ar.is_active = true)
-      LIMIT 1
-    `
-    if (adminRole.length > 0) return true
-  } catch {
-    // ignore if permissions tables unavailable
-  }
-
-  const evento = await sql`SELECT repertorio_ministerio_id, repertorio_funcao FROM eventos WHERE id = ${eventoId}`
-  const { repertorio_ministerio_id, repertorio_funcao } = evento[0] || {}
-  if (!repertorio_ministerio_id) return false
-
-  const membership = await sql`
-    SELECT 1 FROM ministerio_membros WHERE user_id = ${userId} AND ministerio_id = ${repertorio_ministerio_id}
-  `
-  if (membership.length === 0) return false
-
-  if (repertorio_funcao) {
-    const escala = await sql`
-      SELECT 1 FROM escalas WHERE user_id = ${userId} AND evento_id = ${eventoId} AND funcao = ${repertorio_funcao}
-    `
-    if (escala.length === 0) return false
-  }
-
-  return true
-}
+/**
+ * Repertório fica no SQL local (mesmo Postgres da gestao-api).
+ * A authz do ministrante precisa bater com a escala do evento; proxy BFF
+ * com canEdit desatualizado escondia o botão e bloqueava o POST.
+ */
 
 export async function GET(request: NextRequest) {
-  const __gestaoBff = await maybeProxyGestao(request)
-  if (__gestaoBff) return __gestaoBff
-
   const eventoId = request.nextUrl.searchParams.get("evento_id")
   if (!eventoId) return NextResponse.json({ error: "evento_id required" }, { status: 400 })
 
@@ -56,16 +20,13 @@ export async function GET(request: NextRequest) {
   const session = await getSession(request)
   let canEditRepertoire = false
   if (session?.userId) {
-    canEditRepertoire = await canEdit(session.userId, eventoId)
+    canEditRepertoire = await canEditRepertorio(session.userId, eventoId, session.role)
   }
 
   return NextResponse.json({ items, canEdit: canEditRepertoire })
 }
 
 export async function POST(request: NextRequest) {
-  const __gestaoBff = await maybeProxyGestao(request)
-  if (__gestaoBff) return __gestaoBff
-
   const session = await getSession(request)
   if (!session?.userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
@@ -74,7 +35,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "evento_id and items required" }, { status: 400 })
   }
 
-  if (!(await canEdit(session.userId, evento_id))) {
+  if (!(await canEditRepertorio(session.userId, evento_id, session.role))) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
@@ -93,16 +54,13 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const __gestaoBff = await maybeProxyGestao(request)
-  if (__gestaoBff) return __gestaoBff
-
   const session = await getSession(request)
   if (!session?.userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { evento_id } = await request.json()
   if (!evento_id) return NextResponse.json({ error: "evento_id required" }, { status: 400 })
 
-  if (!(await canEdit(session.userId, evento_id))) {
+  if (!(await canEditRepertorio(session.userId, evento_id, session.role))) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
