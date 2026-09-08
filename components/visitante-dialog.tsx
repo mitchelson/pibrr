@@ -60,6 +60,7 @@ import type {
   MensagemCategoria,
   VisitanteMensagemEnviada,
 } from "@/types/supabase"
+import { categoriasAtivasDoPayload } from "@/lib/mensagem-categorias"
 import NovoVisitanteDialog from "./novo-visitante-dialog"
 
 interface VisitanteDialogProps {
@@ -118,8 +119,7 @@ export default function VisitanteDialog({
       ])
       if (catRes.ok) {
         const data = await catRes.json()
-        // Only show active categories
-        setCategorias(data.filter((c: MensagemCategoria) => c.ativa))
+        setCategorias(categoriasAtivasDoPayload(data))
       }
       if (envRes.ok) {
         setEnviadas(await envRes.json())

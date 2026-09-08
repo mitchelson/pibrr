@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { MessageSquare, ExternalLink, Loader2 } from "lucide-react"
 import {
   Drawer,
@@ -13,6 +13,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { DsBtn, DsList, DsRow, DsStatus } from "@/components/app-v2/ds"
 import { processarTemplateMensagem, gerarLinkWhatsApp } from "@/lib/utils"
 import { toast } from "@/components/ui/use-toast"
+import { categoriasAtivasDoPayload } from "@/lib/mensagem-categorias"
+import { filtrarPendenciasSemanaCulto } from "@/lib/domingo-culto"
 import type { MensagemCategoria } from "@/types/supabase"
 
 export type WhatsappPendencia = {
@@ -33,26 +35,46 @@ type Props = {
 
 /**
  * Fluxo da home: obrigação de WhatsApp → pessoa → categorias → modelo → wa.me
- * (mesmo padrão do VisitanteDialog / antigo PendenciasMensagens).
  */
 export function WhatsappPendencias({ pendencias, onChanged }: Props) {
   const [categorias, setCategorias] = useState<MensagemCategoria[]>([])
   const [loadingCats, setLoadingCats] = useState(false)
+  const [catsError, setCatsError] = useState<string | null>(null)
   const [visitanteSel, setVisitanteSel] = useState<WhatsappPendencia | null>(null)
   const [enviadas, setEnviadas] = useState<Set<string>>(new Set())
   const [catSel, setCatSel] = useState<MensagemCategoria | null>(null)
   const [marcando, setMarcando] = useState<string | null>(null)
 
+  // Cinto de segurança: mesmo se a API ainda devolver semanas antigas, filtra no client.
+  const daSemana = useMemo(
+    () => filtrarPendenciasSemanaCulto(pendencias).items,
+    [pendencias]
+  )
+
   useEffect(() => {
     let cancelled = false
     setLoadingCats(true)
-    fetch("/api/mensagens/categorias")
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data: MensagemCategoria[]) => {
-        if (!cancelled) setCategorias((data || []).filter((c) => c.ativa))
+    setCatsError(null)
+    fetch("/api/mensagens/categorias", { credentials: "same-origin" })
+      .then(async (r) => {
+        const json = await r.json().catch(() => null)
+        if (!r.ok) {
+          throw new Error(
+            (json && typeof json === "object" && "error" in json
+              ? String((json as { error?: string }).error)
+              : null) || `Erro ${r.status}`
+          )
+        }
+        return categoriasAtivasDoPayload(json)
       })
-      .catch(() => {
-        if (!cancelled) setCategorias([])
+      .then((ativas) => {
+        if (!cancelled) setCategorias(ativas)
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setCategorias([])
+          setCatsError(err instanceof Error ? err.message : "Falha ao carregar categorias")
+        }
       })
       .finally(() => {
         if (!cancelled) setLoadingCats(false)
@@ -66,10 +88,13 @@ export function WhatsappPendencias({ pendencias, onChanged }: Props) {
     setVisitanteSel(v)
     setCatSel(null)
     try {
-      const res = await fetch(`/api/mensagens/enviadas?visitante_id=${v.id}`)
+      const res = await fetch(`/api/mensagens/enviadas?visitante_id=${v.id}`, {
+        credentials: "same-origin",
+      })
       if (res.ok) {
         const data = await res.json()
-        setEnviadas(new Set(data.map((e: { categoria_id: string }) => e.categoria_id)))
+        const lista = Array.isArray(data) ? data : []
+        setEnviadas(new Set(lista.map((e: { categoria_id: string }) => e.categoria_id)))
       } else {
         setEnviadas(new Set())
       }
@@ -92,6 +117,7 @@ export function WhatsappPendencias({ pendencias, onChanged }: Props) {
       const res = await fetch("/api/mensagens/enviadas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
         body: JSON.stringify({
           visitante_id: visitanteSel.id,
           categoria_id: categoriaId,
@@ -118,12 +144,12 @@ export function WhatsappPendencias({ pendencias, onChanged }: Props) {
     }
   }
 
-  if (pendencias.length === 0) return null
+  if (daSemana.length === 0) return null
 
   return (
     <>
       <DsList>
-        {pendencias.map((v) => (
+        {daSemana.map((v) => (
           <DsRow
             key={v.id}
             onClick={() => openVisitante(v)}
@@ -153,7 +179,9 @@ export function WhatsappPendencias({ pendencias, onChanged }: Props) {
               </div>
             ) : categorias.length === 0 ? (
               <p className="pib-mute py-4 text-center text-sm">
-                Nenhuma categoria de mensagem ativa no fluxo.
+                {catsError
+                  ? `Não foi possível carregar as categorias (${catsError}).`
+                  : "Nenhuma categoria de mensagem ativa no fluxo. Ative em Mensagens no admin."}
               </p>
             ) : (
               categorias.map((cat) => {

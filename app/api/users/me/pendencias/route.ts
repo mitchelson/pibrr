@@ -2,12 +2,31 @@ import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/mobile-auth"
 import { sql } from "@/lib/db"
 import { maybeProxyGestao } from "@/lib/gestao-bff"
-import { formatarDomingoCulto, janelaSemanaCultoAtual } from "@/lib/domingo-culto"
+import {
+  filtrarPendenciasSemanaCulto,
+  formatarDomingoCulto,
+  janelaSemanaCultoAtual,
+} from "@/lib/domingo-culto"
 
 
 export async function GET(request: NextRequest) {
   const __gestaoBff = await maybeProxyGestao(request)
-  if (__gestaoBff) return __gestaoBff
+  if (__gestaoBff?.ok) {
+    try {
+      const raw = await __gestaoBff.clone().json()
+      const lista = Array.isArray(raw) ? raw : []
+      const { items, domingoYmd, domingoLabel } = filtrarPendenciasSemanaCulto(lista)
+      return NextResponse.json(
+        items.map((p: Record<string, unknown>) => ({
+          ...p,
+          domingo_culto: domingoYmd,
+          domingo_culto_label: domingoLabel,
+        }))
+      )
+    } catch {
+      // fall through
+    }
+  }
 
   const session = await getSession(request)
   if (!session?.userId) {
@@ -21,8 +40,6 @@ export async function GET(request: NextRequest) {
   const totalCategorias = cats[0].total
   if (totalCategorias === 0) return NextResponse.json([])
 
-  // Semana do culto = [domingo 00:00, próximo domingo 00:00) em America/Boa_Vista.
-  // Cadastro no domingo → esse domingo; seg–sáb → domingo anterior (via data_cadastro na janela).
   const pendencias = await sql`
     SELECT
       v.id,
