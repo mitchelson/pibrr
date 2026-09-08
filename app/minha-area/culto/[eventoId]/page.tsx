@@ -20,6 +20,7 @@ import {
   isGestaoBffEnabled,
   ssrGestaoJson,
 } from "@/lib/gestao-ssr"
+import { canEditRepertorio } from "@/lib/repertorio-auth"
 
 export const dynamic = "force-dynamic"
 
@@ -178,11 +179,18 @@ export default async function CultoV2Page({
       `) as typeof equipe
     }
 
+    // Itens via SQL se BFF veio vazio — NÃO zerar canEdit (ministrante com lista vazia
+    // precisa ver o botão Adicionar).
     if (repertorioInitial.items.length === 0) {
       const items = await sql`
         SELECT * FROM repertorio_items WHERE evento_id = ${eventoId} ORDER BY ordem, criado_em
       `
-      repertorioInitial = { items: items as Array<Record<string, unknown>>, canEdit: false }
+      if (items.length > 0) {
+        repertorioInitial = {
+          items: items as Array<Record<string, unknown>>,
+          canEdit: repertorioInitial.canEdit,
+        }
+      }
     }
   } else {
     const eventos = await sql`
@@ -213,7 +221,23 @@ export default async function CultoV2Page({
     const items = await sql`
       SELECT * FROM repertorio_items WHERE evento_id = ${eventoId} ORDER BY ordem, criado_em
     `
-    repertorioInitial = { items: items as Array<Record<string, unknown>>, canEdit: false }
+    repertorioInitial = {
+      items: items as Array<Record<string, unknown>>,
+      canEdit: false,
+    }
+  }
+
+  // Authz local (escala + função do evento) — fonte de verdade para o botão Adicionar
+  if (!repertorioInitial.canEdit) {
+    try {
+      repertorioInitial.canEdit = await canEditRepertorio(
+        userId,
+        eventoId,
+        session.user.role
+      )
+    } catch {
+      // mantém canEdit atual se o SQL falhar
+    }
   }
 
   if (!evento) notFound()
