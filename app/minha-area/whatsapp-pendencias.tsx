@@ -174,9 +174,9 @@ export function WhatsappPendencias({ pendencias, onChanged }: Props) {
                     />
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium">{cat.nome}</p>
-                      {cat.descricao ? (
-                        <p className="pib-mute line-clamp-1 text-xs">{cat.descricao}</p>
-                      ) : null}
+                      <p className="pib-mute line-clamp-1 text-xs">
+                        {[cat.dia, cat.descricao].filter(Boolean).join(" · ")}
+                      </p>
                     </div>
                     {!sent && (cat.modelos?.length ?? 0) > 0 && (
                       <DsBtn

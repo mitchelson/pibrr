@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/mobile-auth"
 import { sql } from "@/lib/db"
 import { maybeProxyGestao } from "@/lib/gestao-bff"
+import { formatarDomingoCulto, janelaSemanaCultoAtual } from "@/lib/domingo-culto"
 
 
 export async function GET(request: NextRequest) {
@@ -14,13 +15,14 @@ export async function GET(request: NextRequest) {
   }
 
   const userId = session.userId
+  const { domingoYmd, inicio, fim } = janelaSemanaCultoAtual()
 
   const cats = await sql`SELECT count(*)::int as total FROM mensagem_categorias WHERE ativa = true`
   const totalCategorias = cats[0].total
   if (totalCategorias === 0) return NextResponse.json([])
 
-  // Pendência = categorias ativas ainda sem registro em visitante_mensagens_enviadas.
-  // Filtra pelas pessoas atribuídas ao usuário logado (user_id).
+  // Semana do culto = [domingo 00:00, próximo domingo 00:00) em America/Boa_Vista.
+  // Cadastro no domingo → esse domingo; seg–sáb → domingo anterior (via data_cadastro na janela).
   const pendencias = await sql`
     SELECT
       v.id,
@@ -40,6 +42,8 @@ export async function GET(request: NextRequest) {
     FROM visitantes v
     WHERE v.user_id = ${userId}
       AND v.sem_whatsapp IS NOT TRUE
+      AND v.data_cadastro >= ${inicio.toISOString()}
+      AND v.data_cadastro < ${fim.toISOString()}
       AND EXISTS (
         SELECT 1 FROM mensagem_categorias c
         WHERE c.ativa = true
@@ -55,5 +59,7 @@ export async function GET(request: NextRequest) {
     ...p,
     total_categorias: totalCategorias,
     pendentes: totalCategorias - p.enviadas,
+    domingo_culto: domingoYmd,
+    domingo_culto_label: formatarDomingoCulto(domingoYmd),
   })))
 }

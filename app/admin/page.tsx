@@ -20,6 +20,7 @@ import {
   DsSection,
   DsStatStrip,
 } from "@/components/app-v2/ds"
+import { janelaSemanaCultoAtual } from "@/lib/domingo-culto"
 
 export const dynamic = "force-dynamic"
 
@@ -80,9 +81,12 @@ export default async function AdminV2Dashboard() {
 
     if (showAcolhimento) {
       try {
+        const { inicio, fim } = janelaSemanaCultoAtual()
         const pend = await sql`
           SELECT count(*)::int as total FROM visitantes v
           WHERE v.sem_whatsapp IS NOT TRUE
+            AND v.data_cadastro >= ${inicio.toISOString()}
+            AND v.data_cadastro < ${fim.toISOString()}
             AND EXISTS (
               SELECT 1 FROM mensagem_categorias c WHERE c.ativa = true
               AND NOT EXISTS (
@@ -110,7 +114,7 @@ export default async function AdminV2Dashboard() {
       ? {
           href: "/admin/visitantes",
           title: "WhatsApp pendente",
-          meta: `${whatsappPendentes} pessoa${whatsappPendentes !== 1 ? "s" : ""} novas`,
+          meta: `${whatsappPendentes} pessoa${whatsappPendentes !== 1 ? "s" : ""} da semana do culto`,
           icon: MessageSquare,
           value: whatsappPendentes,
         }

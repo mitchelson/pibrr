@@ -4,6 +4,7 @@ import { sql } from "@/lib/db"
 import { canAccessAcolhimento } from "@/lib/acolhimento"
 import { getAcolhimentoMinisterioId } from "@/lib/acolhimento-server"
 import { maybeProxyGestao } from "@/lib/gestao-bff"
+import { formatarDomingoCulto, janelaSemanaCultoAtual } from "@/lib/domingo-culto"
 
 
 export const dynamic = "force-dynamic"
@@ -75,12 +76,17 @@ export async function GET(request: NextRequest) {
   }
 
   let whatsappPendentes: unknown[] = []
+  let domingoCulto: string | null = null
+  let domingoCultoLabel: string | null = null
   if (showWhatsapp) {
     try {
       const cats = await sql`SELECT count(*)::int as total FROM mensagem_categorias WHERE ativa = true`
       const totalCategorias = cats[0]?.total ?? 0
+      const { domingoYmd, inicio, fim } = janelaSemanaCultoAtual()
+      domingoCulto = domingoYmd
+      domingoCultoLabel = formatarDomingoCulto(domingoYmd)
       if (totalCategorias > 0) {
-        // Só pessoas atribuídas ao usuário — a obrigação de enviar é por responsável.
+        // Semana do culto atual: só cadastros ancorados nesse domingo.
         whatsappPendentes = await sql`
           SELECT
             v.id,
@@ -112,6 +118,8 @@ export async function GET(request: NextRequest) {
           FROM visitantes v
           WHERE v.user_id = ${userId}
             AND v.sem_whatsapp IS NOT TRUE
+            AND v.data_cadastro >= ${inicio.toISOString()}
+            AND v.data_cadastro < ${fim.toISOString()}
             AND EXISTS (
               SELECT 1 FROM mensagem_categorias c
               WHERE c.ativa = true
@@ -134,5 +142,7 @@ export async function GET(request: NextRequest) {
     trocas,
     pedidosMinisterio,
     whatsappPendentes,
+    domingoCulto,
+    domingoCultoLabel,
   })
 }

@@ -369,11 +369,9 @@ export default function MensagensPage() {
                     <AccordionTrigger className="py-0 hover:no-underline">
                       <div className="flex flex-col items-start text-left">
                         <span className="font-semibold text-foreground">{cat.nome}</span>
-                        {cat.descricao && (
-                          <span className="text-xs text-muted-foreground">
-                            {cat.descricao}
-                          </span>
-                        )}
+                        <span className="text-xs text-muted-foreground">
+                          {[cat.dia, cat.descricao].filter(Boolean).join(" · ")}
+                        </span>
                       </div>
                     </AccordionTrigger>
                   </div>
