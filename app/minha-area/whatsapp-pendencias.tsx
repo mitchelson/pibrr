@@ -1,7 +1,8 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { MessageSquare, ExternalLink, Loader2 } from "lucide-react"
+import { useSession } from "next-auth/react"
+import { ArrowLeft, ExternalLink, Loader2, MessageSquare } from "lucide-react"
 import {
   Drawer,
   DrawerContent,
@@ -11,11 +12,16 @@ import {
 } from "@/components/ui/drawer"
 import { Checkbox } from "@/components/ui/checkbox"
 import { DsBtn, DsList, DsRow, DsStatus } from "@/components/app-v2/ds"
-import { processarTemplateMensagem, gerarLinkWhatsApp } from "@/lib/utils"
+import {
+  formatarData,
+  formatarTelefone,
+  gerarLinkWhatsApp,
+  processarTemplateMensagem,
+} from "@/lib/utils"
 import { toast } from "@/components/ui/use-toast"
 import { categoriasAtivasDoPayload } from "@/lib/mensagem-categorias"
 import { filtrarPendenciasSemanaCulto } from "@/lib/domingo-culto"
-import type { MensagemCategoria } from "@/types/supabase"
+import type { MensagemCategoria, MensagemModelo } from "@/types/supabase"
 
 export type WhatsappPendencia = {
   id: string
@@ -23,6 +29,13 @@ export type WhatsappPendencia = {
   celular: string
   data_cadastro: string
   sexo?: string | null
+  cidade?: string | null
+  cidade_outra?: string | null
+  bairro?: string | null
+  faixa_etaria?: string | null
+  civil_status?: string | null
+  membro_igreja?: boolean | null
+  quer_visita?: boolean | null
   enviadas: number
   total_categorias: number
   pendentes: number
@@ -33,19 +46,47 @@ type Props = {
   onChanged?: () => void
 }
 
+type SheetView = "pessoa" | "modelo"
+
+function cidadeLabel(v: WhatsappPendencia) {
+  if (v.cidade === "Outra" && v.cidade_outra) return v.cidade_outra
+  return v.cidade || null
+}
+
+function resumoCadastro(v: WhatsappPendencia): string[] {
+  const lines: string[] = []
+  if (v.celular) lines.push(formatarTelefone(v.celular))
+  if (v.sexo) lines.push(v.sexo)
+  if (v.faixa_etaria) lines.push(v.faixa_etaria)
+  if (v.civil_status) lines.push(v.civil_status)
+  const cidade = cidadeLabel(v)
+  if (cidade) lines.push(v.bairro ? `${cidade} · ${v.bairro}` : cidade)
+  else if (v.bairro) lines.push(v.bairro)
+  if (v.data_cadastro) lines.push(`Cadastro ${formatarData(v.data_cadastro)}`)
+  if (v.membro_igreja === true) lines.push("Membro de igreja")
+  if (v.membro_igreja === false) lines.push("Não é membro de igreja")
+  if (v.quer_visita === true) lines.push("Deseja visita")
+  if (v.quer_visita === false) lines.push("Não deseja visita")
+  return lines
+}
+
 /**
- * Fluxo da home: obrigação de WhatsApp → pessoa → categorias → modelo → wa.me
+ * Fluxo da home: pessoa → dados do cadastro → categorias → modelo → wa.me
  */
 export function WhatsappPendencias({ pendencias, onChanged }: Props) {
+  const { data: session } = useSession()
+  const responsavelNome =
+    session?.user?.name?.split(" ")[0] || session?.user?.name || undefined
+
   const [categorias, setCategorias] = useState<MensagemCategoria[]>([])
   const [loadingCats, setLoadingCats] = useState(false)
   const [catsError, setCatsError] = useState<string | null>(null)
   const [visitanteSel, setVisitanteSel] = useState<WhatsappPendencia | null>(null)
   const [enviadas, setEnviadas] = useState<Set<string>>(new Set())
   const [catSel, setCatSel] = useState<MensagemCategoria | null>(null)
+  const [view, setView] = useState<SheetView>("pessoa")
   const [marcando, setMarcando] = useState<string | null>(null)
 
-  // Cinto de segurança: mesmo se a API ainda devolver semanas antigas, filtra no client.
   const daSemana = useMemo(
     () => filtrarPendenciasSemanaCulto(pendencias).items,
     [pendencias]
@@ -84,9 +125,17 @@ export function WhatsappPendencias({ pendencias, onChanged }: Props) {
     }
   }, [])
 
+  const closeSheet = useCallback(() => {
+    setVisitanteSel(null)
+    setCatSel(null)
+    setView("pessoa")
+    setEnviadas(new Set())
+  }, [])
+
   const openVisitante = useCallback(async (v: WhatsappPendencia) => {
     setVisitanteSel(v)
     setCatSel(null)
+    setView("pessoa")
     try {
       const res = await fetch(`/api/mensagens/enviadas?visitante_id=${v.id}`, {
         credentials: "same-origin",
@@ -103,14 +152,7 @@ export function WhatsappPendencias({ pendencias, onChanged }: Props) {
     }
   }, [])
 
-  const handleEnviar = (cat: MensagemCategoria, modelo: { id: string; corpo: string; titulo: string }) => {
-    if (!visitanteSel) return
-    const msg = processarTemplateMensagem(modelo.corpo, visitanteSel as any)
-    window.open(gerarLinkWhatsApp(visitanteSel.celular, msg), "_blank")
-    setCatSel(null)
-  }
-
-  const handleMarcar = async (categoriaId: string) => {
+  const handleMarcar = async (categoriaId: string, opts?: { silent?: boolean }) => {
     if (!visitanteSel || enviadas.has(categoriaId)) return
     setMarcando(categoriaId)
     try {
@@ -126,10 +168,12 @@ export function WhatsappPendencias({ pendencias, onChanged }: Props) {
       if (!res.ok) throw new Error("Falha ao marcar")
       const next = new Set([...enviadas, categoriaId])
       setEnviadas(next)
-      toast({ title: "Mensagem marcada como enviada" })
+      if (!opts?.silent) toast({ title: "Mensagem marcada como enviada" })
       const allDone = categorias.every((c) => next.has(c.id))
       if (allDone) {
-        setVisitanteSel(null)
+        closeSheet()
+      } else {
+        setView("pessoa")
         setCatSel(null)
       }
       onChanged?.()
@@ -143,6 +187,28 @@ export function WhatsappPendencias({ pendencias, onChanged }: Props) {
       setMarcando(null)
     }
   }
+
+  const handleEnviarModelo = async (modelo: MensagemModelo) => {
+    if (!visitanteSel || !catSel) return
+    if (!visitanteSel.celular) {
+      toast({
+        variant: "destructive",
+        title: "Sem celular",
+        description: "Este visitante não tem WhatsApp cadastrado.",
+      })
+      return
+    }
+    const msg = processarTemplateMensagem(modelo.corpo, visitanteSel, responsavelNome)
+    window.open(gerarLinkWhatsApp(visitanteSel.celular, msg), "_blank", "noopener,noreferrer")
+    if (!enviadas.has(catSel.id)) {
+      await handleMarcar(catSel.id, { silent: true })
+    } else {
+      setView("pessoa")
+      setCatSel(null)
+    }
+  }
+
+  const detalhes = visitanteSel ? resumoCadastro(visitanteSel) : []
 
   if (daSemana.length === 0) return null
 
@@ -162,104 +228,161 @@ export function WhatsappPendencias({ pendencias, onChanged }: Props) {
       </DsList>
 
       <Drawer
-        open={!!visitanteSel && !catSel}
+        open={!!visitanteSel}
         onOpenChange={(open) => {
-          if (!open) setVisitanteSel(null)
+          if (!open) closeSheet()
         }}
       >
         <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>{visitanteSel?.nome}</DrawerTitle>
-            <DrawerDescription>Envie as mensagens pendentes do fluxo ativo</DrawerDescription>
-          </DrawerHeader>
-          <div className="space-y-2 px-4 pb-6">
-            {loadingCats ? (
-              <div className="flex justify-center py-6">
-                <Loader2 className="h-5 w-5 animate-spin text-[var(--pib-mute)]" />
-              </div>
-            ) : categorias.length === 0 ? (
-              <p className="pib-mute py-4 text-center text-sm">
-                {catsError
-                  ? `Não foi possível carregar as categorias (${catsError}).`
-                  : "Nenhuma categoria de mensagem ativa no fluxo. Ative em Mensagens no admin."}
-              </p>
-            ) : (
-              categorias.map((cat) => {
-                const sent = enviadas.has(cat.id)
-                return (
-                  <div
-                    key={cat.id}
-                    className={`flex items-center gap-3 rounded-[var(--pib-radius)] border border-[var(--pib-line)] p-3 ${
-                      sent ? "opacity-50" : "bg-[var(--pib-paper-raised)]"
-                    }`}
-                  >
-                    <Checkbox
-                      checked={sent}
-                      disabled={sent || marcando === cat.id}
-                      onCheckedChange={(checked) => {
-                        if (checked && !sent) handleMarcar(cat.id)
-                      }}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium">{cat.nome}</p>
-                      <p className="pib-mute line-clamp-1 text-xs">
-                        {[cat.dia, cat.descricao].filter(Boolean).join(" · ")}
-                      </p>
-                    </div>
-                    {!sent && (cat.modelos?.length ?? 0) > 0 && (
-                      <DsBtn
-                        variant="ghost"
-                        size="sm"
-                        className="shrink-0 gap-1"
-                        onClick={() => setCatSel(cat)}
-                        disabled={!visitanteSel?.celular}
-                      >
-                        <MessageSquare className="h-3.5 w-3.5" />
-                        Enviar
-                      </DsBtn>
-                    )}
-                  </div>
-                )
-              })
-            )}
-          </div>
-        </DrawerContent>
-      </Drawer>
+          {view === "pessoa" && visitanteSel ? (
+            <>
+              <DrawerHeader>
+                <DrawerTitle>{visitanteSel.nome}</DrawerTitle>
+                <DrawerDescription>
+                  Confira o cadastro e envie as mensagens pendentes
+                </DrawerDescription>
+              </DrawerHeader>
 
-      <Drawer
-        open={!!catSel}
-        onOpenChange={(open) => {
-          if (!open) setCatSel(null)
-        }}
-      >
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>{catSel?.nome}</DrawerTitle>
-            <DrawerDescription>Escolha um modelo para enviar via WhatsApp</DrawerDescription>
-          </DrawerHeader>
-          <div className="max-h-[60vh] space-y-3 overflow-y-auto px-4 pb-6">
-            {catSel?.modelos?.map((modelo) => {
-              const preview = visitanteSel
-                ? processarTemplateMensagem(modelo.corpo, visitanteSel as any)
-                : modelo.corpo
-              return (
-                <button
-                  key={modelo.id}
-                  type="button"
-                  onClick={() => handleEnviar(catSel, modelo)}
-                  className="w-full rounded-[var(--pib-radius)] border border-[var(--pib-line)] bg-[var(--pib-paper-raised)] p-4 text-left transition-colors hover:border-[var(--pib-ink)]"
-                >
-                  <div className="mb-2 flex items-center justify-between gap-2">
-                    <span className="text-sm font-semibold">{modelo.titulo}</span>
-                    <ExternalLink className="h-3.5 w-3.5 shrink-0 text-[var(--pib-mute)]" />
-                  </div>
-                  <p className="pib-mute line-clamp-6 whitespace-pre-wrap text-xs leading-relaxed">
-                    {preview}
+              <div className="space-y-4 px-4 pb-6">
+                <div className="rounded-[var(--pib-radius)] border border-[var(--pib-line)] bg-[var(--pib-paper-raised)] p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--pib-mute)]">
+                    Dados do visitante
                   </p>
-                </button>
-              )
-            })}
-          </div>
+                  {detalhes.length > 0 ? (
+                    <ul className="mt-2 space-y-1">
+                      {detalhes.map((line) => (
+                        <li key={line} className="text-sm text-[var(--pib-ink)]">
+                          {line}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="pib-mute mt-2 text-sm">Sem dados adicionais no cadastro.</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold">Mensagens</p>
+                  {loadingCats ? (
+                    <div className="flex justify-center py-6">
+                      <Loader2 className="h-5 w-5 animate-spin text-[var(--pib-mute)]" />
+                    </div>
+                  ) : categorias.length === 0 ? (
+                    <p className="pib-mute py-4 text-center text-sm">
+                      {catsError
+                        ? `Não foi possível carregar as categorias (${catsError}).`
+                        : "Nenhuma categoria de mensagem ativa no fluxo."}
+                    </p>
+                  ) : (
+                    categorias.map((cat) => {
+                      const sent = enviadas.has(cat.id)
+                      const modelos = cat.modelos || []
+                      return (
+                        <div
+                          key={cat.id}
+                          className={`flex items-center gap-3 rounded-[var(--pib-radius)] border border-[var(--pib-line)] p-3 ${
+                            sent ? "opacity-50" : "bg-[var(--pib-paper-raised)]"
+                          }`}
+                        >
+                          <Checkbox
+                            checked={sent}
+                            disabled={sent || marcando === cat.id}
+                            onCheckedChange={(checked) => {
+                              if (checked && !sent) void handleMarcar(cat.id)
+                            }}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium">{cat.nome}</p>
+                            <p className="pib-mute line-clamp-1 text-xs">
+                              {[cat.dia, cat.descricao].filter(Boolean).join(" · ") ||
+                                (modelos.length
+                                  ? `${modelos.length} modelo${modelos.length !== 1 ? "s" : ""}`
+                                  : "Sem modelo")}
+                            </p>
+                          </div>
+                          {!sent && (
+                            <DsBtn
+                              size="sm"
+                              className="shrink-0 gap-1"
+                              disabled={!visitanteSel.celular || modelos.length === 0 || !!marcando}
+                              onClick={() => {
+                                setCatSel(cat)
+                                setView("modelo")
+                              }}
+                            >
+                              <MessageSquare className="h-3.5 w-3.5" />
+                              Enviar
+                            </DsBtn>
+                          )}
+                        </div>
+                      )
+                    })
+                  )}
+                </div>
+              </div>
+            </>
+          ) : null}
+
+          {view === "modelo" && catSel && visitanteSel ? (
+            <>
+              <DrawerHeader>
+                <div className="flex items-start gap-2">
+                  <DsBtn
+                    variant="ghost"
+                    size="icon"
+                    className="mt-0.5 shrink-0"
+                    onClick={() => {
+                      setView("pessoa")
+                      setCatSel(null)
+                    }}
+                    aria-label="Voltar"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </DsBtn>
+                  <div className="min-w-0">
+                    <DrawerTitle>{catSel.nome}</DrawerTitle>
+                    <DrawerDescription>
+                      Escolha um modelo para abrir no WhatsApp de {visitanteSel.nome}
+                    </DrawerDescription>
+                  </div>
+                </div>
+              </DrawerHeader>
+              <div className="max-h-[60vh] space-y-3 overflow-y-auto px-4 pb-6">
+                {(catSel.modelos || []).map((modelo) => {
+                  const preview = processarTemplateMensagem(
+                    modelo.corpo,
+                    visitanteSel,
+                    responsavelNome
+                  )
+                  return (
+                    <button
+                      key={modelo.id}
+                      type="button"
+                      onClick={() => void handleEnviarModelo(modelo)}
+                      disabled={!!marcando}
+                      className="w-full rounded-[var(--pib-radius)] border border-[var(--pib-line)] bg-[var(--pib-paper-raised)] p-4 text-left transition-colors hover:border-[var(--pib-ink)] disabled:opacity-60"
+                    >
+                      <div className="mb-2 flex items-center justify-between gap-2">
+                        <span className="text-sm font-semibold">{modelo.titulo}</span>
+                        <ExternalLink className="h-3.5 w-3.5 shrink-0 text-[var(--pib-mute)]" />
+                      </div>
+                      <p className="pib-mute line-clamp-6 whitespace-pre-wrap text-xs leading-relaxed">
+                        {preview}
+                      </p>
+                      <p className="mt-3 text-xs font-medium text-[var(--pib-ink)]">
+                        Abrir WhatsApp
+                      </p>
+                    </button>
+                  )
+                })}
+                {(catSel.modelos || []).length === 0 ? (
+                  <p className="pib-mute py-4 text-center text-sm">
+                    Esta categoria ainda não tem modelo cadastrado.
+                  </p>
+                ) : null}
+              </div>
+            </>
+          ) : null}
         </DrawerContent>
       </Drawer>
     </>

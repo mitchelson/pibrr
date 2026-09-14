@@ -113,6 +113,13 @@ export async function GET(request: NextRequest) {
           v.celular,
           v.data_cadastro,
           v.sexo,
+          v.cidade,
+          v.cidade_outra,
+          v.bairro,
+          v.faixa_etaria,
+          v.civil_status,
+          v.membro_igreja,
+          v.quer_visita,
           (
             SELECT count(*)::int
             FROM mensagem_categorias c
